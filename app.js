@@ -1,0 +1,208 @@
+const OWNER = "i-rinkung", REPO = "claude-dotfiles";
+const API = "https://api.github.com/repos/" + OWNER + "/" + REPO;
+const $ = (id) => document.getElementById(id);
+const V = $("v"), BR = $("branch"), OUT = $("logout");
+const st = { branch: "main", folder: "runs", file: null, issueState: "open", issue: null };
+let cache = {}, rid = 0;
+
+const h = (tag, a, ...kids) => {
+  const e = document.createElement(tag);
+  if (typeof a === "string") e.textContent = a;
+  else Object.assign(e, a);
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+};
+const card = (...k) => h("div", { className: "card" }, ...k);
+const mut = (t) => h("div", { className: "mut" }, t);
+const num = (n) => (n == null ? "-" : Number(n).toLocaleString());
+const day = (s) => String(s || "").slice(0, 10);
+const token = () => localStorage.getItem("levana_token");
+
+async function api(path, raw) {
+  const r = await fetch(path.startsWith("http") ? path : API + path, {
+    headers: { Authorization: "Bearer " + token(), Accept: "application/vnd.github+json" }
+  });
+  if (r.status === 401) throw { code: "auth" };
+  if (r.status === 429 || (r.status === 403 && r.headers.get("x-ratelimit-remaining") === "0")) throw { code: "rate" };
+  if (r.status === 403) throw { code: "auth" };
+  if (r.status === 404) throw { code: "404" };
+  if (!r.ok) throw { code: "http", status: r.status };
+  return r.json();
+}
+const get = (key, fn) => cache[key] || (cache[key] = fn());
+const ref = () => "?ref=" + encodeURIComponent(st.branch);
+const dir = (p) => get("d" + p, () => api("/contents/" + p + ref()).then((l) => l.filter((x) => x.type === "file")));
+const text = (p) => get("f" + p, () => api("/contents/" + encodeURI(p) + ref()).then((j) =>
+  new TextDecoder().decode(Uint8Array.from(atob(j.content), (c) => c.charCodeAt(0)))));
+const issues = () => get("i", () => api("/issues?state=all&per_page=100").then((l) => l.filter((i) => !i.pull_request)));
+const commits = () => get("c", () => api("/commits?sha=" + encodeURIComponent(st.branch) + "&per_page=10"));
+const mdFiles = async (d) => {
+  try { return await dir(d); } catch (e) { if (e.code === "404") return []; throw e; }
+};
+const texts = async (d) => {
+  const fs = (await mdFiles(d)).filter((f) => f.name.endsWith(".md"));
+  return Promise.all(fs.map(async (f) => ({ name: f.name.replace(/\.md$/, ""), md: await text(f.path) })));
+};
+const ws = () => get("ws", async () => {
+  const [r, a, l, is] = await Promise.all([texts("runs"), texts("agents"), texts("lessons"), issues()]);
+  const runs = r.map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
+  const agents = a.map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
+  const lessons = {};
+  for (const x of l) lessons[x.name] = KeshParse.countLessons(x.md);
+  return { runs, agents, lessons, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
+});
+
+function md(el, src) {
+  if (window.marked && window.DOMPurify) {
+    el.className = "md";
+    el.innerHTML = DOMPurify.sanitize(marked.parse(src), {
+      FORBID_TAGS: ["img", "svg", "iframe", "form", "style"], FORBID_ATTR: ["style"]
+    });
+  } else {
+    el.append(h("pre", src));
+  }
+  return el;
+}
+
+function tokenForm(msg) {
+  OUT.hidden = true;
+  const inp = h("input", { type: "password", placeholder: "github_pat_...", autocomplete: "off" });
+  const f = h("form", {}, h("div", "วาง fine-grained PAT (read-only) ของ " + OWNER + "/" + REPO + " เก็บไว้ในเครื่องนี้เท่านั้น"), inp, h("button", { className: "on", textContent: "บันทึก" }));
+  f.onsubmit = (e) => {
+    e.preventDefault();
+    if (!inp.value.trim()) return;
+    localStorage.setItem("levana_token", inp.value.trim());
+    cache = {};
+    boot();
+  };
+  V.replaceChildren(...(msg ? [h("p", { className: "bad", textContent: msg })] : []), card(f));
+}
+
+function fail(e) {
+  if (e.code === "auth") return tokenForm("token ไม่ถูกต้องหรือไม่มีสิทธิ์ (401/403)");
+  const m = {
+    rate: "ชน rate limit ของ GitHub รอสักครู่แล้วลองใหม่",
+    404: "ไม่พบข้อมูล (404) ตรวจ repo / branch / สิทธิ์ของ token"
+  }[e.code] || "โหลดไม่สำเร็จ: " + (e.status || e.message || e.code || e);
+  V.replaceChildren(card(h("span", { className: "bad", textContent: m }), h("div", {}, h("button", { textContent: "ลองใหม่", onclick: () => { cache = {}; route(); } }))));
+}
+
+const empty = (t) => card(mut(t || "ไม่มีข้อมูล"));
+
+const views = {
+  async overview() {
+    const [w, cs] = await Promise.all([ws(), commits()]);
+    const open = w.issues.filter((i) => i.state === "open").length;
+    const latest = w.runs.slice().sort((a, b) => String(b.run_id).localeCompare(String(a.run_id))).slice(0, 5);
+    const kpi = (n, t) => card(h("div", { className: "big" }, String(n)), mut(t));
+    return [
+      h("div", { className: "kpis" }, kpi(open, "open issues"), kpi(w.runs.length, "runs")),
+      h("h2", "Run ล่าสุด"),
+      ...(latest.length ? latest.map((r) => card(
+        h("div", { className: "row" }, h("b", r.run_id), h("span", { className: "tag" }, r.status)),
+        mut("tokens " + num(r.tokens_total) + " · bounce " + r.bounce_count))) : [empty("ยังไม่มี run")]),
+      h("h2", "Commits ล่าสุด"),
+      ...(cs.length ? cs.map((c) => card(
+        h("div", c.commit.message.split("\n")[0]),
+        mut(c.sha.slice(0, 7) + " · " + c.commit.author.name + " · " + day(c.commit.author.date)))) : [empty()])
+    ];
+  },
+
+  async issues() {
+    const all = await issues();
+    if (st.issue != null) return issueDetail(all.find((i) => i.number === st.issue));
+    const tg = h("div", { className: "tabs" }, ...["open", "closed"].map((s) =>
+      h("button", { textContent: s, className: st.issueState === s ? "on" : "", onclick: () => { st.issueState = s; route(); } })));
+    const list = all.filter((i) => i.state === st.issueState);
+    return [tg, ...(list.length ? list.map((i) => {
+      const c = card(h("div", { className: "row" }, h("b", "#" + i.number + " " + i.title)), mut(i.user.login + " · " + day(i.created_at) + " · " + i.comments + " comments"));
+      c.className += " tap";
+      c.onclick = () => { st.issue = i.number; route(); };
+      return c;
+    }) : [empty("ไม่มี issue")])];
+  },
+
+  async stats() {
+    const { agg } = await ws();
+    const bars = (title, items, two) => {
+      const max = Math.max(1, ...items.map((x) => x.v));
+      return [h("h2", title), ...(items.length ? items.map((x) => h("div", { className: "bar" },
+        h("span", x.l), h("div", {}, h("i", { style: "width:" + (x.v / max) * 100 + "%" }), x.w == null ? null : h("i", { className: "b2", style: "width:" + (x.w / max) * 100 + "%" })),
+        h("span", x.w == null ? num(x.v) : x.v + " / " + x.w))) : [empty()])];
+    };
+    return [
+      ...bars("tokens ต่อ run", agg.g1.map((x) => ({ l: x.date || x.run_id, v: x.total || 0 }))),
+      ...bars("tokens ต่อ agent", agg.g2.map((x) => ({ l: x.agent, v: x.tokens }))),
+      ...bars("bounces ต่อ agent", agg.g3.map((x) => ({ l: x.agent, v: x.original + x.newCause }))),
+      ...bars("การใช้งาน (ฟ้า) เทียบ lessons (เหลือง)", agg.g5.map((x) => ({ l: x.agent, v: x.handoffs, w: x.lessons })))
+    ];
+  },
+
+  async files() {
+    const tabs = h("div", { className: "tabs" }, ...["runs", "plans", "research", "lessons", "agents"].map((f) =>
+      h("button", { textContent: f, className: st.folder === f ? "on" : "", onclick: () => { st.folder = f; st.file = null; route(); } })));
+    if (st.file) {
+      const body = h("div");
+      md(body, await text(st.file.path));
+      return [tabs, h("button", { className: "ghost", textContent: "← " + st.folder, onclick: () => { st.file = null; route(); } }), card(h("b", st.file.name), body)];
+    }
+    const fs = await mdFiles(st.folder);
+    return [tabs, ...(fs.length ? fs.map((f) => {
+      const c = card(f.name);
+      c.className += " tap";
+      c.onclick = () => { st.file = f; route(); };
+      return c;
+    }) : [empty("โฟลเดอร์ว่าง")])];
+  },
+
+  async agents() {
+    const { agents, lessons } = await ws();
+    return agents.length ? agents.map((a) => card(
+      h("div", { className: "row" }, h("b", a.name), h("span", { className: "tag" }, a.model || "-")),
+      h("div", a.description || ""),
+      mut("tools: " + KeshParse.parseList(a.tools).join(", ")),
+      mut("lessons: " + (lessons[a.name] || 0)))) : [empty("ไม่พบ agents")];
+  }
+};
+
+async function issueDetail(i) {
+  const back = h("button", { className: "ghost", textContent: "← issues", onclick: () => { st.issue = null; route(); } });
+  if (!i) return [back, empty("ไม่พบ issue")];
+  const cm = i.comments ? await get("m" + i.number, () => api("/issues/" + i.number + "/comments?per_page=100")) : [];
+  const body = h("div");
+  md(body, i.body || "_ไม่มีรายละเอียด_");
+  return [back, card(h("b", "#" + i.number + " " + i.title), mut(i.state + " · " + i.user.login), body),
+    ...cm.map((c) => { const b = h("div"); md(b, c.body || ""); return card(mut(c.user.login + " · " + day(c.created_at)), b); })];
+}
+
+async function route() {
+  const name = views[location.hash.slice(1)] ? location.hash.slice(1) : "overview";
+  document.querySelectorAll("#nav a").forEach((a) => a.classList.toggle("on", a.hash === "#" + name));
+  if (!token()) return tokenForm();
+  OUT.hidden = false;
+  const id = ++rid;
+  V.replaceChildren(mut("กำลังโหลด..."));
+  try {
+    const out = await views[name]();
+    if (id === rid) V.replaceChildren(...out);
+  } catch (e) {
+    if (id === rid) fail(e);
+  }
+}
+
+async function boot() {
+  if (!token()) return tokenForm();
+  try {
+    const bs = await api("/branches?per_page=100");
+    BR.replaceChildren(...bs.map((b) => h("option", { value: b.name, textContent: b.name, selected: b.name === st.branch })));
+    BR.hidden = false;
+  } catch (e) {
+    return fail(e);
+  }
+  route();
+}
+
+BR.onchange = () => { st.branch = BR.value; st.file = null; cache = {}; route(); };
+OUT.onclick = () => { localStorage.removeItem("levana_token"); cache = {}; BR.hidden = true; tokenForm(); };
+window.addEventListener("hashchange", route);
+boot();
