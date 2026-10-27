@@ -1,0 +1,34 @@
+:root{--bg:#fafafa;--fg:#1c1c1e;--mut:#6b6b70;--card:#fff;--line:#e2e2e6;--ac:#4b5fd6;--bar:#4b5fd6;--bar2:#e0a030;--bad:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--card:#1e1e22;--line:#32323a;--ac:#8c9bff;--bar:#8c9bff;--bar2:#e0b050;--bad:#ff7b6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+header{display:flex;gap:8px;align-items:center;padding:10px 12px}
+header b{flex:1}
+nav{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);padding:0 8px}
+nav a{padding:8px 12px;color:var(--mut);text-decoration:none;white-space:nowrap}
+nav a.on{color:var(--ac);border-bottom:2px solid var(--ac)}
+main{padding:12px;max-width:760px;margin:0 auto}
+h2{font-size:1.05rem;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;overflow-wrap:anywhere}
+.card.tap{cursor:pointer}
+.row{display:flex;gap:8px;justify-content:space-between;align-items:baseline}
+.mut{color:var(--mut);font-size:.85rem}
+.big{font-size:1.8rem;font-weight:600}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tag{font-size:.75rem;border:1px solid var(--line);border-radius:10px;padding:0 8px}
+.bad{color:var(--bad)}
+button,select,input{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+button{cursor:pointer}
+button.on{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+button.ghost{background:none}
+header select{max-width:40vw}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+form{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(70px,30%) 1fr auto;gap:6px;align-items:center;margin:4px 0;font-size:.85rem}
+.bar i{display:block;height:10px;border-radius:5px;background:var(--bar);min-width:2px}
+.bar i.b2{background:var(--bar2)}
+.md{overflow-wrap:anywhere}
+.md pre,pre{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px;white-space:pre-wrap}
+.md table{border-collapse:collapse;display:block;overflow-x:auto}
+.md td,.md th{border:1px solid var(--line);padding:3px 6px}
+.md a{color:var(--ac)}

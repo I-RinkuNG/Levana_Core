@@ -1,0 +1,8 @@
+{"ccr":{"data":[
+{"created_at":"2026-01-01T00:00:01Z","user":{"uuid":"u1","internal_anthropic_catchall":{"message":{"role":"user","content":"ทำต่อ"},"origin":{"kind":"human"},"timestamp":"2026-01-01T00:00:01Z"}}},
+{"created_at":"2026-01-01T00:00:02Z","assistant":{"uuid":"u2","internal_anthropic_catchall":{"message":{"role":"assistant","content":[{"type":"thinking","text":"hmm"},{"type":"text","text":"dispatching"},{"type":"tool_use","name":"Agent","input":{"subagent_type":"bona","description":"plan the thing"}}]},"timestamp":"2026-01-01T00:00:02Z"}}},
+{"created_at":"2026-01-01T00:00:03Z","assistant":{"uuid":"u3","internal_anthropic_catchall":{"message":{"role":"assistant","content":[{"type":"tool_use","name":"Bash","input":{"command":"ls"}}]}}}},
+{"created_at":"2026-01-01T00:00:04Z","user":{"uuid":"u4","internal_anthropic_catchall":{"message":{"role":"user","content":[{"type":"text","text":"plan done\nNEXT: kotev — build it"}]},"origin":{"kind":"peer","name":"bona","handback":true}}}},
+{"created_at":"2026-01-01T00:00:05Z","result":{"uuid":"u5","internal_anthropic_catchall":{"result":"all good\nNEXT: none"}}},
+{"created_at":"2026-01-01T00:00:06Z","weird":{"x":1}}
+],"has_more":false}}

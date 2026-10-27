@@ -1,0 +1,1 @@
+{"content":[{"type":"text","text":"Note [1]: here is data {not valid json}\n{\"meta\":{\"x\":1}}\n{\"issues\":[{\"number\":1,\"title\":\"Fake issue\",\"updated_at\":\"2026-01-01T00:00:00Z\"}],\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}\ntrailing prose }"}]}
