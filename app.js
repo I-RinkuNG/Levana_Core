@@ -2,7 +2,7 @@ const OWNER = "i-rinkung", REPO = "claude-dotfiles";
 const API = "https://api.github.com/repos/" + OWNER + "/" + REPO;
 const $ = (id) => document.getElementById(id);
 const V = $("v"), BR = $("branch"), OUT = $("logout");
-const st = { branch: "main", folder: "runs", file: null, issueState: "open", issue: null, q: "", f: "all", expiry: null };
+const st = { branch: "main", folder: "runs", file: null, issueState: "open", issue: null, q: "", f: "all" };
 const NAMES = ["today", "overview", "issues", "stats", "files", "agents"];
 let cache = {}, rid = 0;
 
@@ -29,7 +29,6 @@ async function api(path, raw) {
   const r = await fetch(path.startsWith("http") ? path : API + path, {
     headers: { Authorization: "Bearer " + token(), Accept: "application/vnd.github+json" }
   });
-  st.expiry = r.headers.get("github-authentication-token-expiration");
   if (r.status === 401) throw { code: "auth" };
   if (r.status === 429 || (r.status === 403 && r.headers.get("x-ratelimit-remaining") === "0")) throw { code: "rate" };
   if (r.status === 403) throw { code: "auth" };
@@ -258,14 +257,6 @@ async function issueDetail(i) {
     ...cm.map((c) => { const b = h("div"); md(b, c.body || ""); return card(mut(c.user.login + " · " + day(c.created_at)), b); })];
 }
 
-function showAlert() {
-  const A = $("alert"), d = KeshLogic.expiryDaysLeft(st.expiry, Date.now());
-  if (!KeshLogic.expiryWarn(st.expiry, Date.now())) return A.replaceChildren();
-  const t = d <= 0 ? "หมดอายุแล้ว" : d + " วัน";
-  A.replaceChildren(hud("ALERT // TOKEN EXPIRY", tag(t, "warn"), [h("div", { className: "alert-b" },
-    h("p", {}, h("strong", "GitHub token ใกล้หมดอายุ "), "หมดอายุ " + st.expiry + " ต่ออายุแล้ววาง token ใหม่เพื่อให้ dashboard อ่านข้อมูลได้ต่อ"))], "warn alert"));
-}
-
 async function route() {
   const name = views[location.hash.slice(1)] ? location.hash.slice(1) : "today";
   document.querySelectorAll("#nav a").forEach((a) => a.classList.toggle("on", a.hash === "#" + name));
@@ -275,7 +266,7 @@ async function route() {
   V.replaceChildren(mut("กำลังโหลด..."));
   try {
     const out = await views[name]();
-    if (id === rid) { V.replaceChildren(h("div", { className: "page " + name }, ...out)); showAlert(); }
+    if (id === rid) { V.replaceChildren(h("div", { className: "page " + name }, ...out)); }
   } catch (e) {
     if (id === rid) fail(e);
   }

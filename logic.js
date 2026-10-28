@@ -19,15 +19,6 @@ const KeshLogic = (() => {
     }
     return Object.keys(m).map((k) => Object.assign(m[k], { rate: m[k].rejects / m[k].handoffs })).sort((a, b) => b.rate - a.rate || b.rejects - a.rejects);
   };
-  const expiryDaysLeft = (header, now) => {
-    if (!header) return null;
-    const t = Date.parse(String(header).replace(" UTC", "Z").replace(" ", "T"));
-    return Number.isNaN(t) ? null : Math.ceil((t - now) / 86400000);
-  };
-  const expiryWarn = (header, now) => {
-    const d = expiryDaysLeft(header, now);
-    return d != null && d <= 7;
-  };
-  return { TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates, expiryDaysLeft, expiryWarn };
+  return { TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;

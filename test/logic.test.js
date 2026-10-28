@@ -32,13 +32,3 @@ test("rejectRates counts bounce rows per agent", () => {
   assert.deepEqual(r[0], { agent: "rosh", handoffs: 2, rejects: 1, rate: 0.5 });
   assert.equal(r[1].rate, 0);
 });
-
-test("expiry warns at <= 7 days only", () => {
-  const now = Date.parse("2026-10-28T00:00:00Z");
-  assert.equal(L.expiryDaysLeft("2026-10-31 00:00:00 UTC", now), 3);
-  assert.ok(L.expiryWarn("2026-11-04 00:00:00 UTC", now));
-  assert.ok(!L.expiryWarn("2026-11-05 00:00:01 UTC", now));
-  assert.ok(L.expiryWarn("2026-10-20 00:00:00 UTC", now));
-  assert.ok(!L.expiryWarn(null, now));
-  assert.ok(!L.expiryWarn("garbage", now));
-});
