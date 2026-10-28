@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="th" data-theme="ark" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Levana Core / Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+Thai:wght@500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<script>
+/* set theme/mode before paint: stored value, else system */
+(function(){var r=document.documentElement,t,m;
+try{t=localStorage.getItem('lv-theme');m=localStorage.getItem('lv-mode')}catch(e){}
+if(!/^(ark|czn|mix)$/.test(t))t='ark';
+if(!/^(light|dark)$/.test(m))m=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+r.dataset.theme=t;r.dataset.mode=m})();
+</script>
+<style>
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:var(--text-md)/1.55 var(--font-ui)}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--font-mono)}
+.label{font:500 var(--text-xs)/1 var(--font-mono);letter-spacing:var(--label-tracking);text-transform:uppercase;color:var(--fg-muted)}
+.muted{color:var(--fg-muted)}
+
+/* top bar */
+.topbar{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;padding:var(--space-3) var(--space-4);border-bottom:var(--bw) solid var(--border);background:var(--surface)}
+.brand{display:flex;align-items:baseline;gap:var(--space-2);margin-right:auto}
+.brand b{font:600 var(--text-lg)/1 var(--font-display)}
+.seg{display:inline-flex;border:var(--bw) solid var(--border-strong);border-radius:var(--radius)}
+.seg button{background:none;border:0;padding:6px 10px;min-height:32px;cursor:pointer;font:500 var(--text-xs)/1 var(--font-mono);letter-spacing:var(--label-tracking);text-transform:uppercase;color:var(--fg-muted);transition:background var(--dur),color var(--dur)}
+.seg button+button{border-left:var(--bw) solid var(--border)}
+.seg button:hover{background:var(--surface-2);color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+nav.tabs{display:flex;overflow-x:auto;padding:0 var(--space-3);border-bottom:var(--bw) solid var(--border);background:var(--surface)}
+nav.tabs a{padding:10px var(--space-3);color:var(--fg-muted);text-decoration:none;white-space:nowrap;font-size:var(--text-sm);border-bottom:2px solid transparent;transition:color var(--dur)}
+nav.tabs a:hover{color:var(--fg)}
+nav.tabs a[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* layout: 1 column, 2 columns >= 1024 */
+main{max-width:1200px;margin:0 auto;padding:var(--space-4);display:grid;gap:var(--space-4)}
+.col{display:grid;gap:var(--space-4);align-content:start;min-width:0}
+@media(min-width:1024px){main{grid-template-columns:minmax(0,3fr) minmax(0,2fr);padding:var(--space-5)}.span{grid-column:1/-1}}
+h2{margin:0;font:600 var(--text-md)/1.3 var(--font-display)}
+
+/* HUD frame: cut corners (top-left, bottom-right), brackets on the opposite corners, head bar */
+.hud{--c:var(--cut);position:relative;background:var(--border-strong);padding:var(--bw);
+  clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.hud>.in{position:relative;background:var(--surface);height:100%;
+  clip-path:polygon(calc(var(--c) - .42px) 0,100% 0,100% calc(100% - var(--c) + .42px),calc(100% - var(--c) + .42px) 100%,0 100%,0 calc(var(--c) - .42px))}
+.hud>.in::before,.hud>.in::after{content:"";position:absolute;width:10px;height:10px;border:2px solid var(--accent);pointer-events:none}
+.hud>.in::before{top:5px;right:5px;border-left:0;border-bottom:0}
+.hud>.in::after{bottom:5px;left:5px;border-right:0;border-top:0}
+.hud-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);padding:6px 24px 6px calc(var(--cut) + 4px);background:var(--surface-2);border-bottom:var(--bw) solid var(--border)}
+.hud-body{padding:var(--space-3) var(--space-4) var(--space-4)}
+.hud.danger{background:var(--danger)}.hud.danger>.in::before,.hud.danger>.in::after{border-color:var(--danger)}
+.hud.warn{background:var(--warn)}.hud.warn>.in::before,.hud.warn>.in::after{border-color:var(--warn)}
+
+/* plain card (non-HUD) */
+.card{background:var(--surface);border:var(--bw) solid var(--border);border-radius:var(--radius)}
+.card>.hud-head{padding:6px var(--space-3)}
+
+/* alert */
+.alert .hud-body{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
+.alert strong{color:var(--warn)}
+.alert p{margin:0;flex:1;min-width:200px}
+
+/* buttons */
+.btn{min-height:36px;padding:6px 14px;border:var(--bw) solid var(--border-strong);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-size:var(--text-sm);transition:background var(--dur),border-color var(--dur)}
+.btn:hover{background:var(--surface-2);border-color:var(--fg-muted)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+@media(min-width:640px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi .hud-body{padding-top:var(--space-2)}
+.kpi .v{font:500 var(--text-xl)/1.1 var(--font-mono);margin:var(--space-2) 0 var(--space-1)}
+.kpi .v small{font-size:var(--text-sm);color:var(--fg-muted);margin-left:2px}
+.kpi .sub{font-size:var(--text-xs)}
+.meter{height:6px;background:var(--surface-2);border:var(--bw) solid var(--border);margin-top:var(--space-2)}
+.meter>i{display:block;height:100%;background:var(--accent)}
+
+/* bar chart (horizontal, one hue; top agent highlighted) */
+.bars{display:grid;gap:var(--space-2);margin:0;padding:0;list-style:none}
+.bars li{display:grid;grid-template-columns:64px 1fr 74px;gap:var(--space-2);align-items:center;font-size:var(--text-sm)}
+.bars .n{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--fg-muted)}
+.bars .t{height:12px;background:var(--surface-2);border:var(--bw) solid var(--border)}
+.bars .t>i{display:block;height:100%;background:var(--accent);opacity:.55;transition:width var(--dur)}
+.bars li.top .t>i{opacity:1}
+.bars .p{font-family:var(--font-mono);font-size:var(--text-xs);text-align:right}
+.bars li.hide{display:none}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.search{flex:1;min-width:180px;min-height:36px;padding:6px 10px;background:var(--surface);border:var(--bw) solid var(--border-strong);border-radius:var(--radius)}
+.search::placeholder{color:var(--fg-muted)}
+
+/* list rows */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-3);align-items:baseline;padding:10px var(--space-4);border-top:var(--bw) solid var(--border);transition:background var(--dur)}
+.list li:first-child{border-top:0}
+.list li:hover{background:var(--surface-2)}
+.list li[hidden]{display:none}
+.list .id{font:500 var(--text-sm)/1 var(--font-mono);color:var(--accent)}
+.list .ttl{overflow-wrap:anywhere}
+.list .meta{font:var(--text-xs)/1.3 var(--font-mono);color:var(--fg-muted)}
+.empty{padding:var(--space-4);color:var(--fg-muted);font-size:var(--text-sm)}
+
+/* tags */
+.tag{display:inline-block;padding:2px 8px;border:var(--bw) solid currentColor;border-radius:var(--radius);font:500 var(--text-xs)/1.4 var(--font-mono);letter-spacing:var(--label-tracking);text-transform:uppercase;white-space:nowrap}
+.tag.ok{color:var(--ok)}.tag.warn{color:var(--warn)}.tag.bad{color:var(--danger)}.tag.info{color:var(--accent)}
+
+/* dialog */
+dialog{padding:0;border:0;background:none;color:var(--fg);max-width:min(440px,calc(100vw - 32px));width:100%;overflow:visible}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+dialog .hud-body{display:grid;gap:var(--space-3)}
+dialog p{margin:0}
+.actions{display:flex;gap:var(--space-2);justify-content:flex-end}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Levana Core</b><span class="label">SYS // TODAY</span></div>
+  <div class="seg" role="group" aria-label="ธีม" id="themes">
+    <button type="button" data-theme-set="ark" aria-pressed="false">Ark</button>
+    <button type="button" data-theme-set="czn" aria-pressed="false">Czn</button>
+    <button type="button" data-theme-set="mix" aria-pressed="false">Mix</button>
+  </div>
+  <button type="button" class="btn" id="mode" aria-label="สลับโหมดสว่าง/มืด"><span class="label" id="modeLbl">MODE</span></button>
+</header>
+<nav class="tabs" aria-label="หน้า">
+  <a href="#today" aria-current="page">วันนี้</a><a href="#overview">ภาพรวม</a><a href="#issues">Issues</a><a href="#stats">สถิติ</a><a href="#files">ไฟล์</a><a href="#agents">Agents</a>
+</nav>
+
+<main id="today">
+  <section class="span hud warn alert" aria-label="แจ้งเตือน"><div class="in">
+    <div class="hud-head"><span class="label">ALERT // TOKEN EXPIRY</span><span class="tag warn">3 วัน</span></div>
+    <div class="hud-body">
+      <p><strong>GitHub token ใกล้หมดอายุ</strong> หมดอายุ 31 ต.ค. 2026 (อีก 3 วัน) ต่ออายุก่อนวันนั้นเพื่อให้ dashboard อ่านข้อมูลได้ต่อเนื่อง</p>
+      <button type="button" class="btn primary" id="openDlg">ดูวิธีต่ออายุ</button>
+    </div>
+  </div></section>
+
+  <section class="span kpis" aria-label="ตัวเลขสำคัญ">
+    <article class="hud kpi"><div class="in"><div class="hud-head"><span class="label">TOKEN // 5H</span><span class="label">01</span></div><div class="hud-body">
+      <div class="v" id="kPct">0<small>%</small></div><div class="sub muted" id="kTok"></div><div class="meter" role="img" aria-label="ใช้ไปแล้ว"><i id="kMeter" style="width:0"></i></div></div></div></article>
+    <article class="hud kpi"><div class="in"><div class="hud-head"><span class="label">ISSUES // OPEN</span><span class="label">02</span></div><div class="hud-body">
+      <div class="v">4</div><div class="sub muted">ค้างข้าม session</div></div></div></article>
+    <article class="hud kpi"><div class="in"><div class="hud-head"><span class="label">RUNS // TODAY</span><span class="label">03</span></div><div class="hud-body">
+      <div class="v">9</div><div class="sub muted">เสร็จ 7 · กำลังทำ 2</div></div></div></article>
+    <article class="hud kpi"><div class="in"><div class="hud-head"><span class="label">REJECT // RATE</span><span class="label">04</span></div><div class="hud-body">
+      <div class="v">22<small>%</small></div><div class="sub muted">ตีกลับ 2 จาก 9 ครั้ง</div></div></div></article>
+  </section>
+
+  <div class="span toolbar" role="search">
+    <label class="sr" for="q">ค้นหา</label>
+    <input class="search" id="q" type="search" placeholder="ค้นหา issue, run, agent ...">
+    <div class="seg" role="group" aria-label="กรอง" id="flt">
+      <button type="button" data-f="all" aria-pressed="true">All</button>
+      <button type="button" data-f="open" aria-pressed="false">Open</button>
+      <button type="button" data-f="reject" aria-pressed="false">Rejected</button>
+    </div>
+  </div>
+
+  <div class="col">
+    <section class="card" aria-labelledby="hBars">
+      <div class="hud-head"><h2 id="hBars">Token ต่อ agent วันนี้</h2><span class="label">1% ≈ 15K</span></div>
+      <div class="hud-body"><ul class="bars" id="bars"></ul></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="card" aria-labelledby="hIss">
+      <div class="hud-head"><h2 id="hIss">Issues ที่เปิดอยู่</h2><span class="label" id="cIss"></span></div>
+      <ul class="list" id="issues"></ul><div class="empty" id="eIss" hidden>ไม่พบรายการที่ตรงกับคำค้น</div>
+    </section>
+    <section class="card" aria-labelledby="hRun">
+      <div class="hud-head"><h2 id="hRun">Run ล่าสุด</h2><span class="label" id="cRun"></span></div>
+      <ul class="list" id="runs"></ul><div class="empty" id="eRun" hidden>ไม่พบรายการที่ตรงกับคำค้น</div>
+    </section>
+  </div>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgT"><div class="hud warn"><div class="in">
+  <div class="hud-head"><span class="label" id="dlgT">DIALOG // RENEW TOKEN</span><span class="tag warn">3 วัน</span></div>
+  <div class="hud-body">
+    <p>ต่ออายุ token ใน GitHub Settings แล้ววาง token ใหม่ในหน้านี้ ข้อมูลเดิมไม่หาย</p>
+    <div class="actions"><button type="button" class="btn" id="dlgX">ภายหลัง</button><button type="button" class="btn primary" id="dlgOk">รับทราบ</button></div>
+  </div>
+</div></div></dialog>
+
+<script>
+(function(){
+var R=document.documentElement;
+var DATA={
+  agents:[['rosh',120],['kotev',96],['tzayar',80],['cheker',45],['bochek',41],['bona',38],['amet',30],['zekher',22],['oseh',18],['tak',12]], // k tokens
+  issues:[['#59','เลือก web-design-guidelines ให้ Levana','open','tzayar'],['#53','Cheker อ่านโพสต์ FB ผ่าน browser ในตัวไม่ได้','open','cheker'],['#52','Zekher รวม lesson ซ้ำซ้อน','open','zekher'],['#44','ตั้งเตือนวันหมดอายุของ token','open','kotev']],
+  runs:[['2026-10-28-levana-redesign','tzayar','กำลังทำ','warn'],['2026-10-28-design-research','rosh','เสร็จ','ok'],['2026-10-27-parse-fix','kotev','ตีกลับ 1','bad'],['2026-10-27-parse-fix-qa','bochek','เสร็จ','ok'],['2026-10-26-lessons-merge','zekher','ตีกลับ 1','bad']]
+};
+var total=DATA.agents.reduce(function(s,a){return s+a[1]},0), pct=total/15;
+function $(i){return document.getElementById(i)}
+// KPI + bars
+$('kPct').innerHTML=pct.toFixed(1)+'<small>%</small>';
+$('kTok').textContent=total+'K จาก 1,500K ใน 5 ชม.';
+$('kMeter').style.width=Math.min(100,pct)+'%';
+$('bars').innerHTML=DATA.agents.map(function(a,i){var max=DATA.agents[0][1];
+ return '<li data-q="'+a[0]+'"'+(i===0?' class="top"':'')+'><span class="n">'+a[0]+'</span><span class="t"><i style="width:'+(a[1]/max*100)+'%"></i></span><span class="p">'+(a[1]/15).toFixed(1)+'% · '+a[1]+'K</span></li>'}).join('');
+$('issues').innerHTML=DATA.issues.map(function(x){return '<li data-q="'+(x[0]+' '+x[1]+' '+x[3]).toLowerCase()+'" data-k="open"><span class="id">'+x[0]+'</span><span class="ttl">'+x[1]+'</span><span class="tag info">'+x[3]+'</span></li>'}).join('');
+$('runs').innerHTML=DATA.runs.map(function(x){return '<li data-q="'+(x[0]+' '+x[1]+' '+x[2]).toLowerCase()+'" data-k="'+(x[3]==='bad'?'reject':x[3]==='warn'?'open':'done')+'"><span class="id">'+x[1]+'</span><span class="ttl mono" style="font-size:var(--text-sm)">'+x[0]+'</span><span class="tag '+x[3]+'">'+x[2]+'</span></li>'}).join('');
+// search + filter
+var f='all';
+function apply(){var q=$('q').value.trim().toLowerCase();
+ [['issues','eIss','cIss'],['runs','eRun','cRun']].forEach(function(p){var n=0,l=$(p[0]).children;
+  for(var i=0;i<l.length;i++){var ok=(!q||l[i].dataset.q.indexOf(q)>-1)&&(f==='all'||l[i].dataset.k===f);l[i].hidden=!ok;if(ok)n++}
+  $(p[1]).hidden=n>0;$(p[2]).textContent=n+' / '+l.length})}
+$('q').addEventListener('input',apply);
+$('flt').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;f=b.dataset.f;
+ [].forEach.call($('flt').children,function(x){x.setAttribute('aria-pressed',x===b)});apply()});
+apply();
+// theme + mode
+function sync(){[].forEach.call($('themes').children,function(b){b.setAttribute('aria-pressed',b.dataset.themeSet===R.dataset.theme)});
+ $('modeLbl').textContent=R.dataset.mode==='dark'?'DARK':'LIGHT'}
+function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+$('themes').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;R.dataset.theme=b.dataset.themeSet;save('lv-theme',R.dataset.theme);sync()});
+$('mode').addEventListener('click',function(){R.dataset.mode=R.dataset.mode==='dark'?'light':'dark';save('lv-mode',R.dataset.mode);sync()});
+sync();
+// dialog
+var d=$('dlg');function cl(){if(d.close)d.close()}
+$('openDlg').addEventListener('click',function(){if(d.showModal)d.showModal()});
+$('dlgX').addEventListener('click',cl);$('dlgOk').addEventListener('click',cl);
+})();
+</script>
+</body>
+</html>

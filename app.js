@@ -2,7 +2,8 @@ const OWNER = "i-rinkung", REPO = "claude-dotfiles";
 const API = "https://api.github.com/repos/" + OWNER + "/" + REPO;
 const $ = (id) => document.getElementById(id);
 const V = $("v"), BR = $("branch"), OUT = $("logout");
-const st = { branch: "main", folder: "runs", file: null, issueState: "open", issue: null };
+const st = { branch: "main", folder: "runs", file: null, issueState: "open", issue: null, q: "", f: "all" };
+const NAMES = ["today", "overview", "issues", "stats", "files", "agents"];
 let cache = {}, rid = 0;
 
 const h = (tag, a, ...kids) => {
@@ -17,6 +18,12 @@ const mut = (t) => h("div", { className: "mut" }, t);
 const num = (n) => (n == null ? "-" : Number(n).toLocaleString());
 const day = (s) => String(s || "").slice(0, 10);
 const token = () => localStorage.getItem("levana_token");
+const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const hud = (label, tag, body, cls) => h("section", { className: "hud " + (cls || "") },
+  h("div", { className: "in" }, h("div", { className: "hud-head" }, h("span", { className: "label" }, label), tag || null), h("div", { className: "hud-body" }, ...[].concat(body))));
+const panel = (title, count, ...kids) => h("section", { className: "panel" },
+  h("div", { className: "hud-head" }, h("h2", title), typeof count === "string" ? h("span", { className: "label" }, count) : count), ...kids);
+const tag = (t, k) => h("span", { className: "tag " + (k || "info") }, t);
 
 async function api(path, raw) {
   const r = await fetch(path.startsWith("http") ? path : API + path, {
@@ -49,7 +56,7 @@ const ws = () => get("ws", async () => {
   const agents = a.map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
   const lessons = {};
   for (const x of l) lessons[x.name] = KeshParse.countLessons(x.md);
-  return { runs, agents, lessons, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
+  return { runs, agents, lessons, lessonTexts: l, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
 });
 
 function md(el, src) {
@@ -89,7 +96,80 @@ function fail(e) {
 
 const empty = (t) => card(mut(t || "ไม่มีข้อมูล"));
 
+const bars = (items, fmt) => {
+  const max = Math.max(1, ...items.map((x) => x.v));
+  return h("ul", { className: "bars" }, ...items.map((x, i) => h("li", { className: i === 0 ? "top" : "" },
+    h("span", { className: "n", title: x.l }, x.l), h("span", { className: "t" }, h("i", { style: "width:" + (x.v / max) * 100 + "%" })), h("span", { className: "p" }, fmt(x)))));
+};
+const pad = (...k) => h("div", { className: "hud-body" }, ...k);
+const ptxt = (v) => v.toFixed(1) + "% · " + Math.round(v * 15) + "K";
+
 const views = {
+  async today() {
+    const w = await ws();
+    const day0 = todayStr();
+    const runsToday = w.runs.filter((r) => KeshLogic.isToday(r, day0));
+    const used = runsToday.reduce((s, r) => s + (r.tokens_total || 0), 0);
+    const pct = KeshLogic.pct5h(used);
+    const open = w.issues.filter((i) => i.state === "open");
+    const latest = w.runs.slice().sort((a, b) => String(b.run_id).localeCompare(String(a.run_id))).slice(0, 8);
+    const rej = runsToday.reduce((s, r) => s + (r.bounce_count || 0), 0);
+    const hs = runsToday.reduce((s, r) => s + (r.handoffs || []).length, 0);
+    const done = runsToday.filter((r) => r.status === "done").length;
+    const kpi = (lbl, n, i, v, sub, extra) => hud(lbl, h("span", { className: "label" }, "0" + i), [
+      h("div", { className: "v" }, String(v), n ? h("small", n) : null), h("div", { className: "sub" }, sub), extra], "kpi");
+    const perAgent = KeshLogic.tokensByAgent(runsToday, KeshParse.computeTokens);
+    const rr = KeshLogic.rejectRates(w.runs).filter((x) => x.rejects > 0);
+    const q = h("input", { className: "search", id: "q", type: "search", placeholder: "ค้นหา issue, run, lesson ...", value: st.q });
+    const seg = h("div", { className: "seg", role: "group", ariaLabel: "กรอง" }, ...[["all", "All"], ["open", "Open"], ["reject", "Rejected"]].map(([k, t]) =>
+      h("button", { type: "button", textContent: t, className: st.f === k ? "on" : "", onclick: () => { st.f = k; apply(); } })));
+    const issUl = h("ul", { className: "list" }), runUl = h("ul", { className: "list" }), lesUl = h("ul", { className: "list" });
+    const cIss = h("span", { className: "label" }), cRun = h("span", { className: "label" }), cLes = h("span", { className: "label" });
+    const eIss = h("div", { className: "empty" }, "ไม่พบรายการ"), eRun = h("div", { className: "empty" }, "ไม่พบรายการ"), eLes = h("div", { className: "empty" }, "ไม่พบรายการ");
+    const items = (ul, rows, mk) => rows.map((x) => { const li = mk(x); li.dataset.q = x.q.toLowerCase(); li.dataset.k = x.k; ul.append(li); return li; });
+    const iLi = items(issUl, open.map((i) => ({ q: "#" + i.number + " " + i.title + " " + i.user.login, k: "open", i })), (x) =>
+      h("li", {}, h("span", { className: "id" }, "#" + x.i.number), h("span", x.i.title), tag(x.i.user.login)));
+    const rLi = items(runUl, latest.map((r) => ({ q: r.run_id + " " + r.status, k: r.bounce_count > 0 ? "reject" : r.status === "done" ? "done" : "open", r })), (x) =>
+      h("li", {}, h("span", { className: "id" }, x.r.status || "-"), h("span", { className: "meta" }, x.r.run_id + " · " + num(x.r.tokens_total) + " tok"),
+        x.r.bounce_count > 0 ? tag("ตีกลับ " + x.r.bounce_count, "bad") : tag(x.r.status === "done" ? "ok" : "open", x.r.status === "done" ? "ok" : "warn")));
+    const lLi = items(lesUl, w.lessonTexts.map((x) => ({ q: x.name + " " + x.md, k: "lesson", x })), (x) =>
+      h("li", {}, h("span", { className: "id" }, x.x.name), h("span", { className: "meta" }, "lessons " + (w.lessons[x.x.name] || 0)), tag("lesson")));
+    function apply() {
+      const t = q.value.trim().toLowerCase();
+      st.q = q.value;
+      [...seg.children].forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase().startsWith(st.f)));
+      for (const [li, ul, e, c, lesson] of [[iLi, issUl, eIss, cIss], [rLi, runUl, eRun, cRun], [lLi, lesUl, eLes, cLes, 1]]) {
+        let n = 0;
+        li.forEach((el) => {
+          const ok = (!t || el.dataset.q.includes(t)) && (st.f === "all" ? !lesson || !!t : st.f === el.dataset.k);
+          el.hidden = !ok;
+          if (ok) n++;
+        });
+        e.hidden = n > 0;
+        c.textContent = n + " / " + li.length;
+        if (lesson) lesUl.parentNode.hidden = !t || st.f !== "all";
+      }
+    }
+    q.oninput = apply;
+    const out = [
+      h("div", { className: "span kpis" },
+        kpi("TOKEN // 5H", "%", 1, pct.toFixed(1), num(used) + " จาก 1,500,000 ใน 5 ชม.", h("div", { className: "meter", role: "img", ariaLabel: "ใช้ไปแล้ว " + pct.toFixed(1) + "%" }, h("i", { style: "width:" + Math.min(100, pct) + "%" }))),
+        kpi("ISSUES // OPEN", null, 2, open.length, "ค้างข้าม session"),
+        kpi("RUNS // TODAY", null, 3, runsToday.length, "เสร็จ " + done + " · ยังไม่เสร็จ " + (runsToday.length - done)),
+        kpi("REJECT // RATE", "%", 4, hs ? Math.round((rej / hs) * 100) : 0, "ตีกลับ " + rej + " จาก " + hs + " ครั้ง")),
+      h("div", { className: "span toolbar", role: "search" }, h("label", { className: "sr", htmlFor: "q" }, "ค้นหา"), q, seg),
+      h("div", { className: "col" },
+        panel("Token ต่อ agent วันนี้", "1% ≈ 15K", perAgent.length ? pad(bars(perAgent.map((x) => ({ l: x.agent, v: x.tokens })), (x) => ptxt(KeshLogic.pct5h(x.v)))) : empty("ยังไม่มี token วันนี้")),
+        panel("อัตราตีกลับต่อ agent", "ทุก run", rr.length ? pad(bars(rr.map((x) => ({ l: x.agent, v: x.rate })), (x) => Math.round(x.v * 100) + "% · " + rr.find((y) => y.agent === x.l).rejects + "/" + rr.find((y) => y.agent === x.l).handoffs)) : empty("ไม่มีการตีกลับ"))),
+      h("div", { className: "col" },
+        panel("Issues ที่เปิดอยู่", cIss, issUl, eIss),
+        panel("Run ล่าสุด", cRun, runUl, eRun),
+        panel("Lessons", cLes, lesUl, eLes))
+    ];
+    apply();
+    return out;
+  },
+
   async overview() {
     const [w, cs] = await Promise.all([ws(), commits()]);
     const open = w.issues.filter((i) => i.state === "open").length;
@@ -123,7 +203,8 @@ const views = {
   },
 
   async stats() {
-    const { agg } = await ws();
+    const { agg, runs } = await ws();
+    const rr = KeshLogic.rejectRates(runs);
     const bars = (title, items, two) => {
       const max = Math.max(1, ...items.map((x) => x.v));
       return [h("h2", title), ...(items.length ? items.map((x) => h("div", { className: "bar" },
@@ -133,6 +214,7 @@ const views = {
     return [
       ...bars("tokens ต่อ run", agg.g1.map((x) => ({ l: x.date || x.run_id, v: x.total || 0 }))),
       ...bars("tokens ต่อ agent", agg.g2.map((x) => ({ l: x.agent, v: x.tokens }))),
+      ...bars("อัตราตีกลับต่อ agent (%)", rr.map((x) => ({ l: x.agent, v: Math.round(x.rate * 100) }))),
       ...bars("bounces ต่อ agent", agg.g3.map((x) => ({ l: x.agent, v: x.original + x.newCause }))),
       ...bars("การใช้งาน (ฟ้า) เทียบ lessons (เหลือง)", agg.g5.map((x) => ({ l: x.agent, v: x.handoffs, w: x.lessons })))
     ];
@@ -176,7 +258,7 @@ async function issueDetail(i) {
 }
 
 async function route() {
-  const name = views[location.hash.slice(1)] ? location.hash.slice(1) : "overview";
+  const name = views[location.hash.slice(1)] ? location.hash.slice(1) : "today";
   document.querySelectorAll("#nav a").forEach((a) => a.classList.toggle("on", a.hash === "#" + name));
   if (!token()) return tokenForm();
   OUT.hidden = false;
@@ -184,7 +266,7 @@ async function route() {
   V.replaceChildren(mut("กำลังโหลด..."));
   try {
     const out = await views[name]();
-    if (id === rid) V.replaceChildren(...out);
+    if (id === rid) { V.replaceChildren(h("div", { className: "page " + name }, ...out)); }
   } catch (e) {
     if (id === rid) fail(e);
   }
@@ -202,6 +284,14 @@ async function boot() {
   route();
 }
 
+const R = document.documentElement, MODE = $("mode");
+const syncMode = () => { MODE.textContent = R.dataset.mode === "dark" ? "DARK" : "LIGHT"; };
+MODE.onclick = () => {
+  R.dataset.mode = R.dataset.mode === "dark" ? "light" : "dark";
+  try { localStorage.setItem("lv-mode", R.dataset.mode); } catch (e) {}
+  syncMode();
+};
+syncMode();
 BR.onchange = () => { st.branch = BR.value; st.file = null; cache = {}; route(); };
 OUT.onclick = () => { localStorage.removeItem("levana_token"); cache = {}; BR.hidden = true; tokenForm(); };
 window.addEventListener("hashchange", route);
