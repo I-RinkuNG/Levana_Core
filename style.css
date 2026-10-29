@@ -364,3 +364,4 @@ li:first-child>.frow{border-top:0}
 .filters{display:flex;flex-wrap:wrap;gap:var(--s2)}
 .sticky-none{position:static}
 h1:focus{outline:none}
+@media (min-width:600px){.chk>summary{display:none}}

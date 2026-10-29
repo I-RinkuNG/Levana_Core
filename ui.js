@@ -10,7 +10,7 @@ const KeshUI = (() => {
       if (k === "className" || k === "textContent" || k.startsWith("on")) e[k] = v;
       else e.setAttribute(k, v === true ? "" : v);
     }
-    for (const k of kids.flat()) if (k != null && k !== false) e.append(k);
+    for (const k of kids.flat(Infinity)) if (k != null && k !== false) e.append(k);
     return e;
   };
   const icon = (name, cls) => {
