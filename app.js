@@ -56,48 +56,57 @@ async function once(path, raw) {
   e.code = KeshLogic.classify({ status: r.status, retryAfter: e.retryAfter, remaining: rem, msg });
   throw e;
 }
-async function api(path, raw) {
+async function onceGql(vars) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000), path = "graphql";
+  let r;
+  try {
+    r = await fetch("https://api.github.com/graphql", {
+      method: "POST", signal: ctl.signal,
+      headers: { Authorization: "Bearer " + token(), "Content-Type": "application/json" },
+      body: JSON.stringify({ query: KeshLogic.GQL_QUERY, variables: vars })
+    });
+  } catch (x) {
+    throw x && x.name === "AbortError" ? { code: "timeout", path, message: "timeout 15s" } : { code: "network", path, message: String(x && x.message || x) };
+  } finally { clearTimeout(t); }
+  let body = {};
+  try { body = await r.json(); } catch (x) {}
+  const ra = r.headers.get("retry-after"), rem = r.headers.get("x-ratelimit-remaining");
+  const retryAfter = ra == null || isNaN(+ra) ? null : +ra;
+  let errors = body.errors;
+  if (!r.ok && !(errors && errors.length)) errors = [{ message: body.message || "" }];
+  if (r.ok && !(errors && errors.length)) return body.data;
+  const c = KeshLogic.classifyGql({ status: r.status, errors, retryAfter, remaining: rem });
+  throw { status: r.status, path, message: c.message, remaining: rem, retryAfter, code: c.code };
+}
+const retrying = async (fn) => {
   for (let n = 0; ; n++) {
-    try { return await once(path, raw); } catch (e) {
+    try { return await fn(); } catch (e) {
       const d = KeshLogic.retryDelay(e, n);
       if (d == null) { logErr(e); throw e; }
       await sleep(d);
     }
   }
-}
+};
+const api = (path, raw) => retrying(() => once(path, raw));
 const get = (key, fn) => KeshLogic.memo(cache, key, fn);
 const ref = () => "?ref=" + encodeURIComponent(st.branch);
 const dir = (p) => get("d" + p, () => api("/contents/" + p + ref()).then((l) => l.filter((x) => x.type === "file")));
 const text = (p) => get("f" + p, () => api("/contents/" + encodeURI(p) + ref(), true));
-const issues = () => get("i", () => api("/issues?state=all&per_page=100").then((l) => l.filter((i) => !i.pull_request)));
-const commits = () => get("c", () => api("/commits?sha=" + encodeURIComponent(st.branch) + "&per_page=10"));
+const snap = () => get("g", () => retrying(() => onceGql(KeshLogic.gqlVars(OWNER, REPO, st.branch))).then((d) => {
+  const m = KeshLogic.mapGraphql(d);
+  if (!m || !m.branchFound) throw { code: "404", path: "graphql", message: "repository or branch not found" };
+  return m;
+}));
+const issues = () => snap().then((m) => m.issues);
+const commits = () => snap().then((m) => m.commits);
 const mdFiles = async (d) => {
   try { return await dir(d); } catch (e) { if (e.code === "404") return []; throw e; }
 };
-let truncated = false;
-const tree = () => get("t", () => api("/git/trees/" + encodeURIComponent(st.branch) + "?recursive=1").then((t) =>
-  (truncated = !!t.truncated, t.tree).filter((x) => x.type === "blob" && /^(runs|agents|lessons)\/[^/]+\.md$/.test(x.path)).map((x) => x.path)));
 let partial = [];
-const pool = async (items, n, fn) => {
-  const out = new Array(items.length);
-  let i = 0;
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
-    while (i < items.length) {
-      const k = i++;
-      try { out[k] = { ok: true, v: await fn(items[k]) }; } catch (e) { out[k] = { ok: false, e }; }
-    }
-  }));
-  return out;
-};
 const ws = () => get("ws", async () => {
-  const [paths, is] = await Promise.all([tree(), issues()]);
-  const res = await pool(paths, 6, async (p) => ({ dir: p.split("/")[0], name: p.split("/")[1].replace(/\.md$/, ""), md: await text(p) }));
-  const bad = res.filter((x) => !x.ok);
-  const authErr = bad.find((x) => x.e && x.e.code === "auth");
-  if (authErr) throw authErr.e;
-  if (res.length > 0 && bad.length === res.length) throw bad[0].e;
-  partial = paths.filter((p, i) => !res[i].ok);
-  const got = res.filter((x) => x.ok).map((x) => x.v);
+  const m = await snap();
+  partial = m.partial;
+  const is = m.issues, got = m.files;
   const of = (d) => got.filter((x) => x.dir === d);
   const runs = of("runs").map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
   const agents = of("agents").map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
@@ -329,7 +338,7 @@ async function route() {
   try {
     const out = await views[name]();
     if (id === rid) {
-      const note = (partial.length || truncated) && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: [partial.length ? "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") : "", truncated ? "รายการไฟล์ไม่ครบ (tree truncated)" : ""].filter(Boolean).join(" | ") })] : [];
+      const note = partial.length && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") })] : [];
       V.replaceChildren(h("div", { className: "page " + name }, ...note, ...out));
     }
   } catch (e) {
