@@ -25,36 +25,78 @@ const panel = (title, count, ...kids) => h("section", { className: "panel" },
   h("div", { className: "hud-head" }, h("h2", title), typeof count === "string" ? h("span", { className: "label" }, count) : count), ...kids);
 const tag = (t, k) => h("span", { className: "tag " + (k || "info") }, t);
 
-async function api(path, raw) {
-  const r = await fetch(path.startsWith("http") ? path : API + path, {
-    headers: { Authorization: "Bearer " + token(), Accept: "application/vnd.github+json" }
-  });
-  if (r.status === 401) throw { code: "auth" };
-  if (r.status === 429 || (r.status === 403 && r.headers.get("x-ratelimit-remaining") === "0")) throw { code: "rate" };
-  if (r.status === 403) throw { code: "auth" };
-  if (r.status === 404) throw { code: "404" };
-  if (!r.ok) throw { code: "http", status: r.status };
-  return r.json();
+const LOGKEY = "levana_errlog";
+const readLog = () => { try { return JSON.parse(localStorage.getItem(LOGKEY)) || []; } catch (e) { return []; } };
+const logErr = (e) => {
+  try {
+    localStorage.setItem(LOGKEY, JSON.stringify(KeshLogic.pushLog(readLog(), {
+      time: new Date().toISOString(), path: e.path, status: e.status || null, code: e.code,
+      remaining: e.remaining == null ? null : e.remaining, retryAfter: e.retryAfter == null ? null : e.retryAfter, message: e.message || ""
+    })));
+  } catch (x) {}
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function once(path, raw) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
+  let r;
+  try {
+    r = await fetch(path.startsWith("http") ? path : API + path, {
+      signal: ctl.signal,
+      headers: { Authorization: "Bearer " + token(), Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" }
+    });
+    if (r.ok) return await (raw ? r.text() : r.json());
+  } catch (x) {
+    throw x && x.name === "AbortError" ? { code: "timeout", path, message: "timeout 15s" } : { code: "network", path, message: String(x && x.message || x) };
+  } finally { clearTimeout(t); }
+  let msg = "";
+  try { msg = (await r.json()).message || ""; } catch (x) {}
+  const ra = r.headers.get("retry-after"), rem = r.headers.get("x-ratelimit-remaining");
+  const e = { status: r.status, path, message: msg, remaining: rem, retryAfter: ra == null || isNaN(+ra) ? null : +ra };
+  e.code = KeshLogic.classify({ status: r.status, retryAfter: e.retryAfter, remaining: rem, msg });
+  throw e;
 }
-const get = (key, fn) => cache[key] || (cache[key] = fn());
+async function api(path, raw) {
+  for (let n = 0; ; n++) {
+    try { return await once(path, raw); } catch (e) {
+      const d = KeshLogic.retryDelay(e, n);
+      if (d == null) { logErr(e); throw e; }
+      await sleep(d);
+    }
+  }
+}
+const get = (key, fn) => KeshLogic.memo(cache, key, fn);
 const ref = () => "?ref=" + encodeURIComponent(st.branch);
 const dir = (p) => get("d" + p, () => api("/contents/" + p + ref()).then((l) => l.filter((x) => x.type === "file")));
-const text = (p) => get("f" + p, () => api("/contents/" + encodeURI(p) + ref()).then((j) =>
-  new TextDecoder().decode(Uint8Array.from(atob(j.content), (c) => c.charCodeAt(0)))));
+const text = (p) => get("f" + p, () => api("/contents/" + encodeURI(p) + ref(), true));
 const issues = () => get("i", () => api("/issues?state=all&per_page=100").then((l) => l.filter((i) => !i.pull_request)));
 const commits = () => get("c", () => api("/commits?sha=" + encodeURIComponent(st.branch) + "&per_page=10"));
 const mdFiles = async (d) => {
   try { return await dir(d); } catch (e) { if (e.code === "404") return []; throw e; }
 };
-const texts = async (d) => {
-  const fs = (await mdFiles(d)).filter((f) => f.name.endsWith(".md"));
-  return Promise.all(fs.map(async (f) => ({ name: f.name.replace(/\.md$/, ""), md: await text(f.path) })));
+const tree = () => get("t", () => api("/git/trees/" + encodeURIComponent(st.branch) + "?recursive=1").then((t) =>
+  t.tree.filter((x) => x.type === "blob" && /^(runs|agents|lessons)\/[^/]+\.md$/.test(x.path)).map((x) => x.path)));
+let partial = [];
+const pool = async (items, n, fn) => {
+  const out = new Array(items.length);
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (i < items.length) {
+      const k = i++;
+      try { out[k] = { ok: true, v: await fn(items[k]) }; } catch (e) { out[k] = { ok: false, e }; }
+    }
+  }));
+  return out;
 };
 const ws = () => get("ws", async () => {
-  const [r, a, l, is] = await Promise.all([texts("runs"), texts("agents"), texts("lessons"), issues()]);
-  const runs = r.map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
-  const agents = a.map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
-  const lessons = {};
+  const [paths, is] = await Promise.all([tree(), issues()]);
+  const res = await pool(paths, 6, async (p) => ({ dir: p.split("/")[0], name: p.split("/")[1].replace(/\.md$/, ""), md: await text(p) }));
+  partial = paths.filter((p, i) => !res[i].ok);
+  const got = res.filter((x) => x.ok).map((x) => x.v);
+  const of = (d) => got.filter((x) => x.dir === d);
+  const runs = of("runs").map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
+  const agents = of("agents").map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
+  const l = of("lessons"), lessons = {};
   for (const x of l) lessons[x.name] = KeshParse.countLessons(x.md);
   return { runs, agents, lessons, lessonTexts: l, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
 });
@@ -85,13 +127,19 @@ function tokenForm(msg) {
   V.replaceChildren(...(msg ? [h("p", { className: "bad", textContent: msg })] : []), card(f));
 }
 
+let booted = false;
 function fail(e) {
-  if (e.code === "auth") return tokenForm("token ไม่ถูกต้องหรือไม่มีสิทธิ์ (401/403)");
+  if (e.code === "auth") return tokenForm("token ไม่ถูกต้องหรือไม่มีสิทธิ์ (401)");
   const m = {
-    rate: "ชน rate limit ของ GitHub รอสักครู่แล้วลองใหม่",
+    rate: "ชน rate limit ของ GitHub รอสักครู่แล้วลองใหม่" + (e.retryAfter != null ? " (" + e.retryAfter + "s)" : ""),
+    forbidden: "token ไม่มีสิทธิ์เข้าถึง " + e.path + " (403) ไม่ใช่ token ผิด",
+    network: "เชื่อมต่อ GitHub ไม่ได้ (network)",
+    timeout: "GitHub ตอบช้าเกินไป (timeout)",
     404: "ไม่พบข้อมูล (404) ตรวจ repo / branch / สิทธิ์ของ token"
-  }[e.code] || "โหลดไม่สำเร็จ: " + (e.status || e.message || e.code || e);
-  V.replaceChildren(card(h("span", { className: "bad", textContent: m }), h("div", {}, h("button", { textContent: "ลองใหม่", onclick: () => { cache = {}; route(); } }))));
+  }[e.code] || "โหลดไม่สำเร็จ";
+  const detail = [e.status, e.path, e.message].filter(Boolean).join(" · ");
+  V.replaceChildren(card(h("span", { className: "bad", textContent: m }), detail ? mut(detail) : null,
+    h("div", {}, h("button", { textContent: "ลองใหม่", onclick: () => { cache = {}; booted ? route() : boot(); } }))));
 }
 
 const empty = (t) => card(mut(t || "ไม่มีข้อมูล"));
@@ -220,6 +268,15 @@ const views = {
     ];
   },
 
+  async errors() {
+    const log = readLog().reverse();
+    const clr = h("button", { className: "ghost", textContent: "ล้าง", onclick: () => { try { localStorage.removeItem(LOGKEY); } catch (e) {} route(); } });
+    return [clr, ...(log.length ? log.map((x) => card(
+      h("div", { className: "row" }, h("b", x.path || "-"), tag(String(x.status || x.code), "bad")),
+      mut(x.time + " · " + x.code + " · remaining " + x.remaining + " · retry-after " + x.retryAfter),
+      h("div", x.message || ""))) : [empty("ไม่มี error")])];
+  },
+
   async files() {
     const tabs = h("div", { className: "tabs" }, ...["runs", "plans", "research", "lessons", "agents"].map((f) =>
       h("button", { textContent: f, className: st.folder === f ? "on" : "", onclick: () => { st.folder = f; st.file = null; route(); } })));
@@ -266,7 +323,10 @@ async function route() {
   V.replaceChildren(mut("กำลังโหลด..."));
   try {
     const out = await views[name]();
-    if (id === rid) { V.replaceChildren(h("div", { className: "page " + name }, ...out)); }
+    if (id === rid) {
+      const note = partial.length && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") })] : [];
+      V.replaceChildren(h("div", { className: "page " + name }, ...note, ...out));
+    }
   } catch (e) {
     if (id === rid) fail(e);
   }
@@ -281,6 +341,7 @@ async function boot() {
   } catch (e) {
     return fail(e);
   }
+  booted = true;
   route();
 }
 
@@ -293,6 +354,6 @@ MODE.onclick = () => {
 };
 syncMode();
 BR.onchange = () => { st.branch = BR.value; st.file = null; cache = {}; route(); };
-OUT.onclick = () => { localStorage.removeItem("levana_token"); cache = {}; BR.hidden = true; tokenForm(); };
+OUT.onclick = () => { booted = false; localStorage.removeItem("levana_token"); cache = {}; BR.hidden = true; tokenForm(); };
 window.addEventListener("hashchange", route);
 boot();
