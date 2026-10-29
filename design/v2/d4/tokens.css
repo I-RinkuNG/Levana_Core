@@ -1,6 +1,7 @@
 /* ===== Levana v2 · D4 "Sortie Formation" — final tokens =====
    Layout + colour roles from D3, type + radius + spacing from D2, label tabs + operator cards from D1.
-   Colour rule: --act* (orange) = things you can press. --data* (cyan) = measured values. Status colours = state + icon + label. */
+   Colour rule: --act* (orange) = things you can press. --data* (cyan) = measured values. Status colours = state + icon + label.
+   --agent-* = identity only (initial block), always with letter + name. */
 :root{
   /* type */
   --font-body:"Noto Sans Thai","IBM Plex Sans Thai","Sarabun",system-ui,sans-serif;
@@ -26,6 +27,10 @@
   --data:#0a7ea8;--data-ink:#0b6383;--data-bg:#d6ebf3;--data-tint:#e6f2f7;
   --ok:#1b6e45;--ok-bg:#d9efe3;--bad:#b3192b;--bad-mark:#b3192b;--bad-bg:#f8dde0;
   --focus:#0b6f94;
+  /* agent identity (initial block only; never on charts/data). Text on it = --on-agent. AA >= 6.9:1 */
+  --on-agent:#ffffff;
+  --agent-rosh:#4c4c9e;--agent-cheker:#645642;--agent-amet:#6b5600;--agent-zekher:#773b84;--agent-bona:#24569f;
+  --agent-kotev:#426323;--agent-bochek:#8b306a;--agent-tak:#585858;--agent-oseh:#455b6d;--agent-tzayar:#654199;
 }
 html[data-mode=dark]{
   --bg:#0f1015;--surface:#181920;--surface-2:#1f2029;--sunken:#0a0a0e;--line:#2f313c;--line-strong:#5f6372;
@@ -35,6 +40,9 @@ html[data-mode=dark]{
   --data:#249bce;--data-ink:#5cc8ef;--data-bg:#0f2a36;--data-tint:#132530;
   --ok:#55d394;--ok-bg:#11291d;--bad:#ff7a85;--bad-mark:#ec5866;--bad-bg:#33161a;
   --focus:#5cc8ef;
+  --on-agent:#14151b;
+  --agent-rosh:#b0b6ff;--agent-cheker:#c9bba9;--agent-amet:#d0be76;--agent-zekher:#dea6ea;--agent-bona:#91c0ff;
+  --agent-kotev:#aaca91;--agent-bochek:#f59ecf;--agent-tak:#bebebe;--agent-oseh:#acc1d3;--agent-tzayar:#c9acff;
 }
 @media (min-width:1024px){:root{--pad:var(--s6);--gap:var(--s6)}}
 @media (prefers-reduced-motion:reduce){:root{--dur:0ms}}

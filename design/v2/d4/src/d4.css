@@ -138,15 +138,15 @@ html[data-mode=dark] .brief .bad-t{color:var(--bad)}
 /* ---- operator cards (D1) ---- */
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
 .op{display:flex;flex-direction:column;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-in);overflow:hidden;min-width:0}
-.op-ini{height:64px;display:flex;align-items:flex-end;padding:0 var(--s3);font:600 48px/.95 var(--font-disp);background:var(--data-tint);color:var(--data-ink);position:relative}
-.op-ini .mono{position:absolute;top:var(--s2);right:var(--s3);color:var(--ink-2);font-size:var(--t-meta)}
+.op-ini{height:64px;display:flex;align-items:flex-end;padding:0 var(--s3);font:600 48px/.95 var(--font-disp);background:var(--ag,var(--agent-tak));color:var(--on-agent);position:relative}
+.op-ini .mono{position:absolute;top:var(--s2);right:var(--s3);color:var(--on-agent);font-size:var(--t-meta)}
 .op-name{background:var(--slab);color:var(--on-slab);padding:2px var(--s3);font:600 var(--t-small)/1.5 var(--font-disp);letter-spacing:.04em}
 .op-body{padding:var(--s2) var(--s3) var(--s3);display:flex;flex-direction:column;gap:2px}
 .op-val{font:600 24px/1.2 var(--font-disp)}
 .op-bar{height:6px;background:var(--sunken);border-radius:3px;position:relative;margin:var(--s1) 0}
 .op-bar::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--data);border-radius:3px}
 .op.warn{border-color:var(--bad)}
-.op.warn .op-ini{background:var(--bad-bg);color:var(--bad)}
+.op.warn{box-shadow:inset 0 0 0 1px var(--bad)} /* identity block stays; warn = red 2px edge + icon + red text */
 .op dl{display:grid;grid-template-columns:1fr auto;gap:2px var(--s2);margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
 .op dt{color:var(--ink-2)}.op dd{font-weight:600;text-align:right}
 .bnc{height:6px;background:var(--sunken);border-radius:3px;position:relative;margin:var(--s1) 0 2px}
@@ -257,3 +257,17 @@ html.shot .mock{display:none}
 @media (min-width:1024px){.tri-run{grid-template-columns:minmax(0,3fr) minmax(0,7fr) minmax(0,4fr)}}
 .flat .hd{margin-bottom:var(--s2)}
 @media (min-width:1024px){html{scroll-padding-bottom:0}}
+
+/* agent identity hooks */
+.op[data-ag=rosh]{--ag:var(--agent-rosh)}.op[data-ag=cheker]{--ag:var(--agent-cheker)}.op[data-ag=amet]{--ag:var(--agent-amet)}.op[data-ag=zekher]{--ag:var(--agent-zekher)}.op[data-ag=bona]{--ag:var(--agent-bona)}.op[data-ag=kotev]{--ag:var(--agent-kotev)}.op[data-ag=bochek]{--ag:var(--agent-bochek)}.op[data-ag=tak]{--ag:var(--agent-tak)}.op[data-ag=oseh]{--ag:var(--agent-oseh)}.op[data-ag=tzayar]{--ag:var(--agent-tzayar)}
+/* SYS folded into strip: API cell = full-width row on mobile, 2 columns on >=600 */
+.strip .api{grid-column:1/-1;flex-direction:row;align-items:center;gap:var(--s3);border-left:0;border-top:1px solid var(--line);margin-top:var(--s2);padding-top:var(--s2)}
+.strip .api .ico{flex:none;color:var(--ink-2)}
+.strip .api div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.strip .api b{font-size:var(--t-small)}
+.strip .api .meta{color:var(--ink-2)}
+.strip .api .iconbtn{flex:none}
+@media (min-width:600px){.strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,2fr)}.strip .api{grid-column:auto;border-top:0;margin-top:0;padding-top:var(--s1);border-left:1px solid var(--line)}}
+.m-only{display:none}
+@media (max-width:599.98px){.m-only{display:flex}}
+.sq-alert{align-items:center;justify-content:space-between;gap:var(--s2);margin-top:var(--s2);font-size:var(--t-small)}.sq-alert p{display:flex;align-items:center;gap:var(--s1);min-width:0}

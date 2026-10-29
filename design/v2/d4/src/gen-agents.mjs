@@ -6,7 +6,7 @@ const G = [
 ];
 let n = 0;
 const card = ([name, role, tok, ho, b, les]) => { n++; const over = b > 20;
-  return `<li class="op${over ? ' warn' : ''}"><span class="op-ini" aria-hidden="true">${name[0]}<span class="mono">${String(n).padStart(2,'0')}</span></span><b class="op-name" translate="no">${name.toUpperCase()}</b>
+  return `<li class="op${over ? ' warn' : ''}" data-ag="${name.toLowerCase()}"><span class="op-ini" aria-hidden="true">${name[0]}<span class="mono">${String(n).padStart(2,'0')}</span></span><b class="op-name" translate="no">${name.toUpperCase()}</b>
   <div class="op-body"><span class="meta">${role}</span><b class="num op-val">${tok}k</b><span class="op-bar" style="--w:${Math.round(tok/482*100)}%" role="img" aria-label="token 7 วัน ${tok}k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">${ho}</dd><dt class="meta">ตีกลับ</dt><dd class="num${over ? ' bad-t' : ''}">${over ? '<svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>' : ''}${b}%</dd></dl>
   <span class="bnc${over ? ' over' : ''}" role="img" aria-label="ตีกลับ ${b}% เกณฑ์ 20%${over ? ' เกินเกณฑ์' : ''}"><i style="--w:${b*2}%"></i></span>

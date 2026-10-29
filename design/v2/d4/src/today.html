@@ -9,15 +9,15 @@
     <main id="main" class="page">
       <ul class="strip" aria-label="สถานะย่อ">
         <li><span class="mono" translate="no">5H</span><b class="num">62%</b></li>
-        <li class="d-only"><span class="mono" translate="no">RESET</span><b class="num">01:48</b></li>
-        <li><span class="mono" translate="no">API</span><b class="ok-t" data-hide="error">ใช้ได้</b><b class="bad-t" data-show="error" hidden>ใช้ไม่ได้</b></li>
+        <li><span class="mono" translate="no">RESET</span><b class="num">01:48</b></li>
         <li class="d-only"><span class="mono" translate="no">RUN</span><b class="num" translate="no">029 · 4/6</b></li>
         <li><span class="mono" translate="no">BOUNCE 7D</span><b class="num">12%</b></li>
+        <li class="api"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg><div><span class="mono" translate="no">GITHUB TOKEN API</span><b class="ok-t" data-hide="error">ใช้ได้</b><b class="bad-t" data-show="error" hidden><svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>ใช้ไม่ได้ (401)</b><span class="meta">ตรวจ <span class="num">14:30</span> (4 นาทีที่แล้ว)</span></div><button class="iconbtn" type="button" aria-label="ตรวจ GitHub token API อีกครั้ง"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button></li>
       </ul>
 
       <div class="banner keep" role="alert" data-show="error" hidden>
         <svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg>
-        <p><b>ดึงข้อมูลจาก GitHub ไม่ได้</b> token API ตอบ 401 (ตรวจล่าสุด 14:30) ข้อมูลด้านล่างเป็นของเวลา 13:58 ให้ตรวจ token ในหน้า ระบบ แล้วลองใหม่</p>
+        <p><b>ดึงข้อมูลจาก GitHub ไม่ได้</b> token API ตอบ 401 (ตรวจล่าสุด 14:30) ข้อมูลด้านล่างเป็นของเวลา 13:58 กดตรวจ token ที่แถบ GitHub token API ด้านบน แล้วลองใหม่</p>
         <button class="btn" type="button">ลองอีกครั้ง</button>
       </div>
 
@@ -53,15 +53,6 @@
               <div class="kpi"><span class="mono">HANDOFF</span><b class="num val">14</b><span class="meta">เมื่อวาน 11</span></div>
               <div class="kpi"><span class="mono">BOUNCE</span><b class="num val">12%</b><span class="meta ok-t"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ต่ำกว่า 20%</span></div>
               <div class="kpi"><span class="mono">ISSUES</span><b class="num val">3</b><span class="meta">เก่าสุด 2 วัน</span></div>
-            </div>
-          </section>
-          <!-- SYS -->
-          <section class="blk sys keep o7" aria-labelledby="h-s">
-            <div class="hd"><span class="tab" translate="no">SYS 01</span><h2 id="h-s">ระบบ</h2></div>
-            <div class="sys-row">
-              <svg class="ico" aria-hidden="true"><use href="#i-key"/></svg>
-              <p><b>GitHub token API</b><span class="chip ok" data-hide="error"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ใช้ได้</span><span class="chip bad" data-show="error" hidden><svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>ใช้ไม่ได้ (401)</span><br><span class="meta">ตรวจล่าสุด <span class="num">14:30</span> (4 นาทีที่แล้ว)</span></p>
-              <button class="btn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg>ตรวจอีกครั้ง</button>
             </div>
           </section>
         </div>
@@ -103,15 +94,16 @@
         <div class="zone">
           <!-- SQUAD: operator cards (D1) -->
           <section class="blk squad o6" aria-labelledby="h-a">
-            <div class="hd"><span class="tab" translate="no">SQUAD 4/10</span><h2 id="h-a">Token ต่อ agent</h2><a class="more" href="mockup-agents.html">ทั้ง 10</a></div>
+            <div class="hd"><span class="tab" translate="no">SQUAD <b class="m-hide">4/10</b><b class="m-only">2/10</b></span><h2 id="h-a">Token ต่อ agent</h2><a class="more m-hide" href="mockup-agents.html">ดูทั้งหมด</a></div>
             <p class="meta sub">7 วันล่าสุด · เรียงตาม token</p>
             <div class="sk" data-show="loading" hidden aria-hidden="true"><i></i><i></i></div>
             <ul class="cards" data-hide="loading">
-              <li class="op"><span class="op-ini" aria-hidden="true">K<span class="mono">01</span></span><b class="op-name" translate="no">KOTEV</b><div class="op-body"><span class="meta">สร้าง</span><b class="num op-val">482k</b><span class="op-bar" style="--w:100%"></span><span class="meta">ตีกลับ 8%</span></div></li>
-              <li class="op"><span class="op-ini" aria-hidden="true">T<span class="mono">02</span></span><b class="op-name" translate="no">TZAYAR</b><div class="op-body"><span class="meta">ออกแบบ</span><b class="num op-val">296k</b><span class="op-bar" style="--w:61%"></span><span class="meta">ตีกลับ 10%</span></div></li>
-              <li class="op warn"><span class="op-ini" aria-hidden="true">B<span class="mono">03</span></span><b class="op-name" translate="no">BOCHEK</b><div class="op-body"><span class="meta">ทดสอบ</span><b class="num op-val">171k</b><span class="op-bar" style="--w:35%"></span><span class="meta bad-t"><svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>ตีกลับ 24%</span></div></li>
-              <li class="op"><span class="op-ini" aria-hidden="true">A<span class="mono">04</span></span><b class="op-name" translate="no">AMET</b><div class="op-body"><span class="meta">ตรวจข้อเท็จจริง</span><b class="num op-val">140k</b><span class="op-bar" style="--w:29%"></span><span class="meta">ตีกลับ 4%</span></div></li>
+              <li class="op" data-ag="kotev"><span class="op-ini" aria-hidden="true">K<span class="mono">01</span></span><b class="op-name" translate="no">KOTEV</b><div class="op-body"><span class="meta">สร้าง</span><b class="num op-val">482k</b><span class="op-bar" style="--w:100%"></span><span class="meta">ตีกลับ 8%</span></div></li>
+              <li class="op" data-ag="tzayar"><span class="op-ini" aria-hidden="true">T<span class="mono">02</span></span><b class="op-name" translate="no">TZAYAR</b><div class="op-body"><span class="meta">ออกแบบ</span><b class="num op-val">296k</b><span class="op-bar" style="--w:61%"></span><span class="meta">ตีกลับ 10%</span></div></li>
+              <li class="op warn m-hide" data-ag="bochek"><span class="op-ini" aria-hidden="true">B<span class="mono">03</span></span><b class="op-name" translate="no">BOCHEK</b><div class="op-body"><span class="meta">ทดสอบ</span><b class="num op-val">171k</b><span class="op-bar" style="--w:35%"></span><span class="meta bad-t"><svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>ตีกลับ 24%</span></div></li>
+              <li class="op m-hide" data-ag="amet"><span class="op-ini" aria-hidden="true">A<span class="mono">04</span></span><b class="op-name" translate="no">AMET</b><div class="op-body"><span class="meta">ตรวจข้อเท็จจริง</span><b class="num op-val">140k</b><span class="op-bar" style="--w:29%"></span><span class="meta">ตีกลับ 4%</span></div></li>
             </ul>
+            <div class="sq-alert m-only" data-hide="loading"><p class="bad-t"><svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>Bochek ตีกลับ 24% เกินเกณฑ์</p><a class="more" href="mockup-agents.html">ดูทั้งหมด 10</a></div>
           </section>
           <!-- RECENT RUNS: now has its own tab (fixes D1 bug) -->
           <section class="blk runs o5" aria-labelledby="h-rr">

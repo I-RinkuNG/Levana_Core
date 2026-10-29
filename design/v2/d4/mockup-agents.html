@@ -11,7 +11,8 @@
 <style>
 /* ===== Levana v2 · D4 "Sortie Formation" — final tokens =====
    Layout + colour roles from D3, type + radius + spacing from D2, label tabs + operator cards from D1.
-   Colour rule: --act* (orange) = things you can press. --data* (cyan) = measured values. Status colours = state + icon + label. */
+   Colour rule: --act* (orange) = things you can press. --data* (cyan) = measured values. Status colours = state + icon + label.
+   --agent-* = identity only (initial block), always with letter + name. */
 :root{
   /* type */
   --font-body:"Noto Sans Thai","IBM Plex Sans Thai","Sarabun",system-ui,sans-serif;
@@ -37,6 +38,10 @@
   --data:#0a7ea8;--data-ink:#0b6383;--data-bg:#d6ebf3;--data-tint:#e6f2f7;
   --ok:#1b6e45;--ok-bg:#d9efe3;--bad:#b3192b;--bad-mark:#b3192b;--bad-bg:#f8dde0;
   --focus:#0b6f94;
+  /* agent identity (initial block only; never on charts/data). Text on it = --on-agent. AA >= 6.9:1 */
+  --on-agent:#ffffff;
+  --agent-rosh:#4c4c9e;--agent-cheker:#645642;--agent-amet:#6b5600;--agent-zekher:#773b84;--agent-bona:#24569f;
+  --agent-kotev:#426323;--agent-bochek:#8b306a;--agent-tak:#585858;--agent-oseh:#455b6d;--agent-tzayar:#654199;
 }
 html[data-mode=dark]{
   --bg:#0f1015;--surface:#181920;--surface-2:#1f2029;--sunken:#0a0a0e;--line:#2f313c;--line-strong:#5f6372;
@@ -46,6 +51,9 @@ html[data-mode=dark]{
   --data:#249bce;--data-ink:#5cc8ef;--data-bg:#0f2a36;--data-tint:#132530;
   --ok:#55d394;--ok-bg:#11291d;--bad:#ff7a85;--bad-mark:#ec5866;--bad-bg:#33161a;
   --focus:#5cc8ef;
+  --on-agent:#14151b;
+  --agent-rosh:#b0b6ff;--agent-cheker:#c9bba9;--agent-amet:#d0be76;--agent-zekher:#dea6ea;--agent-bona:#91c0ff;
+  --agent-kotev:#aaca91;--agent-bochek:#f59ecf;--agent-tak:#bebebe;--agent-oseh:#acc1d3;--agent-tzayar:#c9acff;
 }
 @media (min-width:1024px){:root{--pad:var(--s6);--gap:var(--s6)}}
 @media (prefers-reduced-motion:reduce){:root{--dur:0ms}}
@@ -190,15 +198,15 @@ html[data-mode=dark] .brief .bad-t{color:var(--bad)}
 /* ---- operator cards (D1) ---- */
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
 .op{display:flex;flex-direction:column;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-in);overflow:hidden;min-width:0}
-.op-ini{height:64px;display:flex;align-items:flex-end;padding:0 var(--s3);font:600 48px/.95 var(--font-disp);background:var(--data-tint);color:var(--data-ink);position:relative}
-.op-ini .mono{position:absolute;top:var(--s2);right:var(--s3);color:var(--ink-2);font-size:var(--t-meta)}
+.op-ini{height:64px;display:flex;align-items:flex-end;padding:0 var(--s3);font:600 48px/.95 var(--font-disp);background:var(--ag,var(--agent-tak));color:var(--on-agent);position:relative}
+.op-ini .mono{position:absolute;top:var(--s2);right:var(--s3);color:var(--on-agent);font-size:var(--t-meta)}
 .op-name{background:var(--slab);color:var(--on-slab);padding:2px var(--s3);font:600 var(--t-small)/1.5 var(--font-disp);letter-spacing:.04em}
 .op-body{padding:var(--s2) var(--s3) var(--s3);display:flex;flex-direction:column;gap:2px}
 .op-val{font:600 24px/1.2 var(--font-disp)}
 .op-bar{height:6px;background:var(--sunken);border-radius:3px;position:relative;margin:var(--s1) 0}
 .op-bar::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--data);border-radius:3px}
 .op.warn{border-color:var(--bad)}
-.op.warn .op-ini{background:var(--bad-bg);color:var(--bad)}
+.op.warn{box-shadow:inset 0 0 0 1px var(--bad)} /* identity block stays; warn = red 2px edge + icon + red text */
 .op dl{display:grid;grid-template-columns:1fr auto;gap:2px var(--s2);margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
 .op dt{color:var(--ink-2)}.op dd{font-weight:600;text-align:right}
 .bnc{height:6px;background:var(--sunken);border-radius:3px;position:relative;margin:var(--s1) 0 2px}
@@ -310,6 +318,20 @@ html.shot .mock{display:none}
 .flat .hd{margin-bottom:var(--s2)}
 @media (min-width:1024px){html{scroll-padding-bottom:0}}
 
+/* agent identity hooks */
+.op[data-ag=rosh]{--ag:var(--agent-rosh)}.op[data-ag=cheker]{--ag:var(--agent-cheker)}.op[data-ag=amet]{--ag:var(--agent-amet)}.op[data-ag=zekher]{--ag:var(--agent-zekher)}.op[data-ag=bona]{--ag:var(--agent-bona)}.op[data-ag=kotev]{--ag:var(--agent-kotev)}.op[data-ag=bochek]{--ag:var(--agent-bochek)}.op[data-ag=tak]{--ag:var(--agent-tak)}.op[data-ag=oseh]{--ag:var(--agent-oseh)}.op[data-ag=tzayar]{--ag:var(--agent-tzayar)}
+/* SYS folded into strip: API cell = full-width row on mobile, 2 columns on >=600 */
+.strip .api{grid-column:1/-1;flex-direction:row;align-items:center;gap:var(--s3);border-left:0;border-top:1px solid var(--line);margin-top:var(--s2);padding-top:var(--s2)}
+.strip .api .ico{flex:none;color:var(--ink-2)}
+.strip .api div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.strip .api b{font-size:var(--t-small)}
+.strip .api .meta{color:var(--ink-2)}
+.strip .api .iconbtn{flex:none}
+@media (min-width:600px){.strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,2fr)}.strip .api{grid-column:auto;border-top:0;margin-top:0;padding-top:var(--s1);border-left:1px solid var(--line)}}
+.m-only{display:none}
+@media (max-width:599.98px){.m-only{display:flex}}
+.sq-alert{align-items:center;justify-content:space-between;gap:var(--s2);margin-top:var(--s2);font-size:var(--t-small)}.sq-alert p{display:flex;align-items:center;gap:var(--s1);min-width:0}
+
 </style>
 </head>
 <body>
@@ -379,54 +401,54 @@ html.shot .mock{display:none}
         <div class="empty" data-show="empty" hidden><svg class="ico" aria-hidden="true"><use href="#i-empty"/></svg><p><b>ยังไม่มีสถิติใน 7 วัน</b> agent ทั้ง 10 ยังไม่ได้รับงาน เมื่อมี run แรก การ์ดจะขึ้นที่นี่</p><a class="btn primary" href="#">เริ่ม run ใหม่</a></div>
         <div data-hide="loading empty"><p class="meta sub">แถบฟ้า = token 7 วันเทียบคนที่ใช้มากสุด · แถบตีกลับมีเส้นเกณฑ์ 20% (เกินแล้วเป็นสีแดง + ไอคอน)</p>
         <div class="group"><h3><span class="tab" translate="no">BUILD 05</span>สายสร้าง</h3><ul class="cards">
-<li class="op"><span class="op-ini" aria-hidden="true">K<span class="mono">01</span></span><b class="op-name" translate="no">KOTEV</b>
+<li class="op" data-ag="kotev"><span class="op-ini" aria-hidden="true">K<span class="mono">01</span></span><b class="op-name" translate="no">KOTEV</b>
   <div class="op-body"><span class="meta">เขียนโค้ด</span><b class="num op-val">482k</b><span class="op-bar" style="--w:100%" role="img" aria-label="token 7 วัน 482k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">9</dd><dt class="meta">ตีกลับ</dt><dd class="num">8%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 8% เกณฑ์ 20%"><i style="--w:16%"></i></span>
   <a class="more" href="#">lessons 36</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">T<span class="mono">02</span></span><b class="op-name" translate="no">TZAYAR</b>
+<li class="op" data-ag="tzayar"><span class="op-ini" aria-hidden="true">T<span class="mono">02</span></span><b class="op-name" translate="no">TZAYAR</b>
   <div class="op-body"><span class="meta">ออกแบบ</span><b class="num op-val">296k</b><span class="op-bar" style="--w:61%" role="img" aria-label="token 7 วัน 296k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">6</dd><dt class="meta">ตีกลับ</dt><dd class="num">10%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 10% เกณฑ์ 20%"><i style="--w:20%"></i></span>
   <a class="more" href="#">lessons 4</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">B<span class="mono">03</span></span><b class="op-name" translate="no">BONA</b>
+<li class="op" data-ag="bona"><span class="op-ini" aria-hidden="true">B<span class="mono">03</span></span><b class="op-name" translate="no">BONA</b>
   <div class="op-body"><span class="meta">วางโครงสร้าง</span><b class="num op-val">88k</b><span class="op-bar" style="--w:18%" role="img" aria-label="token 7 วัน 88k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">4</dd><dt class="meta">ตีกลับ</dt><dd class="num">0%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 0% เกณฑ์ 20%"><i style="--w:0%"></i></span>
   <a class="more" href="#">lessons 3</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">O<span class="mono">04</span></span><b class="op-name" translate="no">OSEH</b>
+<li class="op" data-ag="oseh"><span class="op-ini" aria-hidden="true">O<span class="mono">04</span></span><b class="op-name" translate="no">OSEH</b>
   <div class="op-body"><span class="meta">รันคำสั่ง</span><b class="num op-val">31k</b><span class="op-bar" style="--w:6%" role="img" aria-label="token 7 วัน 31k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">5</dd><dt class="meta">ตีกลับ</dt><dd class="num">0%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 0% เกณฑ์ 20%"><i style="--w:0%"></i></span>
   <a class="more" href="#">lessons 0</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">T<span class="mono">05</span></span><b class="op-name" translate="no">TAK</b>
+<li class="op" data-ag="tak"><span class="op-ini" aria-hidden="true">T<span class="mono">05</span></span><b class="op-name" translate="no">TAK</b>
   <div class="op-body"><span class="meta">ปรับโค้ด</span><b class="num op-val">22k</b><span class="op-bar" style="--w:5%" role="img" aria-label="token 7 วัน 22k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">1</dd><dt class="meta">ตีกลับ</dt><dd class="num">0%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 0% เกณฑ์ 20%"><i style="--w:0%"></i></span>
   <a class="more" href="#">lessons 0</a></div></li>
         </ul></div>
         <div class="group"><h3><span class="tab" translate="no">CHECK 05</span>สายค้นและตรวจ</h3><ul class="cards">
-<li class="op warn"><span class="op-ini" aria-hidden="true">B<span class="mono">06</span></span><b class="op-name" translate="no">BOCHEK</b>
+<li class="op warn" data-ag="bochek"><span class="op-ini" aria-hidden="true">B<span class="mono">06</span></span><b class="op-name" translate="no">BOCHEK</b>
   <div class="op-body"><span class="meta">ทดสอบ</span><b class="num op-val">171k</b><span class="op-bar" style="--w:35%" role="img" aria-label="token 7 วัน 171k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">25</dd><dt class="meta">ตีกลับ</dt><dd class="num bad-t"><svg class="ico sm" aria-hidden="true"><use href="#i-errors"/></svg>24%</dd></dl>
   <span class="bnc over" role="img" aria-label="ตีกลับ 24% เกณฑ์ 20% เกินเกณฑ์"><i style="--w:48%"></i></span>
   <a class="more" href="#">lessons 34</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">A<span class="mono">07</span></span><b class="op-name" translate="no">AMET</b>
+<li class="op" data-ag="amet"><span class="op-ini" aria-hidden="true">A<span class="mono">07</span></span><b class="op-name" translate="no">AMET</b>
   <div class="op-body"><span class="meta">ตรวจข้อเท็จจริง</span><b class="num op-val">140k</b><span class="op-bar" style="--w:29%" role="img" aria-label="token 7 วัน 140k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">7</dd><dt class="meta">ตีกลับ</dt><dd class="num">4%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 4% เกณฑ์ 20%"><i style="--w:8%"></i></span>
   <a class="more" href="#">lessons 13</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">R<span class="mono">08</span></span><b class="op-name" translate="no">ROSH</b>
+<li class="op" data-ag="rosh"><span class="op-ini" aria-hidden="true">R<span class="mono">08</span></span><b class="op-name" translate="no">ROSH</b>
   <div class="op-body"><span class="meta">วางแผนวิจัย</span><b class="num op-val">120k</b><span class="op-bar" style="--w:25%" role="img" aria-label="token 7 วัน 120k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">3</dd><dt class="meta">ตีกลับ</dt><dd class="num">0%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 0% เกณฑ์ 20%"><i style="--w:0%"></i></span>
   <a class="more" href="#">lessons 10</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">C<span class="mono">09</span></span><b class="op-name" translate="no">CHEKER</b>
+<li class="op" data-ag="cheker"><span class="op-ini" aria-hidden="true">C<span class="mono">09</span></span><b class="op-name" translate="no">CHEKER</b>
   <div class="op-body"><span class="meta">ดึงข้อมูล</span><b class="num op-val">64k</b><span class="op-bar" style="--w:13%" role="img" aria-label="token 7 วัน 64k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">4</dd><dt class="meta">ตีกลับ</dt><dd class="num">0%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 0% เกณฑ์ 20%"><i style="--w:0%"></i></span>
   <a class="more" href="#">lessons 9</a></div></li>
-<li class="op"><span class="op-ini" aria-hidden="true">Z<span class="mono">10</span></span><b class="op-name" translate="no">ZEKHER</b>
+<li class="op" data-ag="zekher"><span class="op-ini" aria-hidden="true">Z<span class="mono">10</span></span><b class="op-name" translate="no">ZEKHER</b>
   <div class="op-body"><span class="meta">ดูแล lessons</span><b class="num op-val">45k</b><span class="op-bar" style="--w:9%" role="img" aria-label="token 7 วัน 45k จากสูงสุด 482k"></span>
   <dl><dt class="meta">handoff</dt><dd class="num">2</dd><dt class="meta">ตีกลับ</dt><dd class="num">0%</dd></dl>
   <span class="bnc" role="img" aria-label="ตีกลับ 0% เกณฑ์ 20%"><i style="--w:0%"></i></span>

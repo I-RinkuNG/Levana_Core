@@ -2,46 +2,46 @@
  "today-390-light": {
   "scrollW": 390,
   "clientW": 390,
-  "height": 2366,
+  "height": 2093,
   "minContrast": 5.18,
-  "minCEl": "chip ok \"ใช้ได้\"",
+  "minCEl": "chip ok \"เสร็จ\"",
   "minFont": 13,
   "minFontEl": "SPAN",
   "small": [],
-  "firstQ": 164
+  "firstQ": 246
  },
  "today-390-dark": {
   "scrollW": 390,
   "clientW": 390,
-  "height": 2366,
-  "minContrast": 6.46,
-  "minCEl": "meta bad-t \"ตีกลับ 24%\"",
+  "height": 2093,
+  "minContrast": 6.59,
+  "minCEl": "chip bad \"ตีกลับ 2\"",
   "minFont": 13,
   "minFontEl": "SPAN",
   "small": [],
-  "firstQ": 164
+  "firstQ": 246
  },
  "today-1440-light": {
   "scrollW": 1440,
   "clientW": 1440,
-  "height": 1258,
+  "height": 1277,
   "minContrast": 5.18,
-  "minCEl": "chip ok \"ใช้ได้\"",
+  "minCEl": "chip ok \"เสร็จ\"",
   "minFont": 13,
   "minFontEl": "tag",
   "small": [],
-  "firstQ": 244
+  "firstQ": 263
  },
  "today-1440-dark": {
   "scrollW": 1440,
   "clientW": 1440,
-  "height": 1258,
+  "height": 1277,
   "minContrast": 5.37,
   "minCEl": "num bad-t \"24%\"",
   "minFont": 13,
   "minFontEl": "tag",
   "small": [],
-  "firstQ": 244
+  "firstQ": 263
  },
  "run-390-light": {
   "scrollW": 390,
@@ -134,13 +134,13 @@
  "today-390-light-loading": {
   "scrollW": 390,
   "clientW": 390,
-  "height": 1554,
-  "minContrast": 5.18,
-  "minCEl": "chip ok \"ใช้ได้\"",
+  "height": 1418,
+  "minContrast": 6.99,
+  "minCEl": "SPAN \"กำลังโหลดข้อมูลล่าสุ\"",
   "minFont": 13,
   "minFontEl": "SPAN",
   "small": [],
-  "firstQ": 164
+  "firstQ": 246
  },
  "today-1440-dark-loading": {
   "scrollW": 1440,
@@ -151,51 +151,51 @@
   "minFont": 13,
   "minFontEl": "tag",
   "small": [],
-  "firstQ": 172
+  "firstQ": 191
  },
  "today-390-light-empty": {
   "scrollW": 390,
   "clientW": 390,
-  "height": 1849,
-  "minContrast": 5.18,
-  "minCEl": "chip ok \"ใช้ได้\"",
+  "height": 1576,
+  "minContrast": 5.43,
+  "minCEl": "btn primary \"เริ่ม run ใหม่\"",
   "minFont": 13,
   "minFontEl": "SPAN",
   "small": [],
-  "firstQ": 164
+  "firstQ": 246
  },
  "today-1440-dark-empty": {
   "scrollW": 1440,
   "clientW": 1440,
-  "height": 1097,
+  "height": 1026,
   "minContrast": 6.46,
   "minCEl": "meta bad-t \"ตีกลับ 24%\"",
   "minFont": 13,
   "minFontEl": "tag",
   "small": [],
-  "firstQ": 172
+  "firstQ": 191
  },
  "today-390-light-error": {
   "scrollW": 390,
   "clientW": 390,
-  "height": 2636,
+  "height": 2391,
   "minContrast": 5.18,
   "minCEl": "chip ok \"เสร็จ\"",
   "minFont": 13,
   "minFontEl": "SPAN",
   "small": [],
-  "firstQ": 368
+  "firstQ": 478
  },
  "today-1440-dark-error": {
   "scrollW": 1440,
   "clientW": 1440,
-  "height": 1430,
+  "height": 1448,
   "minContrast": 5.37,
   "minCEl": "num bad-t \"24%\"",
   "minFont": 13,
   "minFontEl": "tag",
   "small": [],
-  "firstQ": 346
+  "firstQ": 365
  },
  "run-390-light-loading": {
   "scrollW": 390,
@@ -332,13 +332,13 @@
  "today-320-light": {
   "scrollW": 320,
   "clientW": 320,
-  "height": 2518,
+  "height": 2249,
   "minContrast": 5.18,
-  "minCEl": "chip ok \"ใช้ได้\"",
+  "minCEl": "chip ok \"เสร็จ\"",
   "minFont": 13,
   "minFontEl": "SPAN",
   "small": [],
-  "firstQ": 182
+  "firstQ": 264
  },
  "run-320-light": {
   "scrollW": 320,
