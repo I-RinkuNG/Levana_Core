@@ -31,7 +31,7 @@ KeshViews.run = (() => {
       });
       const stageBlk = blk({
         tab: tab("STAGE", stg.length ? Math.max(nowI + 1, stg.filter((s) => s.state !== "todo").length) + "/" + stg.length : "0/0"), title: "ขั้นตอน", br: true, cls: "relay o2",
-        children: stg.length ? stages(stg, (s) => s.bounces ? (ROLE[s.agent] || "") + " · ตีกลับ " + s.bounces : s.state === "now" ? "กำลังรัน" + (tk[s.agent] ? " · " + L.fmtTok(tk[s.agent]) : "") : ROLE[s.agent] || "") : h("p", { className: "meta" }, "ยังไม่มีขั้นตอนใน flow")
+        children: stg.length ? stages(stg, (s) => s.bounces ? "ตีกลับ " + s.bounces : s.state === "now" ? "กำลังรัน" + (tk[s.agent] ? " · " + L.fmtTok(tk[s.agent]) : "") : ROLE[s.agent] || "") : h("p", { className: "meta" }, "ยังไม่มีขั้นตอนใน flow")
       });
       const res = (r) => r.bounced ? chip("bad", "ตีกลับ") : r.running ? chip("run", "กำลังรัน") : chip("ok", "ผ่าน");
       const hoBlk = blk({

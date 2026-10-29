@@ -23,12 +23,12 @@ const KeshUI = (() => {
   };
   const num = (t, cls) => h("span", { className: "num" + (cls ? " " + cls : "") }, String(t));
   const tab = (word, nn, act) => h("span", { className: "tab" + (act ? " act" : ""), translate: "no" }, nn == null ? word : [word + " ", h("b", String(nn))]);
-  const more = (text, href) => h("a", { className: "more", href }, text);
+  const more = (text, href, cls) => h("a", { className: "more" + (cls ? " " + cls : ""), href }, text);
   let uid = 0;
-  const blk = ({ tab: t, title, more: m, br, cls, keep, children }) => {
+  const blk = ({ tab: t, title, more: m, moreCls, br, cls, keep, children }) => {
     const id = "h" + ++uid;
     return h("section", { className: "blk" + (br ? " br" : "") + (cls ? " " + cls : "") + (keep ? " keep" : ""), "aria-labelledby": id },
-      h("div", { className: "hd" }, t, title ? h("h2", { id }, title) : null, m ? more(m[0], m[1]) : null), children);
+      h("div", { className: "hd" }, t, title ? h("h2", { id }, title) : null, m ? more(m[0], m[1], moreCls) : null), children);
   };
   const strip = (cells, label, api) => h("ul", { className: "strip", "aria-label": label },
     cells.map((c) => h("li", { className: c.d ? "d-only" : "" }, h("span", { className: "mono", translate: "no" }, c.k), h("b", { className: "num" + (c.cls ? " " + c.cls : "") }, c.v), c.sub ? h("span", { className: "meta" }, c.sub) : null)), api);

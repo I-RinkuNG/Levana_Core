@@ -65,7 +65,7 @@ KeshViews.today = (() => {
             segs, label: "ใช้แล้ว " + usedP + "%" + (resP ? " จองให้ " + cap(res.agent) + " " + resP + "%" : "") + " เหลือ " + leftP + "%",
             legend: [["used", ["ใช้แล้ว ", num(usedP + "%"), " ≈ " + L.fmtTok(win.usedTokens)]], res && resP ? ["resv", ["จองให้ " + cap(res.agent) + " ", num(resP + "%")]] : null, ["left", ["เหลือ ", num(leftP + "%")]]].filter(Boolean)
           }),
-          h("p", { className: "meta foot" }, "1% ≈ 15k token · ตามอัตราตอนนี้จะเหลือ " + Math.max(0, Math.round(100 - proj)) + "% ตอนรีเซ็ต · ช่วงเวลาประมาณจากวันที่ใน run log")
+          h("p", { className: "meta foot" }, "1% ≈ 15k · ตามอัตรานี้จะเหลือ " + Math.max(0, Math.round(100 - proj)) + "% ตอนรีเซ็ต")
         ]
       });
       const kpis = blk({
@@ -77,12 +77,12 @@ KeshViews.today = (() => {
       });
       const relay = blk({
         tab: tab("STAGE", ar ? Math.max(nowI + 1, stg.filter((s) => s.state !== "todo").length) + "/" + stg.length : "0/0"), title: ar ? "Run " + (ar.title || ar.run_id) + " กำลังเดิน" : "ไม่มี run กำลังเดิน", more: ar ? ["รายละเอียด", "#run/" + encodeURIComponent(ar.run_id)] : null, br: true, cls: "relay o4",
-        children: ar && stg.length ? stages(stg, (s) => s.bounces ? (ROLE[s.agent] || "") + " · ตีกลับ " + s.bounces : s.state === "now" ? "กำลังรัน" + (tk[s.agent] ? " · " + L.fmtTok(tk[s.agent]) : "") : ROLE[s.agent] || "") : h("p", { className: "meta" }, "run ถัดไปจะแสดงที่นี่พร้อมขั้นตอนทีละ agent")
+        children: ar && stg.length ? stages(stg, (s) => s.bounces ? "ตีกลับ " + s.bounces : s.state === "now" ? "กำลังรัน" + (tk[s.agent] ? " · " + L.fmtTok(tk[s.agent]) : "") : ROLE[s.agent] || "") : h("p", { className: "meta" }, "run ถัดไปจะแสดงที่นี่พร้อมขั้นตอนทีละ agent")
       });
       const top = cards.slice().sort((a, b) => b.tokens - a.tokens).slice(0, 4).map((c, i) => Object.assign({}, c, { rank: i + 1 }));
       const over = cards.filter((c) => c.level === "bad")[0];
       const squad = blk({
-        tab: h("span", { className: "tab", translate: "no" }, "SQUAD ", h("b", { className: "m-hide" }, "4/10"), h("b", { className: "m-only" }, "2/10")), title: "Token ต่อ agent", more: ["ดูทั้งหมด", "#agents"], cls: "squad o6",
+        tab: h("span", { className: "tab", translate: "no" }, "SQUAD ", h("b", { className: "m-hide" }, "4/10"), h("b", { className: "m-only" }, "2/10")), title: "Token ต่อ agent", more: ["ดูทั้งหมด", "#agents"], moreCls: "m-hide", cls: "squad o6",
         children: [h("p", { className: "meta sub" }, "7 วันล่าสุด · เรียงตาม token"),
           h("ul", { className: "cards" }, top.map((c, i) => { const li = opCard(c, false); if (i > 1) li.classList.add("m-hide"); return li; })),
           over ? h("div", { className: "sq-alert m-only" }, h("p", { className: "bad-t" }, icon("errors", "sm"), cap(over.name) + " ตีกลับ " + Math.round(over.bounceRate * 100) + "% เกินเกณฑ์"), h("a", { className: "more", href: "#agents" }, "ดูทั้งหมด 10")) : null]
