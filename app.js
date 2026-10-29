@@ -96,7 +96,7 @@
       else { main.querySelectorAll(".banner.keep[role=alert]").forEach((x) => x.remove()); main.prepend(b); setBusy(false); }
     }
   }
-  window.KeshApp = { route, logout, tokenForm };
+  window.KeshApp = { route, logout, tokenForm, msg: MSG };
   A.onStatus(() => { const s = $("api-status"); if (s) s.dispatchEvent(new Event("status")); });
   window.addEventListener("hashchange", route);
   route();
