@@ -76,6 +76,10 @@ async function onceGql(vars) {
   if (!r.ok && !(errors && errors.length)) errors = [{ message: body.message || "" }];
   if (r.ok && !(errors && errors.length)) return body.data;
   const c = KeshLogic.classifyGql({ status: r.status, errors, retryAfter, remaining: rem });
+  if (r.ok && body.data && body.data.repository && c.code !== "rate" && c.code !== "auth") {
+    logErr({ status: r.status, path, message: c.message, code: "partial" });
+    return Object.assign({}, body.data, { _errors: errors });
+  }
   throw { status: r.status, path, message: c.message, remaining: rem, retryAfter, code: c.code };
 }
 const retrying = async (fn) => {
@@ -102,10 +106,11 @@ const commits = () => snap().then((m) => m.commits);
 const mdFiles = async (d) => {
   try { return await dir(d); } catch (e) { if (e.code === "404") return []; throw e; }
 };
-let partial = [];
+let partial = [], notes = [];
 const ws = () => get("ws", async () => {
   const m = await snap();
   partial = m.partial;
+  notes = m.notes;
   const is = m.issues, got = m.files;
   const of = (d) => got.filter((x) => x.dir === d);
   const runs = of("runs").map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
@@ -339,7 +344,8 @@ async function route() {
     const out = await views[name]();
     if (id === rid) {
       const note = partial.length && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") })] : [];
-      V.replaceChildren(h("div", { className: "page " + name }, ...note, ...out));
+      const nn = name !== "errors" ? notes.map((t) => h("div", { className: "bad", textContent: t })) : [];
+      V.replaceChildren(h("div", { className: "page " + name }, ...note, ...nn, ...out));
     }
   } catch (e) {
     if (id === rid) fail(e);

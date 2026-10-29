@@ -95,3 +95,17 @@ test("classifyGql: error types map to existing codes", () => {
   assert.equal(c({ status: 502, errors: [{ message: "x" }] }), "http");
   assert.equal(c({ status: 200, errors: [{ type: "MAX_NODE_LIMIT_EXCEEDED", message: "x" }] }), "http");
 });
+
+test("classifyGql: message includes error path", () => {
+  const c = L.classifyGql({ status: 200, errors: [{ type: "FORBIDDEN", path: ["repository", "issues"], message: "Resource not accessible" }] });
+  assert.equal(c.code, "forbidden");
+  assert.match(c.message, /repository\.issues: Resource not accessible/);
+});
+
+test("mapGraphql: partial errors give empty issues plus a note", () => {
+  const d = { repository: { ref: { target: { history: { nodes: [] } } }, issues: null }, _errors: [{ type: "FORBIDDEN", path: ["repository", "issues", "nodes"], message: "denied" }] };
+  const m = L.mapGraphql(d);
+  assert.deepEqual(m.issues, []);
+  assert.deepEqual(m.notes, ["โหลด repository.issues ไม่ได้: denied"]);
+  assert.deepEqual(L.mapGraphql(gqlData).notes, []);
+});

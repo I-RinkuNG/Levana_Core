@@ -63,7 +63,8 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   });
   const classifyGql = ({ status, errors, retryAfter, remaining }) => {
     const errs = errors || [];
-    const msg = errs.map((x) => x.message).filter(Boolean).join("; ");
+    const where = (x) => (Array.isArray(x.path) ? x.path.join(".") : x.path || "");
+    const msg = errs.map((x) => (where(x) ? where(x) + ": " : "") + (x.message || "")).filter(Boolean).join("; ");
     if (status === 401) return { code: "auth", message: msg };
     if (status && status !== 200) return { code: classify({ status, retryAfter, remaining, msg }), message: msg };
     const t = (x) => x.type || (x.extensions && x.extensions.code) || "";
@@ -74,6 +75,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (/bad credentials/i.test(msg)) return { code: "auth", message: msg };
     return { code: "http", message: msg };
   };
+  const gqlNotes = (errors) => (errors || []).map((x) => "โหลด " + (Array.isArray(x.path) ? x.path.slice(0, 2).join(".") : x.path || "บางส่วน") + " ไม่ได้: " + (x.message || ""));
   const mapGraphql = (data) => {
     const repo = data && data.repository;
     if (!repo) return null;
@@ -98,8 +100,8 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     const commits = ((hist && hist.nodes) || []).map((c) => ({
       sha: c.oid, commit: { message: c.message || "", author: { name: (c.author && c.author.name) || "", date: (c.author && c.author.date) || "" } }
     }));
-    return { files, partial, issues, commits, branchFound: !!repo.ref };
+    return { files, partial, issues, commits, notes: gqlNotes(data._errors), branchFound: !!repo.ref };
   };
-  return { classify, classifyGql, mapGraphql, gqlVars, GQL_QUERY, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
+  return { classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;
