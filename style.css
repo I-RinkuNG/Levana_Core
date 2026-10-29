@@ -368,3 +368,4 @@ h1:focus{outline:none}
 .reasons-m{margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--line)}
 .bounce-d{display:none}
 @media (min-width:1024px){.reasons-m{display:none}.bounce-d{display:block}}
+.rows .mchip{grid-area:chip}
