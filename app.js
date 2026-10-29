@@ -1,10 +1,8 @@
-const OWNER = "i-rinkung", REPO = "claude-dotfiles";
-const API = "https://api.github.com/repos/" + OWNER + "/" + REPO;
 const $ = (id) => document.getElementById(id);
 const V = $("v"), BR = $("branch"), OUT = $("logout");
-const st = { branch: "main", folder: "runs", file: null, issueState: "open", issue: null, q: "", f: "all" };
+const st = Object.assign(KeshApi.st, { folder: "runs", file: null, issueState: "open", issue: null, q: "", f: "all" });
 const NAMES = ["today", "overview", "issues", "stats", "files", "agents"];
-let cache = {}, rid = 0;
+let rid = 0;
 
 const h = (tag, a, ...kids) => {
   const e = document.createElement(tag);
@@ -17,7 +15,6 @@ const card = (...k) => h("div", { className: "card" }, ...k);
 const mut = (t) => h("div", { className: "mut" }, t);
 const num = (n) => (n == null ? "-" : Number(n).toLocaleString());
 const day = (s) => String(s || "").slice(0, 10);
-const token = () => localStorage.getItem("levana_token");
 const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const hud = (label, tag, body, cls) => h("section", { className: "hud " + (cls || "") },
   h("div", { className: "in" }, h("div", { className: "hud-head" }, h("span", { className: "label" }, label), tag || null), h("div", { className: "hud-body" }, ...[].concat(body))));
@@ -25,101 +22,8 @@ const panel = (title, count, ...kids) => h("section", { className: "panel" },
   h("div", { className: "hud-head" }, h("h2", title), typeof count === "string" ? h("span", { className: "label" }, count) : count), ...kids);
 const tag = (t, k) => h("span", { className: "tag " + (k || "info") }, t);
 
+const { OWNER, REPO, readLog, api, get, text, issues, commits, mdFiles, ws, token } = KeshApi;
 const LOGKEY = "levana_errlog";
-const readLog = () => { try { return JSON.parse(localStorage.getItem(LOGKEY)) || []; } catch (e) { return []; } };
-const logErr = (e) => {
-  try {
-    localStorage.setItem(LOGKEY, JSON.stringify(KeshLogic.pushLog(readLog(), {
-      time: new Date().toISOString(), path: e.path, status: e.status || null, code: e.code,
-      remaining: e.remaining == null ? null : e.remaining, retryAfter: e.retryAfter == null ? null : e.retryAfter, message: e.message || ""
-    })));
-  } catch (x) {}
-};
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function once(path, raw) {
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
-  let r;
-  try {
-    r = await fetch(path.startsWith("http") ? path : API + path, {
-      signal: ctl.signal,
-      headers: { Authorization: "Bearer " + token(), Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" }
-    });
-    if (r.ok) return await (raw ? r.text() : r.json());
-  } catch (x) {
-    throw x && x.name === "AbortError" ? { code: "timeout", path, message: "timeout 15s" } : { code: "network", path, message: String(x && x.message || x) };
-  } finally { clearTimeout(t); }
-  let msg = "";
-  try { msg = (await r.json()).message || ""; } catch (x) {}
-  const ra = r.headers.get("retry-after"), rem = r.headers.get("x-ratelimit-remaining");
-  const e = { status: r.status, path, message: msg, remaining: rem, retryAfter: ra == null || isNaN(+ra) ? null : +ra };
-  e.code = KeshLogic.classify({ status: r.status, retryAfter: e.retryAfter, remaining: rem, msg });
-  throw e;
-}
-async function onceGql(vars) {
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000), path = "graphql";
-  let r;
-  try {
-    r = await fetch("https://api.github.com/graphql", {
-      method: "POST", signal: ctl.signal,
-      headers: { Authorization: "Bearer " + token(), "Content-Type": "application/json" },
-      body: JSON.stringify({ query: KeshLogic.GQL_QUERY, variables: vars })
-    });
-  } catch (x) {
-    throw x && x.name === "AbortError" ? { code: "timeout", path, message: "timeout 15s" } : { code: "network", path, message: String(x && x.message || x) };
-  } finally { clearTimeout(t); }
-  let body = {};
-  try { body = await r.json(); } catch (x) {}
-  const ra = r.headers.get("retry-after"), rem = r.headers.get("x-ratelimit-remaining");
-  const retryAfter = ra == null || isNaN(+ra) ? null : +ra;
-  let errors = body.errors;
-  if (!r.ok && !(errors && errors.length)) errors = [{ message: body.message || "" }];
-  if (r.ok && !(errors && errors.length)) return body.data;
-  const c = KeshLogic.classifyGql({ status: r.status, errors, retryAfter, remaining: rem });
-  if (r.ok && body.data && body.data.repository && c.code !== "rate" && c.code !== "auth") {
-    logErr({ status: r.status, path, message: c.message, code: "partial" });
-    return Object.assign({}, body.data, { _errors: errors });
-  }
-  throw { status: r.status, path, message: c.message, remaining: rem, retryAfter, code: c.code };
-}
-const retrying = async (fn) => {
-  for (let n = 0; ; n++) {
-    try { return await fn(); } catch (e) {
-      const d = KeshLogic.retryDelay(e, n);
-      if (d == null) { logErr(e); throw e; }
-      await sleep(d);
-    }
-  }
-};
-const api = (path, raw) => retrying(() => once(path, raw));
-const get = (key, fn) => KeshLogic.memo(cache, key, fn);
-const ref = () => "?ref=" + encodeURIComponent(st.branch);
-const dir = (p) => get("d" + p, () => api("/contents/" + p + ref()).then((l) => l.filter((x) => x.type === "file")));
-const text = (p) => get("f" + p, () => api("/contents/" + encodeURI(p) + ref(), true));
-const snap = () => get("g", () => retrying(() => onceGql(KeshLogic.gqlVars(OWNER, REPO, st.branch))).then((d) => {
-  const m = KeshLogic.mapGraphql(d);
-  if (!m || !m.branchFound) throw { code: "404", path: "graphql", message: "repository or branch not found" };
-  return m;
-}));
-const issues = () => snap().then((m) => m.issues);
-const commits = () => snap().then((m) => m.commits);
-const mdFiles = async (d) => {
-  try { return await dir(d); } catch (e) { if (e.code === "404") return []; throw e; }
-};
-let partial = [], notes = [];
-const ws = () => get("ws", async () => {
-  const m = await snap();
-  partial = m.partial;
-  notes = m.notes;
-  const is = m.issues, got = m.files;
-  const of = (d) => got.filter((x) => x.dir === d);
-  const runs = of("runs").map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
-  const agents = of("agents").map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
-  const l = of("lessons"), lessons = {};
-  for (const x of l) lessons[x.name] = KeshParse.countLessons(x.md);
-  return { runs, agents, lessons, lessonTexts: l, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
-});
-
 function md(el, src) {
   if (window.marked && window.DOMPurify) {
     el.className = "md";
@@ -140,7 +44,7 @@ function tokenForm(msg) {
     e.preventDefault();
     if (!inp.value.trim()) return;
     localStorage.setItem("levana_token", inp.value.trim());
-    cache = {};
+    KeshApi.clear();
     boot();
   };
   V.replaceChildren(...(msg ? [h("p", { className: "bad", textContent: msg })] : []), card(f));
@@ -158,7 +62,7 @@ function fail(e) {
   }[e.code] || "โหลดไม่สำเร็จ";
   const detail = [e.status, e.path, e.message].filter(Boolean).join(" · ");
   V.replaceChildren(card(h("span", { className: "bad", textContent: m }), detail ? mut(detail) : null,
-    h("div", {}, h("button", { textContent: "ลองใหม่", onclick: () => { cache = {}; booted ? route() : boot(); } }))));
+    h("div", {}, h("button", { textContent: "ลองใหม่", onclick: () => { KeshApi.clear(); booted ? route() : boot(); } }))));
 }
 
 const empty = (t) => card(mut(t || "ไม่มีข้อมูล"));
@@ -343,8 +247,8 @@ async function route() {
   try {
     const out = await views[name]();
     if (id === rid) {
-      const note = partial.length && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") })] : [];
-      const nn = name !== "errors" ? notes.map((t) => h("div", { className: "bad", textContent: t })) : [];
+      const note = KeshApi.partial().length && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: "โหลดไม่ได้ " + KeshApi.partial().length + " ไฟล์: " + KeshApi.partial().join(", ") })] : [];
+      const nn = name !== "errors" ? KeshApi.notes().map((t) => h("div", { className: "bad", textContent: t })) : [];
       V.replaceChildren(h("div", { className: "page " + name }, ...note, ...nn, ...out));
     }
   } catch (e) {
@@ -373,7 +277,7 @@ MODE.onclick = () => {
   syncMode();
 };
 syncMode();
-BR.onchange = () => { st.branch = BR.value; st.file = null; cache = {}; route(); };
-OUT.onclick = () => { booted = false; localStorage.removeItem("levana_token"); cache = {}; BR.hidden = true; tokenForm(); };
+BR.onchange = () => { st.branch = BR.value; st.file = null; KeshApi.clear(); route(); };
+OUT.onclick = () => { booted = false; localStorage.removeItem("levana_token"); KeshApi.clear(); BR.hidden = true; tokenForm(); };
 window.addEventListener("hashchange", route);
 boot();
