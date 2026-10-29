@@ -100,7 +100,7 @@ const ws = () => get("ws", async () => {
   const agents = of("agents").map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
   const l = of("lessons"), lessons = {};
   for (const x of l) lessons[x.name] = KeshParse.countLessons(x.md);
-  return { runs, agents, lessons, lessonTexts: l, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
+  return { runs, agents, lessons, files: got, lessonTexts: l, issues: is, agg: KeshParse.aggregate(runs, is, agents, lessons) };
 });
 
 const recheck = async () => {

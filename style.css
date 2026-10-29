@@ -369,3 +369,5 @@ h1:focus{outline:none}
 .bounce-d{display:none}
 @media (min-width:1024px){.reasons-m{display:none}.bounce-d{display:block}}
 .rows .mchip{grid-area:chip}
+.lgrid{display:grid;gap:var(--gap);grid-template-columns:minmax(0,1fr);align-items:start}
+@media (min-width:1024px){.lgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
