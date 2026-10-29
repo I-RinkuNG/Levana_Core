@@ -74,8 +74,9 @@ const commits = () => get("c", () => api("/commits?sha=" + encodeURIComponent(st
 const mdFiles = async (d) => {
   try { return await dir(d); } catch (e) { if (e.code === "404") return []; throw e; }
 };
+let truncated = false;
 const tree = () => get("t", () => api("/git/trees/" + encodeURIComponent(st.branch) + "?recursive=1").then((t) =>
-  t.tree.filter((x) => x.type === "blob" && /^(runs|agents|lessons)\/[^/]+\.md$/.test(x.path)).map((x) => x.path)));
+  (truncated = !!t.truncated, t.tree).filter((x) => x.type === "blob" && /^(runs|agents|lessons)\/[^/]+\.md$/.test(x.path)).map((x) => x.path)));
 let partial = [];
 const pool = async (items, n, fn) => {
   const out = new Array(items.length);
@@ -91,6 +92,10 @@ const pool = async (items, n, fn) => {
 const ws = () => get("ws", async () => {
   const [paths, is] = await Promise.all([tree(), issues()]);
   const res = await pool(paths, 6, async (p) => ({ dir: p.split("/")[0], name: p.split("/")[1].replace(/\.md$/, ""), md: await text(p) }));
+  const bad = res.filter((x) => !x.ok);
+  const authErr = bad.find((x) => x.e && x.e.code === "auth");
+  if (authErr) throw authErr.e;
+  if (res.length > 0 && bad.length === res.length) throw bad[0].e;
   partial = paths.filter((p, i) => !res[i].ok);
   const got = res.filter((x) => x.ok).map((x) => x.v);
   const of = (d) => got.filter((x) => x.dir === d);
@@ -324,7 +329,7 @@ async function route() {
   try {
     const out = await views[name]();
     if (id === rid) {
-      const note = partial.length && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") })] : [];
+      const note = (partial.length || truncated) && name !== "errors" && name !== "files" && name !== "issues" ? [h("div", { className: "bad", textContent: [partial.length ? "โหลดไม่ได้ " + partial.length + " ไฟล์: " + partial.join(", ") : "", truncated ? "รายการไฟล์ไม่ครบ (tree truncated)" : ""].filter(Boolean).join(" | ") })] : [];
       V.replaceChildren(h("div", { className: "page " + name }, ...note, ...out));
     }
   } catch (e) {

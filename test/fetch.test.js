@@ -23,7 +23,8 @@ test("retryDelay: backoff, caps, never auth/404, max 2 retries", () => {
   assert.equal(L.retryDelay({ code: "http", status: 502 }, 0), 500);
   assert.equal(L.retryDelay({ code: "http", status: 400 }, 0), null);
   assert.equal(L.retryDelay({ code: "rate", retryAfter: 3 }, 0), 3000);
-  assert.equal(L.retryDelay({ code: "rate", retryAfter: 60 }, 0), 10000);
+  assert.equal(L.retryDelay({ code: "rate", retryAfter: 60 }, 0), null);
+  assert.equal(L.retryDelay({ code: "rate", retryAfter: 10 }, 0), 10000);
   assert.equal(L.retryDelay({ code: "rate" }, 1), 1000);
   for (const code of ["auth", "404", "forbidden"]) assert.equal(L.retryDelay({ code }, 0), null);
 });

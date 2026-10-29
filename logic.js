@@ -30,7 +30,10 @@ const KeshLogic = (() => {
     if (attempt >= 2) return null;
     const back = 500 * Math.pow(2, attempt);
     if (e.code === "network" || e.code === "timeout" || (e.code === "http" && e.status >= 500)) return back;
-    if (e.code === "rate") return Math.min(10000, e.retryAfter != null ? e.retryAfter * 1000 : back);
+    if (e.code === "rate") {
+      const d = e.retryAfter != null ? e.retryAfter * 1000 : back;
+      return d > 10000 ? null : d;
+    }
     return null;
   };
   const pushLog = (log, entry, max = 50) => (log || []).concat([entry]).slice(-max);
