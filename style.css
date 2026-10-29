@@ -144,7 +144,7 @@ html[data-mode=dark] .brief .bad-t{color:var(--bad)}
 .q-verb{grid-area:verb;color:var(--ink-2);font-weight:600}
 .q-bad .q-verb,.q-bad::before{color:var(--bad)}
 .q-body{grid-area:body;display:flex;flex-direction:column;min-width:0}
-.q-body b{line-height:1.5}
+.q-body b{line-height:1.5;text-wrap:balance}
 .q .btn{grid-area:btn;justify-self:start;margin-top:var(--s2)}
 
 /* ---- 5h budget: countdown hero (D2) ---- */
@@ -284,7 +284,7 @@ html[data-mode=dark] .brief .bad-t{color:var(--bad)}
 .mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--slab);color:var(--on-slab)}
 .mark svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5}
 .o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}.o7{order:7}
-.sub{margin:calc(-1 * var(--s2)) 0 var(--s3)}
+.sub{margin:calc(-1 * var(--s2)) 0 var(--s3);max-width:60ch}
 @media (min-width:1024px){.tri>.zone>*{order:0}}
 @media (max-width:599.98px){
   .m-hide{display:none!important}
@@ -292,6 +292,9 @@ html[data-mode=dark] .brief .bad-t{color:var(--bad)}
   .q .btn{margin:0;padding:0 var(--s3)}
   .q::before{align-self:center;font-size:24px}
   .op-ini{height:40px;font-size:32px}
+  .rows .row{padding:8px 0}
+  .m-hero{margin-bottom:12px}
+  .strip li.api{margin-top:0}
 }
 @media (min-width:1024px){
   .tri .cards{grid-template-columns:repeat(2,minmax(0,1fr))}

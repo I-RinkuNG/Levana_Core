@@ -25,7 +25,7 @@ async function once(path, raw) {
   try {
     r = await fetch(path.startsWith("http") ? path : API + path, {
       signal: ctl.signal,
-      headers: { Authorization: "Bearer " + token(), Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" }
+      headers: Object.assign({ Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" }, path.startsWith("https://api.github.com/") || !path.startsWith("http") ? { Authorization: "Bearer " + token() } : {})
     });
     if (r.ok) return await (raw ? r.text() : r.json());
   } catch (x) {

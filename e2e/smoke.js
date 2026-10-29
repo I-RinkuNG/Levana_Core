@@ -9,7 +9,7 @@ const server = http.createServer((q, r) => {
   fs.readFile(p.startsWith(ROOT) ? p : "/nope", (e, b) => e ? (r.writeHead(404), r.end()) : (r.writeHead(200, { "content-type": MIME[path.extname(p)] || "text/plain" }), r.end(b)));
 });
 const PAGES = ["today", "runs", "run", "issues", "issue", "agents", "usage", "lessons", "files", "errors", "more"];
-const OUT = path.join(ROOT, "design/v2/build-shots");
+const OUT = process.env.OUT || path.join(ROOT, "design/v2/build-shots");
 const only = process.argv[2];
 (async () => {
   await new Promise((r) => server.listen(0, r));
