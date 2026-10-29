@@ -19,6 +19,30 @@ const KeshLogic = (() => {
     }
     return Object.keys(m).map((k) => Object.assign(m[k], { rate: m[k].rejects / m[k].handoffs })).sort((a, b) => b.rate - a.rate || b.rejects - a.rejects);
   };
-  return { TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
+  const classify = ({ status, retryAfter, remaining, msg }) => {
+    if (status === 401) return "auth";
+    if (status === 404) return "404";
+    if (status === 429 || (status === 403 && (retryAfter != null || remaining === "0" || /rate limit/i.test(msg || "")))) return "rate";
+    if (status === 403) return "forbidden";
+    return "http";
+  };
+  const retryDelay = (e, attempt) => {
+    if (attempt >= 2) return null;
+    const back = 500 * Math.pow(2, attempt);
+    if (e.code === "network" || e.code === "timeout" || (e.code === "http" && e.status >= 500)) return back;
+    if (e.code === "rate") {
+      const d = e.retryAfter != null ? e.retryAfter * 1000 : back;
+      return d > 10000 ? null : d;
+    }
+    return null;
+  };
+  const pushLog = (log, entry, max = 50) => (log || []).concat([entry]).slice(-max);
+  const memo = (cache, key, fn) => {
+    if (cache[key]) return cache[key];
+    const p = cache[key] = fn();
+    p.catch(() => { if (cache[key] === p) delete cache[key]; });
+    return p;
+  };
+  return { classify, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;
