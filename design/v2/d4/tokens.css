@@ -1,0 +1,40 @@
+/* ===== Levana v2 · D4 "Sortie Formation" — final tokens =====
+   Layout + colour roles from D3, type + radius + spacing from D2, label tabs + operator cards from D1.
+   Colour rule: --act* (orange) = things you can press. --data* (cyan) = measured values. Status colours = state + icon + label. */
+:root{
+  /* type */
+  --font-body:"Noto Sans Thai","IBM Plex Sans Thai","Sarabun",system-ui,sans-serif;
+  --font-disp:"Anuphan","Noto Sans Thai",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",monospace;
+  --t-meta:13px;--t-small:15px;--t-body:17px;--t-h2:20px;--t-h1:28px;--t-val:32px;--t-hero:56px;
+  --lh:1.6;--lh-h:1.3;--lh-disp:1.15;
+  /* spacing (4-based scale only) */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;--s12:48px;
+  --pad:var(--s4);--gap:var(--s4);            /* mobile; desktop raises both to --s6 */
+  /* shape */
+  --r:14px;--r-in:10px;--r-tab:6px;--r-ctl:999px;--r-chip:999px;
+  --br:16px;--br-w:2px;--br-off:6px;          /* corner bracket arm, stroke, offset outside the card */
+  /* motion */
+  --dur:140ms;--ease:cubic-bezier(.2,0,0,1);
+  --tap:44px;
+
+  /* light */
+  --bg:#e9eaef;--surface:#ffffff;--surface-2:#f3f4f7;--sunken:#dfe1e7;--line:#cfd2db;--line-strong:#7d8291;
+  --ink:#14151b;--ink-2:#4a4d5a;
+  --slab:#14151b;--on-slab:#f4f4f7;--on-slab-2:#b3b6c2;
+  --act:#b8440b;--act-hover:#9a3807;--on-act:#ffffff;--act-ink:#a63d09;
+  --data:#0a7ea8;--data-ink:#0b6383;--data-bg:#d6ebf3;--data-tint:#e6f2f7;
+  --ok:#1b6e45;--ok-bg:#d9efe3;--bad:#b3192b;--bad-mark:#b3192b;--bad-bg:#f8dde0;
+  --focus:#0b6f94;
+}
+html[data-mode=dark]{
+  --bg:#0f1015;--surface:#181920;--surface-2:#1f2029;--sunken:#0a0a0e;--line:#2f313c;--line-strong:#5f6372;
+  --ink:#eeeef3;--ink-2:#a6a8b6;
+  --slab:#2c2e3a;--on-slab:#eeeef3;--on-slab-2:#a6a8b6;
+  --act:#ff8a3d;--act-hover:#ffa264;--on-act:#1a0d02;--act-ink:#ffa264;
+  --data:#249bce;--data-ink:#5cc8ef;--data-bg:#0f2a36;--data-tint:#132530;
+  --ok:#55d394;--ok-bg:#11291d;--bad:#ff7a85;--bad-mark:#ec5866;--bad-bg:#33161a;
+  --focus:#5cc8ef;
+}
+@media (min-width:1024px){:root{--pad:var(--s6);--gap:var(--s6)}}
+@media (prefers-reduced-motion:reduce){:root{--dur:0ms}}
