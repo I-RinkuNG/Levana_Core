@@ -228,3 +228,17 @@ test("lessonGroups: <=7 then rest, query and agent filter; highlight", () => {
   assert.deepEqual(L.highlight("a NEEDLE b", "needle"), [{ t: "a ", hit: false }, { t: "NEEDLE", hit: true }, { t: " b", hit: false }]);
   assert.deepEqual(L.highlight("abc", ""), [{ t: "abc", hit: false }]);
 });
+
+test("bounceSummary: totals, sorted rates, empty", () => {
+  const s = L.bounceSummary([{ name: "a", handoffs: 25, bounceRate: 0.24 }, { name: "b", handoffs: 5, bounceRate: 0 }, { name: "c", handoffs: 0, bounceRate: 0 }]);
+  assert.equal(s.handoffs, 30);
+  assert.equal(s.bounces, 6);
+  assert.equal(s.rate, 0.2);
+  assert.equal(s.rates[0].agent, "a");
+  assert.equal(s.rates.length, 2);
+  assert.deepEqual(L.bounceSummary([]), { handoffs: 0, bounces: 0, rate: 0, rates: [] });
+});
+
+test("normalizeAgent knows tzayar", () => {
+  assert.equal(P.normalizeAgent("Tzayar"), "tzayar");
+});

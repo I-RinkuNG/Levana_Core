@@ -1,5 +1,5 @@
 const KeshParse = (() => {
-  const KNOWN_AGENTS = ["kesh", "rin", "rosh", "cheker", "amet", "zekher", "bona", "kotev", "bochek", "tak", "oseh"];
+  const KNOWN_AGENTS = ["kesh", "rin", "rosh", "cheker", "amet", "zekher", "bona", "kotev", "bochek", "tak", "oseh", "tzayar"];
 
   function normalizeAgent(text) {
     const m = /[A-Za-z]+/.exec(String(text == null ? "" : text).trim());

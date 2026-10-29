@@ -31,7 +31,7 @@ const KeshUI = (() => {
       h("div", { className: "hd" }, t, title ? h("h2", { id }, title) : null, m ? more(m[0], m[1]) : null), children);
   };
   const strip = (cells, label, api) => h("ul", { className: "strip", "aria-label": label },
-    cells.map((c) => h("li", { className: c.d ? "d-only" : "" }, h("span", { className: "mono", translate: "no" }, c.k), h("b", { className: "num" + (c.cls ? " " + c.cls : "") }, c.v))), api);
+    cells.map((c) => h("li", { className: c.d ? "d-only" : "" }, h("span", { className: "mono", translate: "no" }, c.k), h("b", { className: "num" + (c.cls ? " " + c.cls : "") }, c.v), c.sub ? h("span", { className: "meta" }, c.sub) : null)), api);
   const KIND = { ok: "check", bad: "bounce", run: "play" };
   const chip = (kind, text) => h("span", { className: "chip " + kind }, icon(KIND[kind] || "check", "sm"), text);
   const btn = (text, o = {}) => {
@@ -65,6 +65,11 @@ const KeshUI = (() => {
           h("a", { className: "more", href: "#lessons" }, "lessons " + c.lessons)
         ] : h("span", { className: "meta" + (bad ? " bad-t" : "") }, bad ? icon("errors", "sm") : null, "ตีกลับ " + pct + "%")));
   };
+  const runRow = (r, seq) => {
+    const c = KeshLogic.runChip(r);
+    return h("li", h("a", { className: "row", href: "#run/" + encodeURIComponent(r.run_id) }, h("span", { className: "num rid", translate: "no" }, String(seq).padStart(3, "0")),
+      h("span", { className: "rname" }, r.title || r.run_id), chip(c.kind, c.text), h("span", { className: "num rtok" }, KeshLogic.fmtTok(r.tokens_total))));
+  };
   const md = (el, src) => {
     if (window.marked && window.DOMPurify) {
       el.className = "md";
@@ -72,5 +77,5 @@ const KeshUI = (() => {
     } else el.append(h("pre", src));
     return el;
   };
-  return { h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, meter, stages, opCard, md };
+  return { runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, meter, stages, opCard, md };
 })();

@@ -249,12 +249,17 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     return out;
   };
 
+  const bounceSummary = (cards) => {
+    const rates = (cards || []).filter((c) => c.handoffs > 0 && c.name !== "rin" && c.name !== "kesh").map((c) => ({ agent: c.name, handoffs: c.handoffs, rejects: Math.round(c.bounceRate * c.handoffs), rate: c.bounceRate })).sort((a, b) => b.rate - a.rate || b.rejects - a.rejects);
+    const handoffs = rates.reduce((s, r) => s + r.handoffs, 0), bounces = rates.reduce((s, r) => s + r.rejects, 0);
+    return { handoffs, bounces, rate: handoffs ? bounces / handoffs : 0, rates };
+  };
   const actionQueue = ({ runs, issues, apiStatus, rates, now }) => {
     const out = [];
     const ar = activeRun(runs);
     if (ar) {
       const st = stageModel(ar).find((s) => s.state === "now");
-      out.push({ kind: "APPROVE", title: "Run " + ar.run_id + " รออนุมัติ", meta: (st ? "อยู่ขั้น " + st.agent + " · " : "") + (ar.handoffs || []).length + " handoff", href: "#run/" + encodeURIComponent(ar.run_id), danger: false });
+      out.push({ kind: "APPROVE", title: "Run " + (ar.title || ar.run_id) + " รออนุมัติ", meta: (st ? "อยู่ขั้น " + st.agent + " · " : "") + (ar.handoffs || []).length + " handoff", href: "#run/" + encodeURIComponent(ar.run_id), danger: false });
     }
     if (apiStatus && apiStatus.ok === false) out.push({ kind: "ALERT", title: "GitHub token API ใช้ไม่ได้", meta: "ตรวจล่าสุด " + (apiStatus.checkedAt ? hhmm(apiStatus.checkedAt) : "-"), href: "#errors", danger: true });
     for (const r of (rates || []).filter((x) => bounceLevel(x.rate) === "bad" && x.agent !== "rin" && x.agent !== "kesh")) {
@@ -316,6 +321,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (i < t.length) out.push({ t: t.slice(i), hit: false });
     return out;
   };
-  return { BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
+  return { bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;
