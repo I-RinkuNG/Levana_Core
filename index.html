@@ -1,41 +1,68 @@
 <!doctype html>
-<html lang="th" data-theme="mix">
+<html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e9eaef">
 <title>Levana Core</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css">
 <script>
-(function(){var m;try{m=localStorage.getItem("lv-mode")}catch(e){}
-if(m!=="light"&&m!=="dark")m=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";
-document.documentElement.dataset.mode=m})();
+(function(){var m;try{m=localStorage.getItem("lvn-mode")}catch(e){}
+document.documentElement.dataset.mode=m||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})()
 </script>
+<link rel="preload" href="fonts/notosansthai-thai.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/notosansthai-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <b>Levana Core</b>
-  <select id="branch" aria-label="branch" hidden></select>
-  <button id="logout" class="ghost" hidden>ลบ token</button>
-  <button id="mode" type="button" aria-label="สลับโหมดสว่าง/มืด"></button>
-</header>
-<nav id="nav">
-  <a href="#today">วันนี้</a>
-  <a href="#overview">ภาพรวม</a>
-  <a href="#issues">Issues</a>
-  <a href="#stats">สถิติ</a>
-  <a href="#files">ไฟล์</a>
-  <a href="#agents">Agents</a>
-  <a href="#errors">Errors</a>
-</nav>
-<main id="v"></main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha512-xeUh+KxNyTufZOje++oQHstlMQ8/rpyzPuM+gjMFYK3z5ILJGE7l2NvYL+XfliKURMpBIKKp1XoPN/qswlSMFA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-jB0TkTBeQC9ZSkBqDhdmfTv1qdfbWpGE72yJ/01Srq6hEzZIz2xkz1e57p9ai7IeHMwEG7HpzG6NdptChif5Pg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></symbol>
+  <symbol id="i-runs" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12"/><path d="M18 4l2 2-2 2"/></symbol>
+  <symbol id="i-issues" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  <symbol id="i-agents" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+  <symbol id="i-usage" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-lessons" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></symbol>
+  <symbol id="i-files" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+  <symbol id="i-errors" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16A8 8 0 0 0 12 4z" fill="currentColor"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bounce" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-empty" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M3 13h5l2 2h4l2-2h5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l12 8-12 8z"/></symbol>
+</svg>
+<a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+<div class="app" data-state="ready">
+  <aside class="nav" aria-label="เมนูหลัก">
+    <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3v18h14"/><path d="M10 3v13h9"/></svg></span><b>LEVANA</b><span class="tag" translate="no">core</span></div>
+    <nav id="nav"></nav>
+    <p class="nav-foot meta mono" translate="no">claude-dotfiles<br>main</p>
+  </aside>
+  <div class="col" id="col"></div>
+</div>
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
 <script src="parse.js"></script>
 <script src="logic.js"></script>
+<script src="api.js"></script>
+<script src="ui.js"></script>
+<script>var KeshViews = {};</script>
+<script src="views/today.js"></script>
+<script src="views/runs.js"></script>
+<script src="views/run.js"></script>
+<script src="views/issues.js"></script>
+<script src="views/agents.js"></script>
+<script src="views/usage.js"></script>
+<script src="views/lessons.js"></script>
+<script src="views/files.js"></script>
+<script src="views/errors.js"></script>
+<script src="views/more.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

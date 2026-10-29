@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="th" data-dir="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111315">
+<title>Levana v2 mockup — A · Terminal</title>
+<script>(function(){var q=new URLSearchParams(location.search),m=q.get('mode');try{m=m||localStorage.getItem('lvn-mode')}catch(e){}document.documentElement.dataset.mode=m||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600&family=Barlow+Condensed:wght@600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Levana_Core design tokens v2
+   Usage: <html data-dir="a|b|c" data-mode="light|dark">
+   Foundations are shared; each direction swaps colour, fonts, and frame shape only.
+   Fonts: Google Fonts (all OFL, all support Thai or fall back to a Thai face).
+   Production: self-host WOFF2 subset thai+latin, font-display: swap, preload 400/600 (R21). */
+
+:root {
+  /* ---- spacing: the only allowed values (R5) ---- */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+  /* ---- type scale: 3 text sizes + 1 display numeral size (R2, R7) ---- */
+  --t-meta: 0.8125rem;   /* 13px  mono labels, timestamps, table meta (secondary only) */
+  --t-body: 1.0625rem;   /* 17px  Thai body, list rows, buttons */
+  --t-title: 1.5rem;     /* 24px  page title, panel numbers */
+  --t-display: 2rem;     /* 32px  one hero figure per screen (tabular) */
+  --lh-body: 1.6;        /* Thai body (R3) */
+  --lh-title: 1.3;
+  --lh-display: 1.15;
+  --lh-control: 1.4;     /* single-line controls; tone marks never clipped */
+  --w-regular: 400;
+  --w-strong: 600;
+  --measure: 32em;       /* ~60 Thai characters per line (R4) */
+  --label-track: 0.06em; /* EN mono labels only, never on Thai */
+
+  /* ---- sizes ---- */
+  --tap: 44px;           /* minimum tap target (R1) */
+  --nav-h: 64px;         /* mobile bottom bar */
+  --header-h: 56px;
+  --side-w: 240px;
+  --content-max: 1200px;
+
+  /* ---- motion (Rin: < 200ms, hover only) ---- */
+  --dur: 140ms;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* ---- frame shape defaults (overridden per direction) ---- */
+  --cut: 0px;            /* angled corner size */
+  --radius: 0px;         /* panel radius */
+  --radius-ctl: 0px;     /* control radius */
+  --bw: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur: 0ms; }
+}
+
+/* =====================================================================
+   A · TERMINAL  (Arknights-leaning)
+   White operation panels, black label slabs, signal cyan + caution yellow,
+   condensed numerals, one cut corner per panel, thin 1px lines.
+   ===================================================================== */
+[data-dir="a"] {
+  --font-body: "IBM Plex Sans Thai", "Sarabun", "Noto Sans Thai", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "IBM Plex Sans Thai", "Noto Sans Thai", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Noto Sans Thai", monospace;
+  --cut: 12px; --radius: 0px; --radius-ctl: 0px;
+}
+[data-dir="a"][data-mode="light"] {
+  --bg: #e9ecef;  --surface: #ffffff; --surface-2: #f1f3f5; --sunken: #dde1e5;
+  --line: #cfd5db; --line-strong: #8a949e;
+  --ink: #121417; --ink-2: #4a525c;
+  --slab: #16181b; --on-slab: #ffffff;           /* black label slabs */
+  --accent: #0072ad; --accent-ink: #006aa3; --on-accent: #ffffff;
+  --hi: #ffd60a; --on-hi: #121417;               /* caution yellow, fill only */
+  --danger: #b4152b; --danger-bg: #fde8eb;
+  --warn: #8a5a00;  --warn-bg: #fff4cc;
+  --ok: #1d6f3a;    --ok-bg: #e3f4e8;
+  --focus: #006aa3;
+  --c1: #0a85c2; --c2: #b07f00; --c3: #c2255c; --c-other: #9aa3ad; --grid: #e3e7eb;
+}
+[data-dir="a"][data-mode="dark"] {
+  --bg: #111315;  --surface: #1a1d20; --surface-2: #22262a; --sunken: #0b0c0e;
+  --line: #2e3338; --line-strong: #5d6670;
+  --ink: #eceff2; --ink-2: #a6afb9;
+  --slab: #e9ecef; --on-slab: #111315;           /* slabs invert in dark */
+  --accent: #38bdf8; --accent-ink: #5cc8ff; --on-accent: #0b0c0e;
+  --hi: #ffd84a; --on-hi: #111315;
+  --danger: #ff7a85; --danger-bg: #3a1a1f;
+  --warn: #ffd166;  --warn-bg: #3a3014;
+  --ok: #5fd68a;    --ok-bg: #16301f;
+  --focus: #5cc8ff;
+  --c1: #1e95cc; --c2: #b8890a; --c3: #e0457b; --c-other: #5d6670; --grid: #262a2e;
+}
+
+/* =====================================================================
+   B · CODEX  (Chaos Zero Nightmare-leaning)
+   Lavender-white / deep night, orchid primary in pill actions,
+   tab-shaped page header, soft 14px panels, orange as the one highlight.
+   ===================================================================== */
+[data-dir="b"] {
+  --font-body: "Noto Sans Thai", "IBM Plex Sans Thai", "Sarabun", system-ui, sans-serif;
+  --font-display: "Anuphan", "Noto Sans Thai", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Noto Sans Thai", monospace;
+  --cut: 0px; --radius: 14px; --radius-ctl: 999px;
+}
+[data-dir="b"][data-mode="light"] {
+  --bg: #f1eff7;  --surface: #ffffff; --surface-2: #f6f4fb; --sunken: #e7e3f2;
+  --line: #e0dbee; --line-strong: #9a92b5;
+  --ink: #1c1830; --ink-2: #575170;
+  --slab: #1c1830; --on-slab: #ffffff;
+  --accent: #5b35c9; --accent-ink: #5b35c9; --on-accent: #ffffff;
+  --hi: #e8590c; --on-hi: #ffffff;               /* orange: marks + large text only */
+  --danger: #b81d3c; --danger-bg: #fce9ee;
+  --warn: #8f4a00;  --warn-bg: #fff0e0;
+  --ok: #17694d;    --ok-bg: #e2f5ee;
+  --focus: #5b35c9;
+  --c1: #5b35c9; --c2: #e8590c; --c3: #0f9d8a; --c-other: #a59fbd; --grid: #ece9f4;
+}
+[data-dir="b"][data-mode="dark"] {
+  --bg: #0f0d17;  --surface: #191624; --surface-2: #211d30; --sunken: #0a0910;
+  --line: #2f2a45; --line-strong: #6c6491;
+  --ink: #efebfa; --ink-2: #aea7c8;
+  --slab: #efebfa; --on-slab: #0f0d17;
+  --accent: #a58bff; --accent-ink: #b9a4ff; --on-accent: #0f0d17;
+  --hi: #ff8a3d; --on-hi: #0f0d17;
+  --danger: #ff7590; --danger-bg: #3a1624;
+  --warn: #ffb066;  --warn-bg: #36240f;
+  --ok: #4fd1a8;    --ok-bg: #12302a;
+  --focus: #b9a4ff;
+  --c1: #9271f0; --c2: #d9661c; --c3: #1a9e8a; --c-other: #5a5378; --grid: #262138;
+}
+
+/* =====================================================================
+   C · RELAY  (Arknights x CZN palette, Cyberpunk 2077 dialog shapes)
+   Graphite ground, crimson frame lines, notched dialog tabs, a cut
+   bottom-right corner and a corner marker; yellow as the signal fill.
+   ===================================================================== */
+[data-dir="c"] {
+  --font-body: "IBM Plex Sans Thai", "Sarabun", "Noto Sans Thai", system-ui, sans-serif;
+  --font-display: "Chakra Petch", "IBM Plex Sans Thai", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Noto Sans Thai", monospace;
+  --cut: 16px; --radius: 0px; --radius-ctl: 0px;
+}
+[data-dir="c"][data-mode="light"] {
+  --bg: #e6e6ea;  --surface: #f7f7f8; --surface-2: #eeeef1; --sunken: #d9d9df;
+  --line: #cfcfd6; --line-strong: #c0182f;      /* frame line = crimson */
+  --ink: #141418; --ink-2: #4d4d57;
+  --slab: #141418; --on-slab: #f7f7f8;
+  --accent: #c0182f; --accent-ink: #b0152a; --on-accent: #ffffff;
+  --hi: #f5d90a; --on-hi: #141418;
+  --sel: #007c89;                                /* selection / focus cyan */
+  --danger: #b0152a; --danger-bg: #fbe6e9;
+  --warn: #7d5f00;  --warn-bg: #fbf3c4;
+  --ok: #1d6f3a;    --ok-bg: #e2f2e7;
+  --focus: #007c89;
+  --c1: #c0182f; --c2: #0090a8; --c3: #6a4bd0; --c-other: #a3a3ad; --grid: #e2e2e7;
+}
+[data-dir="c"][data-mode="dark"] {
+  --bg: #0d0c0f;  --surface: #16141a; --surface-2: #1f1c24; --sunken: #08070a;
+  --line: #352a31; --line-strong: #ff4d5e;
+  --ink: #f1eef3; --ink-2: #b4adb9;
+  --slab: #f7e01d; --on-slab: #0d0c0f;           /* yellow slab, CP-style signal */
+  --accent: #ff4d5e; --accent-ink: #ff6b79; --on-accent: #0d0c0f;
+  --hi: #f7e01d; --on-hi: #0d0c0f;
+  --sel: #45e5f0;
+  --danger: #ff6b79; --danger-bg: #3a1419;
+  --warn: #f7e01d;  --warn-bg: #2f2a0b;
+  --ok: #5fd68a;    --ok-bg: #13291b;
+  --focus: #45e5f0;
+  --c1: #f0475a; --c2: #1fa5b0; --c3: #9a7cf0; --c-other: #5c5562; --grid: #241f27;
+}
+
+/* Levana v2 mockup components. Everything references tokens.css. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; color-scheme: light dark; scroll-padding-top: 72px; scroll-padding-bottom: 80px; }
+a, button, summary, [tabindex] { touch-action: manipulation; -webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 20%, transparent); }
+@media (min-width: 1024px) { html { scroll-padding-bottom: 0; } }
+[data-mode="light"] { color-scheme: light; }
+[data-mode="dark"] { color-scheme: dark; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: var(--w-regular) var(--t-body)/var(--lh-body) var(--font-body);
+  word-break: normal; overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+::selection { background: var(--accent); color: var(--on-accent); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { line-height: var(--lh-title); text-wrap: balance; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); }
+.meta { font-size: var(--t-meta); line-height: var(--lh-body); color: var(--ink-2); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: var(--s-2); top: -64px; z-index: 50; background: var(--slab); color: var(--on-slab); padding: var(--s-3) var(--s-4); }
+.skip:focus { top: var(--s-2); }
+.ico { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- EN mono label (Rin: small mono, >= 13px, 4.5:1) ---------- */
+.lbl {
+  font: var(--w-strong) var(--t-meta)/1.4 var(--font-mono);
+  letter-spacing: var(--label-track); text-transform: uppercase; color: var(--ink-2);
+}
+
+/* ---------- app shell ---------- */
+.app { min-height: 100dvh; padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
+.side { display: none; }
+.topbar {
+  position: sticky; top: 0; z-index: 20; height: var(--header-h);
+  display: flex; align-items: center; gap: var(--s-2); padding: 0 var(--s-2) 0 var(--s-4);
+  background: var(--bg); border-bottom: var(--bw) solid var(--line);
+}
+.topbar h1 { font: var(--w-strong) var(--t-title)/var(--lh-title) var(--font-display); flex: 1; min-width: 0; }
+.brand-sm { font: var(--w-strong) var(--t-meta)/1 var(--font-mono); letter-spacing: var(--label-track); color: var(--ink-2); }
+.iconbtn {
+  inline-size: var(--tap); block-size: var(--tap); display: grid; place-items: center; flex: none;
+  background: transparent; border: var(--bw) solid var(--line); border-radius: var(--radius-ctl); cursor: pointer; color: var(--ink);
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.iconbtn:hover { background: var(--surface-2); border-color: var(--line-strong); }
+.backbtn { display: inline-flex; align-items: center; gap: var(--s-1); min-height: var(--tap); padding: 0 var(--s-3) 0 var(--s-2); margin-left: calc(var(--s-2) * -1);
+  background: transparent; border: 0; cursor: pointer; color: var(--ink-2); text-decoration: none; font-size: var(--t-meta); }
+.backbtn:hover { color: var(--ink); }
+
+.fresh { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); padding: var(--s-3) var(--s-4) 0; }
+.fresh .dot { width: 8px; height: 8px; background: var(--ok); display: inline-block; margin-right: var(--s-1); }
+
+main { padding: var(--s-4); display: block; }
+.page-stack { display: flex; flex-direction: column; gap: var(--s-4); }
+.col { display: contents; }
+
+/* ---------- bottom tab bar (mobile, R8) ---------- */
+.tabbar {
+  position: fixed; inset: auto 0 0 0; z-index: 30; height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--surface); border-top: var(--bw) solid var(--line);
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: var(--nav-h); color: var(--ink-2); text-decoration: none; position: relative;
+  font-size: var(--t-meta); line-height: 1.4;
+  transition: color var(--dur) var(--ease);
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-current="page"] { color: var(--ink); font-weight: var(--w-strong); }
+.tab[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; background: var(--accent); }
+
+/* ---------- panel ---------- */
+.panel { position: relative; isolation: isolate; background: var(--surface); padding: var(--s-4); border-radius: var(--radius); }
+.ph { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-2) var(--s-3); margin-bottom: var(--s-3); min-height: 28px; }
+.ph h2 { font: var(--w-strong) var(--t-body)/var(--lh-title) var(--font-body); }
+.ph .end { margin-left: auto; }
+.tag { display: inline-flex; align-items: center; min-height: 24px; padding: 0 var(--s-2);
+  background: var(--slab); color: var(--on-slab); font: var(--w-strong) var(--t-meta)/1.4 var(--font-mono); letter-spacing: var(--label-track); text-transform: uppercase; }
+
+/* status chips: icon + text, never colour alone */
+.chip { display: inline-flex; align-items: center; gap: var(--s-1); min-height: 24px; padding: 0 var(--s-2);
+  font-size: var(--t-meta); line-height: 1.4; font-weight: var(--w-strong); border-radius: var(--radius-ctl); white-space: nowrap; }
+.chip .ico { width: 14px; height: 14px; stroke-width: 2; }
+.chip.run { background: var(--warn-bg); color: var(--warn); }
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.bad { background: var(--danger-bg); color: var(--danger); }
+.chip.neu { background: var(--surface-2); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  min-height: var(--tap); padding: 0 var(--s-4); line-height: var(--lh-control);
+  border: var(--bw) solid var(--line-strong); background: transparent; color: var(--ink);
+  border-radius: var(--radius-ctl); cursor: pointer; text-decoration: none; font-weight: var(--w-strong); font-size: var(--t-meta); white-space: nowrap;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.more { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); min-height: var(--tap); margin-top: var(--s-2);
+  color: var(--accent-ink); text-decoration: none; font-weight: var(--w-strong); font-size: var(--t-meta); }
+.more:hover { text-decoration: underline; }
+
+/* ---------- action queue (R13: first) ---------- */
+.acts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.act { display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-3); padding: var(--s-3) 0; border-top: var(--bw) solid var(--line); }
+.act:first-child { border-top: 0; padding-top: 0; }
+.act .mark { grid-row: span 2; width: 32px; height: 32px; display: grid; place-items: center; }
+.act .mark.bad { background: var(--danger-bg); color: var(--danger); }
+.act .mark.run { background: var(--warn-bg); color: var(--warn); }
+.act .mark.neu { background: var(--surface-2); color: var(--ink-2); }
+.act .txt { min-width: 0; }
+.act .txt strong { font-weight: var(--w-strong); display: block; }
+.act .go { grid-column: 2; justify-self: start; }
+
+/* ---------- budget (hero figure) ---------- */
+.hero-fig { font: var(--w-strong) var(--t-display)/var(--lh-display) var(--font-display); letter-spacing: -0.01em; }
+.hero-fig small { font-size: var(--t-body); font-weight: var(--w-regular); color: var(--ink-2); margin-left: var(--s-1); }
+.meter { display: flex; height: 16px; background: var(--sunken); margin: var(--s-3) 0 var(--s-2); gap: 2px; position: relative; }
+.meter span { display: block; height: 100%; }
+.meter .rsv { background: repeating-linear-gradient(135deg, var(--line-strong) 0 2px, transparent 2px 6px); opacity: .7; }
+.meter .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.legend { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); font-size: var(--t-meta); color: var(--ink-2); }
+.legend li { display: inline-flex; align-items: center; gap: var(--s-2); }
+.key { width: 12px; height: 12px; display: inline-block; flex: none; }
+.key.rsv { background: repeating-linear-gradient(135deg, var(--line-strong) 0 2px, transparent 2px 5px); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.legend b { color: var(--ink); font-weight: var(--w-strong); }
+
+/* ---------- KPI strip: one container split by dividers ---------- */
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); padding: 0; }
+.kpis.k4 { grid-template-columns: repeat(2, 1fr); }
+.kpi { padding: var(--s-3) var(--s-4); border-left: var(--bw) solid var(--line); min-width: 0; }
+.kpi:first-child { border-left: 0; }
+.kpis.k4 .kpi:nth-child(3) { border-left: 0; }
+.kpis.k4 .kpi:nth-child(n+3) { border-top: var(--bw) solid var(--line); }
+.kpi .v { font: var(--w-strong) var(--t-title)/var(--lh-display) var(--font-display); display: block; margin-top: var(--s-1); }
+.kpi .v small { font: var(--w-regular) var(--t-meta)/1 var(--font-body); color: var(--ink-2); margin-left: 2px; }
+.kpi .d { font-size: var(--t-meta); color: var(--ink-2); display: block; line-height: 1.5; }
+.kpi .d.bad { color: var(--danger); font-weight: var(--w-strong); }
+
+/* ---------- rows (runs, handoffs) ---------- */
+.rows { list-style: none; margin: 0; padding: 0; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 0 var(--s-3); align-items: center; min-height: 56px; padding: var(--s-2) 0; border-top: var(--bw) solid var(--line); text-decoration: none; color: inherit; }
+.rows li:first-child .row { border-top: 0; }
+a.row:hover { background: var(--surface-2); }
+.row .t { font-weight: var(--w-strong); min-width: 0; }
+.row .s { grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: center; }
+.row .r { grid-row: 1 / span 2; grid-column: 2; text-align: right; }
+.row .r b { font: var(--w-strong) var(--t-body)/1.3 var(--font-mono); display: block; }
+
+/* handoff timeline in Today */
+.hand { display: grid; grid-template-columns: 56px 1fr auto; gap: 0 var(--s-3); align-items: start; padding: var(--s-3) 0; border-top: var(--bw) solid var(--line); }
+.rows li:first-child .hand { border-top: 0; padding-top: 0; }
+.hand .id { font: var(--w-strong) var(--t-meta)/1.6 var(--font-mono); color: var(--ink-2); }
+.hand .who { font-weight: var(--w-strong); }
+.hand .res { font-size: var(--t-meta); color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hand .tk { font: var(--w-strong) var(--t-meta)/1.6 var(--font-mono); text-align: right; }
+
+/* agent bars */
+.abars { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.abar { display: grid; grid-template-columns: 72px 1fr auto; gap: var(--s-3); align-items: center; }
+.abar .bar { height: 12px; background: var(--sunken); position: relative; }
+.abar .bar span { position: absolute; inset: 0 auto 0 0; }
+.abar .n { font: var(--w-strong) var(--t-meta)/1.4 var(--font-mono); text-align: right; min-width: 7ch; }
+.abar .who { font-size: var(--t-meta); font-weight: var(--w-strong); }
+
+details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: var(--s-3); min-height: var(--tap); }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary .chev { margin-left: auto; transition: transform var(--dur) var(--ease); }
+details.fold[open] > summary .chev { transform: rotate(180deg); }
+details.fold > summary h2 { font: var(--w-strong) var(--t-body)/var(--lh-title) var(--font-body); }
+
+/* ---------- Run detail ---------- */
+.req { max-width: var(--measure); }
+.flow { margin-top: var(--s-3); display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; }
+.flow li { font-size: var(--t-meta); padding: var(--s-1) var(--s-2); background: var(--surface-2); color: var(--ink-2); border-radius: var(--radius-ctl); }
+.flow li.now { background: var(--hi); color: var(--on-hi); font-weight: var(--w-strong); }
+
+.chart { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.hbar { display: grid; grid-template-columns: 112px 1fr 64px; gap: var(--s-3); align-items: center; min-height: var(--tap); padding: 0 var(--s-1); outline-offset: 0; cursor: default; position: relative; }
+.hbar:hover, .hbar:focus-visible { background: var(--surface-2); }
+.hbar .lab { font-size: var(--t-meta); line-height: 1.35; }
+.hbar .lab b { font-family: var(--font-mono); font-weight: var(--w-strong); color: var(--ink); margin-right: var(--s-1); }
+.hbar .lab span { color: var(--ink-2); }
+.hbar .track { height: 20px; position: relative; }
+.hbar .track i { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; }
+.hbar.bounce .track i { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.45) 0 2px, transparent 2px 6px); }
+.hbar .val { font: var(--w-strong) var(--t-meta)/1.3 var(--font-mono); text-align: right; }
+.hbar .val small { display: block; font-weight: var(--w-regular); color: var(--ink-2); }
+.axis { display: grid; grid-template-columns: 112px 1fr 64px; gap: var(--s-3); padding: 0 var(--s-1); }
+.axis .ticks { display: flex; justify-content: space-between; font: var(--t-meta)/1.4 var(--font-mono); color: var(--ink-2); border-top: var(--bw) solid var(--line); padding-top: var(--s-1); }
+.tip { position: fixed; z-index: 60; pointer-events: none; background: var(--slab); color: var(--on-slab); padding: var(--s-2) var(--s-3); font-size: var(--t-meta); line-height: 1.5; max-width: 260px; box-shadow: 0 6px 20px rgba(0,0,0,.25); border-radius: var(--radius-ctl) ; }
+[data-dir="b"] .tip { border-radius: 10px; }
+
+.split { display: flex; height: 20px; gap: 2px; margin: var(--s-2) 0 var(--s-4); }
+.split span:first-child { border-radius: 4px 0 0 4px; }
+.split span:last-child { border-radius: 0 4px 4px 0; }
+table.t { width: 100%; border-collapse: collapse; font-size: var(--t-meta); }
+table.t th { text-align: left; font-weight: var(--w-strong); color: var(--ink-2); padding: var(--s-2) var(--s-2) var(--s-2) 0; border-bottom: var(--bw) solid var(--line); }
+table.t td { padding: var(--s-3) var(--s-2) var(--s-3) 0; border-bottom: var(--bw) solid var(--line); vertical-align: middle; }
+table.t tr:last-child td { border-bottom: 0; }
+table.t .r { text-align: right; font-family: var(--font-mono); }
+table.t .who { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--t-body); font-weight: var(--w-strong); }
+
+.filters { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-3); }
+.fchip { min-height: var(--tap); padding: 0 var(--s-4); border: var(--bw) solid var(--line); background: transparent; border-radius: var(--radius-ctl); cursor: pointer; font-size: var(--t-meta); color: var(--ink-2); }
+.fchip[aria-pressed="true"] { background: var(--slab); color: var(--on-slab); border-color: var(--slab); font-weight: var(--w-strong); }
+.fchip b { font-family: var(--font-mono); margin-left: var(--s-1); }
+
+.hlist { list-style: none; margin: 0; padding: 0; }
+.hlist details { border-top: var(--bw) solid var(--line); }
+.hlist li:first-child details { border-top: 0; }
+.hlist summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 48px 1fr auto 20px; gap: 0 var(--s-3); align-items: center; min-height: 56px; padding: var(--s-2) 0; }
+.hlist summary::-webkit-details-marker { display: none; }
+.hlist summary:hover { background: var(--surface-2); }
+.hlist .id { font: var(--w-strong) var(--t-meta)/1.4 var(--font-mono); color: var(--ink-2); }
+.hlist .why { display: block; font-size: var(--t-meta); color: var(--ink-2); }
+.hlist .tk { font: var(--w-strong) var(--t-meta)/1.4 var(--font-mono); text-align: right; }
+.hlist .chev { transition: transform var(--dur) var(--ease); color: var(--ink-2); }
+.hlist details[open] .chev { transform: rotate(180deg); }
+.hlist .body { padding: 0 0 var(--s-4) calc(48px + var(--s-3)); max-width: calc(var(--measure) + 64px); color: var(--ink); }
+.hlist .body p + p { margin-top: var(--s-2); }
+
+/* ---------- states ---------- */
+.sk { background: var(--sunken); position: relative; overflow: hidden; }
+.sk::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 55%, transparent), transparent);
+  animation: shimmer 1.2s infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .sk::after { animation: none; display: none; } }
+.sk-line { height: 14px; margin: var(--s-2) 0; }
+.sk-big { height: 36px; width: 40%; margin: var(--s-2) 0; }
+.sk-bar { height: 16px; margin: var(--s-3) 0; }
+.sk-row { height: 44px; margin: var(--s-2) 0; }
+.state-note { display: flex; gap: var(--s-3); align-items: flex-start; }
+.state-note .ico { width: 24px; height: 24px; color: var(--ink-2); margin-top: 2px; }
+.state-note p + p { margin-top: var(--s-1); }
+.state-note .btn { margin-top: var(--s-3); }
+.banner { display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-3); padding: var(--s-4); background: var(--danger-bg); color: var(--ink); }
+.banner .ico { color: var(--danger); width: 24px; height: 24px; }
+.banner strong { color: var(--danger); }
+.banner .btn { grid-column: 2; justify-self: start; margin-top: var(--s-2); border-color: var(--danger); color: var(--danger); }
+.stale { position: relative; }
+.stale .panel { opacity: .72; }
+.stale-tag { display: inline-flex; gap: var(--s-1); align-items: center; }
+
+/* ---------- mockup controls (not part of the product) ---------- */
+.mock { position: fixed; right: var(--s-2); bottom: calc(var(--nav-h) + var(--s-2)); z-index: 40; font-size: var(--t-meta); }
+.mock summary { cursor: pointer; min-height: var(--tap); display: grid; place-items: center; padding: 0 var(--s-3); background: var(--slab); color: var(--on-slab); list-style: none; font-family: var(--font-mono); }
+.mock[open] > div { position: absolute; right: 0; bottom: 52px; background: var(--surface); border: var(--bw) solid var(--line-strong); padding: var(--s-3); width: 240px; display: grid; gap: var(--s-2); }
+.mock a { min-height: var(--tap); display: flex; align-items: center; }
+[data-shot] .mock { display: none; }
+
+/* =====================================================================
+   >= 600px
+   ===================================================================== */
+@media (min-width: 600px) {
+  main { padding: var(--s-6); }
+  .fresh { padding: var(--s-4) var(--s-6) 0; }
+  .panel { padding: var(--s-6); }
+  .kpis, .kpis.k4 { padding: 0; }
+  .kpis.k4 { grid-template-columns: repeat(4, 1fr); }
+  .kpis.k4 .kpi:nth-child(3) { border-left: var(--bw) solid var(--line); }
+  .kpis.k4 .kpi:nth-child(n+3) { border-top: 0; }
+  .act { grid-template-columns: auto 1fr auto; align-items: center; }
+  .act .mark { grid-row: auto; }
+  .act .go { grid-column: 3; }
+  .hbar, .axis { grid-template-columns: 160px 1fr 80px; }
+}
+
+/* =====================================================================
+   >= 1024px: side nav + two columns (Rin)
+   ===================================================================== */
+@media (min-width: 1024px) {
+  .app { display: grid; grid-template-columns: var(--side-w) 1fr; padding-bottom: 0; }
+  .tabbar { display: none; }
+  .mock { bottom: var(--s-4); right: var(--s-4); }
+  .side { display: flex; flex-direction: column; gap: var(--s-6); position: sticky; top: 0; height: 100dvh; padding: var(--s-6) var(--s-4);
+    background: var(--bg); border-right: var(--bw) solid var(--line); }
+  .side .brand { display: flex; align-items: baseline; gap: var(--s-2); padding: 0 var(--s-3); }
+  .side .brand b { font: var(--w-strong) var(--t-title)/1 var(--font-display); letter-spacing: 0.02em; }
+  .side nav { display: grid; gap: var(--s-6); }
+  .side .grp { display: grid; gap: 2px; }
+  .side .grp .lbl { padding: 0 var(--s-3) var(--s-1); }
+  .side a { display: flex; align-items: center; gap: var(--s-3); min-height: var(--tap); padding: 0 var(--s-3); color: var(--ink-2); text-decoration: none; position: relative; border-radius: var(--radius-ctl);
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+  .side a:hover { background: var(--surface-2); color: var(--ink); }
+  .side a[aria-current="page"] { color: var(--ink); font-weight: var(--w-strong); background: var(--surface); }
+  .side a .cnt { margin-left: auto; font: var(--w-strong) var(--t-meta)/1 var(--font-mono); color: var(--ink-2); }
+  .side .foot { margin-top: auto; padding: 0 var(--s-3); }
+  .brand-sm { display: none; }
+  .topbar { padding: 0 var(--s-6); height: 64px; }
+  .topbar .fresh-inline { display: flex; }
+  main { padding: var(--s-6); max-width: var(--content-max); }
+  .fresh { display: none; }
+  .page-stack { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s-6); align-items: start; }
+  .page-stack > .full { grid-column: 1 / -1; }
+  .col { display: flex; flex-direction: column; gap: var(--s-6); }
+  .col > * { order: 0 !important; }
+  details.fold > summary { pointer-events: none; }
+  details.fold > summary .chev { display: none; }
+}
+.fresh-inline { display: none; align-items: center; gap: var(--s-2); margin-right: var(--s-2); }
+
+/* =====================================================================
+   DIRECTION A · TERMINAL — black slab labels, top-right cut, hairline frame
+   ===================================================================== */
+[data-dir="a"] .panel { background: transparent; }
+[data-dir="a"] .panel::before, [data-dir="a"] .panel::after { content: ""; position: absolute; z-index: -1; }
+[data-dir="a"] .panel::before { inset: 0; background: var(--line); clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+[data-dir="a"] .panel::after { inset: 1px; background: var(--surface); clip-path: polygon(0 0, calc(100% - var(--cut) + .42px) 0, 100% calc(var(--cut) - .42px), 100% 100%, 0 100%); }
+[data-dir="a"] .panel.lead::before { background: var(--line-strong); }
+[data-dir="a"] .panel.lead > .stripe { position: absolute; left: 0; top: 0; width: 48px; height: 4px; background: var(--hi); }
+[data-dir="a"] .ph .tag { margin-left: calc(var(--s-4) * -1); padding-left: var(--s-4); }
+[data-dir="a"] .topbar { background: var(--surface); }
+[data-dir="a"] .topbar h1 { text-transform: none; font-size: 1.75rem; letter-spacing: 0; }
+[data-dir="a"] .hero-fig { font-size: 2.5rem; letter-spacing: 0; }
+[data-dir="a"] .kpi .v { font-size: 1.75rem; }
+[data-dir="a"] .side a[aria-current="page"]::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px; background: var(--accent); }
+[data-dir="a"] .side a[aria-current="page"] { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+[data-dir="a"] .tab[aria-current="page"]::before { left: 20%; right: 20%; height: 4px; background: var(--hi); }
+[data-dir="a"] .act .mark { clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+[data-dir="a"] .btn.primary { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+@media (min-width: 600px) { [data-dir="a"] .ph .tag { margin-left: calc(var(--s-6) * -1); padding-left: var(--s-6); } }
+
+/* =====================================================================
+   DIRECTION B · CODEX — soft panels, tab header, pill actions
+   ===================================================================== */
+[data-dir="b"] .panel { box-shadow: 0 1px 2px rgba(28,24,48,.06); }
+[data-dir="b"][data-mode="dark"] .panel { box-shadow: inset 0 0 0 1px var(--line); }
+[data-dir="b"] .topbar { background: var(--bg); border-bottom: 0; }
+[data-dir="b"] .topbar h1 { font-weight: var(--w-strong); }
+[data-dir="b"] .topbar .tabhead { display: flex; align-items: center; gap: var(--s-2); }
+[data-dir="b"] .tag { border-radius: 999px; padding: 0 var(--s-3); background: var(--sunken); color: var(--ink-2); }
+[data-dir="b"] .panel.lead .tag { background: var(--accent); color: var(--on-accent); }
+[data-dir="b"] .btn.primary { padding-left: var(--s-2); }
+[data-dir="b"] .btn.primary::before { content: ""; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--on-accent); background: radial-gradient(circle, var(--on-accent) 0 4px, transparent 5px); flex: none; }
+[data-dir="b"] .act .mark { border-radius: 50%; }
+[data-dir="b"] .meter, [data-dir="b"] .meter span:first-child { border-radius: 999px 0 0 999px; }
+[data-dir="b"] .meter { border-radius: 999px; overflow: hidden; }
+[data-dir="b"] .abar .bar, [data-dir="b"] .abar .bar span { border-radius: 999px; }
+[data-dir="b"] .flow li.now { background: var(--accent); color: var(--on-accent); }
+[data-dir="b"] .tab[aria-current="page"]::before { display: none; }
+[data-dir="b"] .tab[aria-current="page"] .ico { background: var(--sunken); border-radius: 999px; width: 56px; height: 28px; padding: 4px 18px; color: var(--accent-ink); }
+[data-dir="b"] .side a[aria-current="page"] { background: var(--slab); color: var(--on-slab); }
+[data-dir="b"] .side a[aria-current="page"] .cnt { color: var(--on-slab); }
+[data-dir="b"] .chip { border-radius: 999px; }
+[data-dir="b"] .kpis { overflow: hidden; }
+[data-dir="b"] .hero-fig { color: var(--accent-ink); }
+[data-dir="b"] .sk { border-radius: 8px; }
+[data-dir="b"] .banner { border-radius: var(--radius); }
+[data-dir="b"] .fresh .dot { border-radius: 50%; }
+
+/* =====================================================================
+   DIRECTION C · RELAY — dialog frame: notched tab, cut bottom-right, marker
+   ===================================================================== */
+[data-dir="c"] .panel { background: transparent; margin-top: 0; }
+[data-dir="c"] .panel::before, [data-dir="c"] .panel::after { content: ""; position: absolute; z-index: -1; }
+[data-dir="c"] .panel::before { inset: 0; background: var(--line); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%); }
+[data-dir="c"] .panel::after { inset: 1px; background: var(--surface); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut) + .42px), calc(100% - var(--cut) + .42px) 100%, 0 100%); }
+[data-dir="c"] .panel.lead::before, [data-dir="c"] .panel.dlg::before { background: var(--line-strong); }
+[data-dir="c"] .panel > .corner { position: absolute; top: -1px; right: -1px; width: 8px; height: 8px; background: var(--line-strong); }
+[data-dir="c"] .ph .tag { clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); padding-right: var(--s-6); margin: calc(var(--s-4) * -1) 0 0 calc(var(--s-4) * -1); min-height: 28px; }
+[data-dir="c"] .panel.lead .tag, [data-dir="c"] .panel.dlg .tag { background: var(--accent); color: var(--on-accent); }
+[data-dir="c"][data-mode="dark"] .panel.lead .tag { background: var(--hi); color: var(--on-hi); }
+[data-dir="c"] .topbar { background: var(--bg); border-bottom: var(--bw) solid var(--line-strong); }
+[data-dir="c"] .topbar h1 { letter-spacing: 0.01em; }
+[data-dir="c"] .btn.primary { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%); }
+[data-dir="c"] .btn { border-color: var(--line-strong); }
+[data-dir="c"] .act .mark { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
+[data-dir="c"] .tab[aria-current="page"]::before { background: var(--hi); height: 4px; left: 18%; right: 18%; }
+[data-dir="c"][data-mode="light"] .tab[aria-current="page"]::before { background: var(--accent); }
+[data-dir="c"] .side { border-right-color: var(--line-strong); }
+[data-dir="c"] .side a[aria-current="page"] { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); }
+[data-dir="c"] .side a[aria-current="page"]::after { content: ""; position: absolute; right: -1px; top: -1px; width: 6px; height: 6px; background: var(--line-strong); }
+[data-dir="c"] .fchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+[data-dir="c"] .hero-fig { font-size: 2.25rem; }
+@media (min-width: 600px) { [data-dir="c"] .ph .tag { margin: calc(var(--s-6) * -1) 0 0 calc(var(--s-6) * -1); } }
+
+/* ---------- additions ---------- */
+.maincol { min-width: 0; }
+.dot-ok { width: 8px; height: 8px; background: var(--ok); display: inline-block; }
+[data-dir="b"] .dot-ok { border-radius: 50%; }
+.budget .ticks { display: none; }
+/* B: CZN countdown — thin-line HUD frame with mid-edge ticks around the hero figure */
+[data-dir="b"] .budget .ticks { display: block; position: absolute; inset: 0; pointer-events: none; border: 1px solid var(--line-strong); border-radius: var(--radius); z-index: 0;
+  background:
+    linear-gradient(var(--line-strong), var(--line-strong)) top center / 1px 8px no-repeat,
+    linear-gradient(var(--line-strong), var(--line-strong)) bottom center / 1px 8px no-repeat,
+    linear-gradient(var(--line-strong), var(--line-strong)) left center / 8px 1px no-repeat,
+    linear-gradient(var(--line-strong), var(--line-strong)) right center / 8px 1px no-repeat; }
+[data-dir="b"] .budget > :not(.ticks) { position: relative; z-index: 1; }
+[data-dir="b"] .budget .hero-fig { font-size: 2.5rem; }
+/* A: operator name-card — bold name, small class label, signal bar */
+[data-dir="a"] .namecard .req { font-size: var(--t-body); }
+[data-dir="a"] .namecard::before { background: var(--line-strong); }
+[data-dir="a"] .namecard > .stripe { width: 96px !important; background: var(--danger) !important; }
+.dk { display: none !important; }
+@media (min-width: 1024px) { .dk { display: revert !important; } li.hand.dk { display: grid !important; } }
+/* full-page screenshots: pin the tab bar to the document bottom */
+[data-shot] .app { position: relative; }
+[data-shot] .tabbar { position: absolute; }
+@media (min-width: 1024px) { .budget .hero-fig { font-size: 3rem !important; } }
+
+details.fold.panel > summary { margin: 0; }
+details.fold[open] > summary { margin-bottom: var(--s-3); }
+details.fold > summary .tag { flex: none; }
+[data-dir="c"] details.fold > summary .tag { margin: calc(var(--s-4) * -1) 0 0 calc(var(--s-4) * -1); align-self: flex-start; }
+@media (min-width: 600px) { [data-dir="c"] details.fold > summary .tag { margin: calc(var(--s-6) * -1) 0 0 calc(var(--s-6) * -1); } }
+[data-dir="a"] details.fold > summary .tag { margin-left: calc(var(--s-4) * -1); padding-left: var(--s-4); }
+@media (min-width: 600px) { [data-dir="a"] details.fold > summary .tag { margin-left: calc(var(--s-6) * -1); padding-left: var(--s-6); } }
+@media (min-width: 1024px) { details.fold > summary { min-height: 28px; } }
+
+/* R2: primary data and controls at body size; 13px only for secondary meta */
+.btn, .fchip, .more, table.t td, .hlist .tk, .hand .tk { font-size: var(--t-body); }
+.hbar .val small { font-size: var(--t-meta); }
+.hand .tk, .hlist .tk { line-height: 1.4; }
+[data-dir="a"] .side .brand b { font-size: 1.75rem; }
+[data-dir="c"] details.fold > summary { min-height: 48px; padding-bottom: var(--s-4); margin-bottom: calc(var(--s-4) * -1); }
+[data-dir="c"] details.fold[open] > summary { margin-bottom: 0; padding-bottom: var(--s-3); }
+[data-dir="c"] details.fold > summary .tag { align-self: center; }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></symbol>
+  <symbol id="i-runs" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12"/><path d="M18 4l2 2-2 2"/></symbol>
+  <symbol id="i-issues" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  <symbol id="i-agents" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+  <symbol id="i-usage" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-lessons" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></symbol>
+  <symbol id="i-files" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+  <symbol id="i-errors" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16A8 8 0 0 0 12 4z" fill="currentColor"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bounce" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-empty" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M3 13h5l2 2h4l2-2h5"/></symbol>
+</svg>
+<a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+
+<div class="app">
+  <aside class="side" aria-label="เมนูหลัก">
+    <div class="brand"><b>LEVANA</b><span class="lbl">core</span></div>
+    <nav>
+      <div class="grp"><span class="lbl">Work</span>
+        <a href="?page=today" data-nav="today"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg>วันนี้</a>
+        <a href="?page=run" data-nav="run"><svg class="ico" aria-hidden="true"><use href="#i-runs"/></svg>Runs<span class="cnt">29</span></a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg>Issues<span class="cnt">3</span></a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-agents"/></svg>Agents<span class="cnt">10</span></a>
+      </div>
+      <div class="grp"><span class="lbl">Data</span>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-usage"/></svg>การใช้ token</a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-lessons"/></svg>Lessons<span class="cnt">9</span></a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-files"/></svg>ไฟล์</a>
+      </div>
+      <div class="grp"><span class="lbl">System</span>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg>Errors<span class="cnt">1</span></a>
+      </div>
+    </nav>
+    <div class="foot meta">I-RinkuNG/claude-dotfiles<br><span class="mono" translate="no">main · 1a4e9f3</span></div>
+  </aside>
+
+  <div class="maincol">
+    <!-- ================= TODAY header ================= -->
+    <header class="topbar" data-for="today">
+      <span class="brand-sm">LVN</span>
+      <h1>วันนี้</h1>
+      <span class="fresh-inline meta"><span class="dot-ok"></span>อัปเดต <span class="mono" translate="no">14:32</span> (2 นาทีที่แล้ว)</span>
+      <button class="iconbtn" type="button" aria-label="รีเฟรชข้อมูล"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="iconbtn" type="button" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><svg class="ico" aria-hidden="true"><use href="#i-theme"/></svg></button>
+    </header>
+    <!-- ================= RUN header ================= -->
+    <header class="topbar" data-for="run" hidden>
+      <a class="backbtn" href="?page=today"><svg class="ico" aria-hidden="true"><use href="#i-back"/></svg><span>Runs</span></a>
+      <h1>levana-ux</h1>
+      <span class="fresh-inline meta">อัปเดต <span class="mono" translate="no">14:32</span> (2 นาทีที่แล้ว)</span>
+      <button class="iconbtn" type="button" aria-label="รีเฟรชข้อมูล"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="iconbtn" type="button" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><svg class="ico" aria-hidden="true"><use href="#i-theme"/></svg></button>
+    </header>
+
+    <p class="fresh meta" role="status"><span><span class="dot"></span>อัปเดต <span class="mono" translate="no">14:32</span> (2 นาทีที่แล้ว)</span><span class="mono" translate="no">main · 1a4e9f3</span></p>
+
+    <main id="main">
+    <!-- =============================== TODAY =============================== -->
+    <section data-page="today" aria-label="วันนี้">
+
+      <!-- ---------- ready / error ---------- -->
+      <div data-view="ready">
+        <div class="banner" data-only="error" role="alert" style="margin-bottom:var(--s-4)">
+          <svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg>
+          <div><strong>ดึงข้อมูลใหม่ไม่สำเร็จ</strong><p class="meta" style="color:var(--ink)">GitHub ตอบ 403 (rate limit) เมื่อ 14:32 · ด้านล่างเป็นข้อมูลเก่าจาก 13:58 ลองใหม่ได้หลัง 14:45</p></div>
+          <button class="btn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg>ลองอีกครั้ง</button>
+        </div>
+        <div class="page-stack">
+          <div class="col">
+            <!-- ACTION QUEUE -->
+            <section class="panel lead" style="order:1" aria-labelledby="h-act">
+              <span class="stripe"></span><span class="corner"></span>
+              <div class="ph"><span class="tag">Action</span><h2 id="h-act">ต้องจัดการ 3 เรื่อง</h2><span class="stale-tag chip neu end" data-only="error"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>ข้อมูลเก่า 13:58</span></div>
+              <ul class="acts">
+                <li class="act">
+                  <span class="mark bad" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></span>
+                  <div class="txt"><strong>GitHub token หมดอายุใน 6 วัน</strong><span class="meta">4 พ.ย. 2026 · หลังจากนั้น Levana ดึงข้อมูลไม่ได้</span></div>
+                  <a class="btn primary go" href="#">ต่ออายุ token</a>
+                </li>
+                <li class="act">
+                  <span class="mark run" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg></span>
+                  <div class="txt"><strong>levana-ux รอผลจาก Tzayar</strong><span class="meta">ขั้น 4 design 3 แบบ · ทำงานอยู่ · งบ 220k</span></div>
+                  <a class="btn go" href="?page=run">เปิด run</a>
+                </li>
+                <li class="act">
+                  <span class="mark neu" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg></span>
+                  <div class="txt"><strong>#53 ตั้งค่า PC (Windows) ครั้งแรกหลัง pull repo</strong><span class="meta">Issue เปิดอยู่ · I-RinkuNG</span></div>
+                  <a class="btn go" href="#">ดู issue</a>
+                </li>
+              </ul>
+            </section>
+
+            <!-- ACTIVE RUN -->
+            <section class="panel" style="order:4" aria-labelledby="h-run">
+              <span class="corner"></span>
+              <div class="ph"><span class="tag">Run</span><h2 id="h-run">levana-ux</h2><span class="chip run end"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>กำลังทำ · ขั้น 4</span></div>
+              <ul class="rows">
+                <li class="hand"><span class="id" translate="no">4</span><div><span class="who" translate="no">Kesh → Tzayar</span><span class="res">design system + mockup 3 แบบ ให้ Rin เลือก</span></div><span class="tk meta">กำลังทำ</span></li>
+                <li class="hand"><span class="id" translate="no">1b'''</span><div><span class="who" translate="no">Kesh → Cheker</span><span class="res">60 ภาพจากคลิป gameplay: dialog box, title card, battle HUD</span></div><span class="tk" translate="no">31,245</span></li>
+                <li class="hand"><span class="id" translate="no">1b''</span><div><span class="who" translate="no">Kesh → Cheker</span><span class="res">48 frame จาก YouTube · CZN ใช้ได้ ~17 ภาพ</span></div><span class="tk" translate="no">27,601</span></li>
+                <li class="hand dk"><span class="id" translate="no">1c</span><div><span class="who" translate="no">Kesh → Bochek</span><span class="res">ประเมิน Levana: ช้า 3.8s/50 req, nav ล้น, tap &lt;44px</span></div><span class="tk" translate="no">33,072</span></li>
+              </ul>
+              <a class="more" href="?page=run">ดู run ทั้งหมด (8 handoff, ตีกลับ 2) <svg class="ico" aria-hidden="true"><use href="#i-next"/></svg></a>
+            </section>
+
+            <!-- RECENT RUNS -->
+            <section class="panel" style="order:5" aria-labelledby="h-recent">
+              <div class="ph"><span class="tag">Log</span><h2 id="h-recent">Run ล่าสุด</h2></div>
+              <ul class="rows">
+                <li><a class="row" href="?page=run"><span class="t" translate="no">levana-ux</span><span class="r"><b>265,323</b></span><span class="s"><span class="meta mono">10-29</span><span class="chip run">กำลังทำ</span></span></a></li>
+                <li><a class="row" href="#"><span class="t" translate="no">superpowers-lessons</span><span class="r"><b>124,150</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip bad"><svg class="ico" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ 1</span></span></a></li>
+                <li><a class="row" href="#"><span class="t" translate="no">levana-redesign</span><span class="r"><b>126,676</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>เสร็จ</span></span></a></li>
+                <li><a class="row" href="#"><span class="t" translate="no">levana-fetch-error</span><span class="r"><b>22,304</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip neu">เปิดอยู่</span></span></a></li>
+                <li class="dk"><a class="row" href="#"><span class="t" translate="no">external-md-vetting</span><span class="r"><b>17,163</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>เสร็จ</span></span></a></li>
+              </ul>
+              <a class="more" href="#">ดู run ทั้งหมด 29 รายการ <svg class="ico" aria-hidden="true"><use href="#i-next"/></svg></a>
+            </section>
+          </div>
+
+          <div class="col">
+            <!-- 5H BUDGET -->
+            <section class="panel dlg budget" style="order:2" aria-labelledby="h-5h">
+              <span class="corner"></span><span class="ticks" aria-hidden="true"></span>
+              <div class="ph"><span class="tag">5H window</span><h2 id="h-5h">งบ 5 ชั่วโมง</h2></div>
+              <p class="hero-fig num">17.7%<small>ใช้ไปแล้ว</small></p>
+              <div class="meter" role="img" aria-label="ใช้ไป 17.7 เปอร์เซ็นต์: Cheker 9.4, Bochek 4.5, Kotev 3.9; Tzayar จองไว้ 14.7">
+                <span style="width:9.35%;background:var(--c1)"></span><span style="width:4.48%;background:var(--c2)"></span><span style="width:3.85%;background:var(--c3)"></span><span class="rsv" style="width:14.67%"></span>
+              </div>
+              <ul class="legend">
+                <li><span class="key" style="background:var(--c1)"></span>Cheker <b class="mono" translate="no">140k</b></li>
+                <li><span class="key" style="background:var(--c2)"></span>Bochek <b class="mono" translate="no">67k</b></li>
+                <li><span class="key" style="background:var(--c3)"></span>Kotev <b class="mono" translate="no">58k</b></li>
+                <li><span class="key rsv"></span>Tzayar จอง <b class="mono" translate="no">220k</b></li>
+              </ul>
+              <p class="meta" style="margin-top:var(--s-3)"><span class="mono" translate="no">265,323 / 1,500,000</span> · 1% ≈ 15k · รีเซ็ต <span class="mono" translate="no">17:05</span> (อีก 2 ชม. 33 นาที)</p>
+            </section>
+
+            <!-- KPI -->
+            <section class="panel kpis" style="order:3" aria-label="ตัวเลขวันนี้">
+              <div class="kpi"><span class="meta">Handoff</span><span class="v num">8</span><span class="d">+1 กำลังทำ</span></div>
+              <div class="kpi"><span class="meta">ตีกลับ</span><span class="v num">25<small>%</small></span><span class="d bad">2 จาก 8</span></div>
+              <div class="kpi"><span class="meta">Issue เปิด</span><span class="v num">3</span><span class="d">ไม่มีใหม่วันนี้</span></div>
+            </section>
+
+            <!-- AGENTS TODAY (collapsed on mobile) -->
+            <details class="panel fold" style="order:6" data-open-desktop>
+              <summary><span class="tag">Agents</span><h2>Token ต่อ agent วันนี้</h2><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+              <ul class="abars" style="margin-top:var(--s-3)">
+                <li class="abar"><span class="who" translate="no">Cheker</span><span class="bar"><span style="width:100%;background:var(--c1)"></span></span><span class="n" translate="no">140,272</span></li>
+                <li class="abar"><span class="who" translate="no">Bochek</span><span class="bar"><span style="width:47.9%;background:var(--c2)"></span></span><span class="n" translate="no">67,227</span></li>
+                <li class="abar"><span class="who" translate="no">Kotev</span><span class="bar"><span style="width:41.2%;background:var(--c3)"></span></span><span class="n" translate="no">57,824</span></li>
+              </ul>
+              <p class="meta" style="margin-top:var(--s-3)">ตีกลับวันนี้: Kotev 1 (partial data), Cheker 1 (ภาพไม่พอ)</p>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- loading: skeleton mirrors the real layout ---------- -->
+      <div data-view="loading" aria-busy="true" aria-label="กำลังโหลด" hidden>
+        <div class="page-stack">
+          <div class="col">
+            <div class="panel" style="order:1"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div>
+            <div class="panel" style="order:4"><div class="sk sk-line" style="width:40%"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div>
+          </div>
+          <div class="col">
+            <div class="panel" style="order:2"><div class="sk sk-line" style="width:35%"></div><div class="sk sk-big"></div><div class="sk sk-bar"></div><div class="sk sk-line" style="width:70%"></div></div>
+            <div class="panel" style="order:3"><div class="sk sk-big" style="width:100%"></div></div>
+          </div>
+        </div>
+        <p class="meta" style="margin-top:var(--s-4)">กำลังดึงข้อมูลจาก GitHub (1 request)…</p>
+      </div>
+
+      <!-- ---------- empty: no run today ---------- -->
+      <div data-view="empty" hidden>
+        <div class="page-stack">
+          <div class="col">
+            <section class="panel lead" style="order:1"><span class="stripe"></span><span class="corner"></span>
+              <div class="ph"><span class="tag">Action</span><h2>ไม่มีเรื่องต้องจัดการ</h2></div>
+              <div class="state-note"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><div><p>ไม่มี issue เปิด, token ยังไม่ใกล้หมดอายุ และไม่มี run ค้าง</p></div></div>
+            </section>
+            <section class="panel" style="order:4"><span class="corner"></span>
+              <div class="ph"><span class="tag">Run</span><h2>ยังไม่มี run วันนี้</h2></div>
+              <div class="state-note"><svg class="ico" aria-hidden="true"><use href="#i-empty"/></svg><div><p>Run จะขึ้นที่นี่เมื่อ Kesh สร้างไฟล์ใน <span class="mono" translate="no">runs/</span> ของวันนี้</p><p class="meta">run ล่าสุด: levana-ux · 29 ต.ค.</p><a class="btn" href="?page=run">เปิด run ล่าสุด</a></div></div>
+            </section>
+          </div>
+          <div class="col">
+            <section class="panel dlg budget" style="order:2"><span class="corner"></span><span class="ticks" aria-hidden="true"></span>
+              <div class="ph"><span class="tag">5H window</span><h2>งบ 5 ชั่วโมง</h2></div>
+              <p class="hero-fig num">0%<small>ยังไม่ได้ใช้</small></p>
+              <div class="meter"></div>
+              <p class="meta">หน้าต่าง 5 ชม. เริ่มนับเมื่อใช้ token ครั้งแรก</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================== RUN DETAIL =============================== -->
+    <section data-page="run" aria-label="รายละเอียด run" hidden>
+      <div data-view="ready">
+      <div class="page-stack">
+        <section class="panel lead full namecard" aria-labelledby="h-req">
+          <span class="stripe"></span><span class="corner"></span>
+          <div class="ph"><span class="tag">Run · 2026-10-29</span><h2 id="h-req">คำขอ</h2><span class="chip run end"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>กำลังทำ · ขั้น 4 Tzayar</span></div>
+          <p class="req">ทำ Levana ให้เร็วขึ้นด้วย GraphQL request เดียว แล้วให้ทีม research และประเมิน UX/UI ใหม่ทั้งหมด เพราะ Rin ให้คะแนน UX/UI ต่ำมากและคาดหวังสูง</p>
+          <ol class="flow" aria-label="flow ที่อนุมัติ">
+            <li>1 GraphQL + ภาพเกม + ประเมิน</li><li>2 QA</li><li>3 ตรวจ research</li><li class="now">4 design 3 แบบ</li><li>5 Rin เลือก</li>
+          </ol>
+        </section>
+
+        <section class="panel kpis k4 full" aria-label="สรุป run">
+          <div class="kpi"><span class="meta">Tokens</span><span class="v num">265,323</span><span class="d">ไม่รวมขั้น 4</span></div>
+          <div class="kpi"><span class="meta">ของ 5 ชม.</span><span class="v num">17.7<small>%</small></span><span class="d">1% ≈ 15k</span></div>
+          <div class="kpi"><span class="meta">Handoff</span><span class="v num">8</span><span class="d">+1 กำลังทำ</span></div>
+          <div class="kpi"><span class="meta">ตีกลับ</span><span class="v num">2</span><span class="d bad">25% · Kotev, Cheker</span></div>
+        </section>
+
+        <div class="col">
+          <section class="panel" aria-labelledby="h-chart">
+            <span class="corner"></span>
+            <div class="ph"><span class="tag">Tokens</span><h2 id="h-chart">Token ต่อ handoff</h2>
+              <ul class="legend end"><li><span class="key" style="background:var(--c1)"></span>Cheker</li><li><span class="key" style="background:var(--c2)"></span>Bochek</li><li><span class="key" style="background:var(--c3)"></span>Kotev</li></ul></div>
+            <ol class="chart" data-tip>
+              <li class="hbar" tabindex="0" data-tip="#1a Kesh → Kotev · 40,738 tokens · สะสม 2.7% ของ 5 ชม."><span class="lab"><b>1a</b><span>Kotev</span></span><span class="track"><i style="width:74.1%;background:var(--c3)"></i></span><span class="val">40,738<small>2.7%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#2 Kesh → Bochek · 34,155 tokens · สะสม 5.0%"><span class="lab"><b>2</b><span>Bochek</span></span><span class="track"><i style="width:62.1%;background:var(--c2)"></i></span><span class="val">34,155<small>5.0%</small></span></li>
+              <li class="hbar bounce" tabindex="0" data-tip="#2' ตีกลับรอบ 1 · Kotev · 17,086 tokens · สะสม 6.1%"><span class="lab"><b>2'</b><span>Kotev <svg class="ico" style="width:14px;height:14px;vertical-align:-2px" role="img" aria-label="ตีกลับ"><use href="#i-bounce"/></svg></span></span><span class="track"><i style="width:31.1%;background:var(--c3)"></i></span><span class="val">17,086<small>6.1%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1b Kesh → Cheker · 54,980 tokens · สะสม 9.8%"><span class="lab"><b>1b</b><span>Cheker</span></span><span class="track"><i style="width:100%;background:var(--c1)"></i></span><span class="val">54,980<small>9.8%</small></span></li>
+              <li class="hbar bounce" tabindex="0" data-tip="#1b' ตีกลับรอบ 1 · Cheker · 26,446 tokens · สะสม 11.6%"><span class="lab"><b>1b'</b><span>Cheker <svg class="ico" style="width:14px;height:14px;vertical-align:-2px" role="img" aria-label="ตีกลับ"><use href="#i-bounce"/></svg></span></span><span class="track"><i style="width:48.1%;background:var(--c1)"></i></span><span class="val">26,446<small>11.6%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1c Kesh → Bochek · 33,072 tokens · สะสม 13.8%"><span class="lab"><b>1c</b><span>Bochek</span></span><span class="track"><i style="width:60.2%;background:var(--c2)"></i></span><span class="val">33,072<small>13.8%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1b'' Kesh → Cheker · 27,601 tokens · สะสม 15.6%"><span class="lab"><b>1b''</b><span>Cheker</span></span><span class="track"><i style="width:50.2%;background:var(--c1)"></i></span><span class="val">27,601<small>15.6%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1b''' Kesh → Cheker · 31,245 tokens · สะสม 17.7%"><span class="lab"><b>1b'''</b><span>Cheker</span></span><span class="track"><i style="width:56.8%;background:var(--c1)"></i></span><span class="val">31,245<small>17.7%</small></span></li>
+            </ol>
+            <div class="axis" aria-hidden="true"><span></span><span class="ticks"><span>0</span><span>25k</span><span>55k</span></span><span class="meta" style="text-align:right">สะสม</span></div>
+            <p class="meta" style="margin-top:var(--s-3)">แถบลายเฉียง = ตีกลับ · เรียงตามเวลาที่ทำ</p>
+          </section>
+
+          <section class="panel" aria-labelledby="h-hand">
+            <div class="ph"><span class="tag">Handoffs</span><h2 id="h-hand">ลำดับงาน</h2></div>
+            <div class="filters" role="group" aria-label="กรอง handoff">
+              <button class="fchip" type="button" aria-pressed="true">ทั้งหมด<b>9</b></button>
+              <button class="fchip" type="button" aria-pressed="false">ตีกลับ<b>2</b></button>
+              <button class="fchip" type="button" aria-pressed="false">Cheker<b>4</b></button>
+              <button class="fchip" type="button" aria-pressed="false">Kotev<b>2</b></button>
+            </div>
+            <ul class="hlist">
+              <li><details><summary><span class="id" translate="no">1a</span><span><b>Kesh → Kotev</b><span class="why">GraphQL request เดียวแทน REST 49 ตัว</span></span><span class="tk" translate="no">40,738</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>71f6efc (+142/−29) · 49 REST → 1 GraphQL · test 46/0</p><p class="meta">proxy cloud บล็อก api.github.com/graphql (403) จึงยังไม่ได้รัน query จริง</p></div></details></li>
+              <li><details><summary><span class="id" translate="no">2</span><span><b>Kesh → Bochek</b><span class="why">QA 1a + validate schema offline</span></span><span class="tk" translate="no">34,155</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>schema PASS · test 46/0 · Playwright 7 view ผ่าน</p><p class="meta">bug M: ได้ 200 + errors แล้วทั้งหน้าล่ม</p></div></details></li>
+              <li><details open><summary><span class="id" translate="no">2'</span><span><b>Kesh → Kotev</b> <span class="chip bad"><svg class="ico" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ 1</span><span class="why">partial data + path ในข้อความ error</span></span><span class="tk" translate="no">17,086</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>769edde (+27/−5) · test 48/0 · Kesh อ่าน diff และรัน test ผ่านเอง ไม่ส่ง Bochek ซ้ำเพราะแก้เล็กและมี test</p></div></details></li>
+              <li class="dk"><details><summary><span class="id" translate="no">1b</span><span><b>Kesh → Cheker</b><span class="why">เก็บภาพ UI เกม + dashboard</span></span><span class="tk" translate="no">54,980</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>64 ไฟล์ · Cyberpunk 14 ภาพเต็มใช้ได้ดี · Arknights/CZN เป็นแบนเนอร์ซ้ำกัน UI เล็ก</p></div></details></li>
+              <li class="dk"><details><summary><span class="id" translate="no">1b'</span><span><b>Kesh → Cheker</b> <span class="chip bad"><svg class="ico" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ 1</span><span class="why">ภาพ Arknights/CZN ไม่พอใช้ออกแบบ</span></span><span class="tk" translate="no">26,446</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>App Store 28 ภาพความละเอียดสูง · ยังขาด CZN home/deck</p></div></details></li>
+            </ul>
+            <a class="more" href="#">แสดงทั้งหมด 9 handoff <svg class="ico" aria-hidden="true"><use href="#i-down"/></svg></a>
+          </section>
+        </div>
+
+        <div class="col">
+          <details class="panel dlg fold" data-open-desktop>
+            <span class="corner"></span>
+            <summary><span class="tag">Agents</span><h2 id="h-split">แบ่งตาม agent</h2><span class="meta mono">Cheker 53%</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+            <div class="split" role="img" aria-label="Cheker 52.9%, Bochek 25.3%, Kotev 21.8%"><span style="width:52.9%;background:var(--c1)"></span><span style="width:25.3%;background:var(--c2)"></span><span style="width:21.8%;background:var(--c3)"></span></div>
+            <table class="t" translate="no">
+              <thead><tr><th scope="col">Agent</th><th scope="col" class="r">Tokens</th><th scope="col" class="r">ส่วน</th><th scope="col" class="r">ตีกลับ</th></tr></thead>
+              <tbody>
+                <tr><td><span class="who" translate="no"><span class="key" style="background:var(--c1)"></span>Cheker</span></td><td class="r">140,272</td><td class="r">53%</td><td class="r">1/4</td></tr>
+                <tr><td><span class="who" translate="no"><span class="key" style="background:var(--c2)"></span>Bochek</span></td><td class="r">67,227</td><td class="r">25%</td><td class="r">0/2</td></tr>
+                <tr><td><span class="who" translate="no"><span class="key" style="background:var(--c3)"></span>Kotev</span></td><td class="r">57,824</td><td class="r">22%</td><td class="r">1/2</td></tr>
+              </tbody>
+            </table>
+          </details>
+
+          <section class="panel dk" aria-labelledby="h-cmp">
+            <div class="ph"><span class="tag">Compare</span><h2 id="h-cmp">เทียบ run ก่อนหน้า</h2></div>
+            <ul class="rows">
+              <li><div class="row"><span class="t" translate="no">levana-redesign</span><span class="r"><b>126,676</b></span><span class="s meta">10-28 · ตีกลับ 1 · 8.4%</span></div></li>
+              <li><div class="row"><span class="t" translate="no">levana-dashboard</span><span class="r"><b>203,282</b></span><span class="s meta">10-27 · ตีกลับ 2 · 13.6%</span></div></li>
+            </ul>
+            <p class="meta" style="margin-top:var(--s-2)">run นี้ใช้มากกว่า levana-redesign 2.1 เท่า ส่วนใหญ่มาจากการเก็บภาพ 4 รอบของ Cheker</p>
+          </section>
+        </div>
+      </div>
+      </div>
+
+      <div data-view="loading" aria-busy="true" hidden>
+        <div class="page-stack">
+          <div class="panel full"><div class="sk sk-line" style="width:25%"></div><div class="sk sk-line"></div><div class="sk sk-line" style="width:60%"></div></div>
+          <div class="panel full"><div class="sk sk-big" style="width:100%"></div></div>
+          <div class="col"><div class="panel"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+          <div class="col"><div class="panel"><div class="sk sk-bar"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+        </div>
+      </div>
+      <div data-view="empty" hidden>
+        <section class="panel"><div class="state-note"><svg class="ico" aria-hidden="true"><use href="#i-empty"/></svg><div><p><strong>run นี้ยังไม่มี handoff</strong></p><p class="meta">ตาราง Handoffs ในไฟล์ runs/2026-10-29-levana-ux.md ยังว่าง Kesh จะเพิ่มแถวเมื่อส่งงานให้ agent แรก</p><a class="btn" href="?page=today">กลับไปหน้าวันนี้</a></div></div></section>
+      </div>
+    </section>
+    </main>
+  </div>
+
+  <nav class="tabbar" aria-label="เมนูหลัก">
+    <a class="tab" href="?page=today" data-nav="today"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg>วันนี้</a>
+    <a class="tab" href="?page=run" data-nav="run"><svg class="ico" aria-hidden="true"><use href="#i-runs"/></svg>Runs</a>
+    <a class="tab" href="#"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg>Issues</a>
+    <a class="tab" href="#"><svg class="ico" aria-hidden="true"><use href="#i-agents"/></svg>Agents</a>
+    <a class="tab" href="#"><svg class="ico" aria-hidden="true"><use href="#i-more"/></svg>เพิ่มเติม</a>
+  </nav>
+</div>
+
+<details class="mock">
+  <summary>mockup</summary>
+  <div>
+    <span class="lbl">Page</span><a href="?page=today">วันนี้</a><a href="?page=run">Run detail</a>
+    <span class="lbl">State</span><a href="?state=ready" data-keep>ปกติ</a><a href="?state=loading" data-keep>กำลังโหลด</a><a href="?state=empty" data-keep>ว่าง</a><a href="?state=error" data-keep>ผิดพลาด</a>
+    <span class="lbl">Direction</span><a href="mockup-a.html">A · Terminal</a><a href="mockup-b.html">B · Codex</a><a href="mockup-c.html">C · Relay</a>
+  </div>
+</details>
+<div class="tip" role="tooltip" hidden></div>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search), html = document.documentElement;
+  var page = q.get('page') || 'today', state = q.get('state') || 'ready';
+  if (q.get('shot')) html.setAttribute('data-shot', '1');
+  // pages
+  document.querySelectorAll('[data-page]').forEach(function (s) { s.hidden = s.dataset.page !== page; });
+  document.querySelectorAll('header[data-for]').forEach(function (h) { h.hidden = h.dataset.for !== page; });
+  document.querySelectorAll('[data-nav]').forEach(function (a) { if (a.dataset.nav === page) a.setAttribute('aria-current', 'page'); });
+  // states: error = ready view + banner + stale panels
+  var view = state === 'error' ? 'ready' : state;
+  document.querySelectorAll('[data-view]').forEach(function (v) { v.hidden = v.dataset.view !== view; });
+  document.querySelectorAll('[data-only="error"]').forEach(function (e) { e.hidden = state !== 'error'; });
+  if (state === 'error') document.querySelectorAll('[data-page="' + page + '"] .page-stack').forEach(function (p) { p.classList.add('stale'); });
+  // keep page when switching state from the mockup panel
+  document.querySelectorAll('a[data-keep]').forEach(function (a) { a.href = a.getAttribute('href') + '&page=' + page; });
+  function syncMeta() { document.querySelector('meta[name=theme-color]').content = getComputedStyle(html).getPropertyValue('--bg').trim(); }
+  syncMeta();
+  // theme toggle (remembered)
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
+    b.setAttribute('aria-pressed', html.dataset.mode === 'dark');
+    b.addEventListener('click', function () {
+      var m = html.dataset.mode === 'dark' ? 'light' : 'dark';
+      html.dataset.mode = m; syncMeta(); try { localStorage.setItem('lvn-mode', m); } catch (e) {}
+      b.setAttribute('aria-pressed', m === 'dark');
+    });
+  });
+  // desktop: secondary panels open
+  var mq = matchMedia('(min-width: 1024px)');
+  function fold() { document.querySelectorAll('[data-open-desktop]').forEach(function (d) { d.open = mq.matches; var s = d.querySelector('summary'); if (mq.matches) s.setAttribute('tabindex', '-1'); else s.removeAttribute('tabindex'); }); }
+  fold(); mq.addEventListener('change', fold);
+  // chart tooltip (hover + keyboard focus)
+  var tip = document.querySelector('.tip');
+  function show(el) { var r = el.getBoundingClientRect(); tip.textContent = el.dataset.tip; tip.hidden = false;
+    var t = tip.getBoundingClientRect(); tip.style.left = Math.max(8, Math.min(innerWidth - t.width - 8, r.left + r.width / 2 - t.width / 2)) + 'px';
+    tip.style.top = (r.top - t.height - 8 < 8 ? r.bottom + 8 : r.top - t.height - 8) + 'px'; }
+  document.querySelectorAll('.hbar[data-tip]').forEach(function (el) {
+    el.addEventListener('mouseenter', function () { show(el); }); el.addEventListener('focus', function () { show(el); });
+    el.addEventListener('mouseleave', function () { tip.hidden = true; }); el.addEventListener('blur', function () { tip.hidden = true; });
+  });
+})();
+
+</script>
+</body>
+</html>

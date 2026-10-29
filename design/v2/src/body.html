@@ -1,0 +1,330 @@
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></symbol>
+  <symbol id="i-runs" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12"/><path d="M18 4l2 2-2 2"/></symbol>
+  <symbol id="i-issues" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  <symbol id="i-agents" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+  <symbol id="i-usage" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-lessons" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></symbol>
+  <symbol id="i-files" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+  <symbol id="i-errors" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16A8 8 0 0 0 12 4z" fill="currentColor"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bounce" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-empty" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M3 13h5l2 2h4l2-2h5"/></symbol>
+</svg>
+<a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+
+<div class="app">
+  <aside class="side" aria-label="เมนูหลัก">
+    <div class="brand"><b>LEVANA</b><span class="lbl">core</span></div>
+    <nav>
+      <div class="grp"><span class="lbl">Work</span>
+        <a href="?page=today" data-nav="today"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg>วันนี้</a>
+        <a href="?page=run" data-nav="run"><svg class="ico" aria-hidden="true"><use href="#i-runs"/></svg>Runs<span class="cnt">29</span></a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg>Issues<span class="cnt">3</span></a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-agents"/></svg>Agents<span class="cnt">10</span></a>
+      </div>
+      <div class="grp"><span class="lbl">Data</span>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-usage"/></svg>การใช้ token</a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-lessons"/></svg>Lessons<span class="cnt">9</span></a>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-files"/></svg>ไฟล์</a>
+      </div>
+      <div class="grp"><span class="lbl">System</span>
+        <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg>Errors<span class="cnt">1</span></a>
+      </div>
+    </nav>
+    <div class="foot meta">I-RinkuNG/claude-dotfiles<br><span class="mono" translate="no">main · 1a4e9f3</span></div>
+  </aside>
+
+  <div class="maincol">
+    <!-- ================= TODAY header ================= -->
+    <header class="topbar" data-for="today">
+      <span class="brand-sm">LVN</span>
+      <h1>วันนี้</h1>
+      <span class="fresh-inline meta"><span class="dot-ok"></span>อัปเดต <span class="mono" translate="no">14:32</span> (2 นาทีที่แล้ว)</span>
+      <button class="iconbtn" type="button" aria-label="รีเฟรชข้อมูล"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="iconbtn" type="button" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><svg class="ico" aria-hidden="true"><use href="#i-theme"/></svg></button>
+    </header>
+    <!-- ================= RUN header ================= -->
+    <header class="topbar" data-for="run" hidden>
+      <a class="backbtn" href="?page=today"><svg class="ico" aria-hidden="true"><use href="#i-back"/></svg><span>Runs</span></a>
+      <h1>levana-ux</h1>
+      <span class="fresh-inline meta">อัปเดต <span class="mono" translate="no">14:32</span> (2 นาทีที่แล้ว)</span>
+      <button class="iconbtn" type="button" aria-label="รีเฟรชข้อมูล"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="iconbtn" type="button" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><svg class="ico" aria-hidden="true"><use href="#i-theme"/></svg></button>
+    </header>
+
+    <p class="fresh meta" role="status"><span><span class="dot"></span>อัปเดต <span class="mono" translate="no">14:32</span> (2 นาทีที่แล้ว)</span><span class="mono" translate="no">main · 1a4e9f3</span></p>
+
+    <main id="main">
+    <!-- =============================== TODAY =============================== -->
+    <section data-page="today" aria-label="วันนี้">
+
+      <!-- ---------- ready / error ---------- -->
+      <div data-view="ready">
+        <div class="banner" data-only="error" role="alert" style="margin-bottom:var(--s-4)">
+          <svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg>
+          <div><strong>ดึงข้อมูลใหม่ไม่สำเร็จ</strong><p class="meta" style="color:var(--ink)">GitHub ตอบ 403 (rate limit) เมื่อ 14:32 · ด้านล่างเป็นข้อมูลเก่าจาก 13:58 ลองใหม่ได้หลัง 14:45</p></div>
+          <button class="btn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg>ลองอีกครั้ง</button>
+        </div>
+        <div class="page-stack">
+          <div class="col">
+            <!-- ACTION QUEUE -->
+            <section class="panel lead" style="order:1" aria-labelledby="h-act">
+              <span class="stripe"></span><span class="corner"></span>
+              <div class="ph"><span class="tag">Action</span><h2 id="h-act">ต้องจัดการ 3 เรื่อง</h2><span class="stale-tag chip neu end" data-only="error"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>ข้อมูลเก่า 13:58</span></div>
+              <ul class="acts">
+                <li class="act">
+                  <span class="mark bad" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></span>
+                  <div class="txt"><strong>GitHub token หมดอายุใน 6 วัน</strong><span class="meta">4 พ.ย. 2026 · หลังจากนั้น Levana ดึงข้อมูลไม่ได้</span></div>
+                  <a class="btn primary go" href="#">ต่ออายุ token</a>
+                </li>
+                <li class="act">
+                  <span class="mark run" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg></span>
+                  <div class="txt"><strong>levana-ux รอผลจาก Tzayar</strong><span class="meta">ขั้น 4 design 3 แบบ · ทำงานอยู่ · งบ 220k</span></div>
+                  <a class="btn go" href="?page=run">เปิด run</a>
+                </li>
+                <li class="act">
+                  <span class="mark neu" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg></span>
+                  <div class="txt"><strong>#53 ตั้งค่า PC (Windows) ครั้งแรกหลัง pull repo</strong><span class="meta">Issue เปิดอยู่ · I-RinkuNG</span></div>
+                  <a class="btn go" href="#">ดู issue</a>
+                </li>
+              </ul>
+            </section>
+
+            <!-- ACTIVE RUN -->
+            <section class="panel" style="order:4" aria-labelledby="h-run">
+              <span class="corner"></span>
+              <div class="ph"><span class="tag">Run</span><h2 id="h-run">levana-ux</h2><span class="chip run end"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>กำลังทำ · ขั้น 4</span></div>
+              <ul class="rows">
+                <li class="hand"><span class="id" translate="no">4</span><div><span class="who" translate="no">Kesh → Tzayar</span><span class="res">design system + mockup 3 แบบ ให้ Rin เลือก</span></div><span class="tk meta">กำลังทำ</span></li>
+                <li class="hand"><span class="id" translate="no">1b'''</span><div><span class="who" translate="no">Kesh → Cheker</span><span class="res">60 ภาพจากคลิป gameplay: dialog box, title card, battle HUD</span></div><span class="tk" translate="no">31,245</span></li>
+                <li class="hand"><span class="id" translate="no">1b''</span><div><span class="who" translate="no">Kesh → Cheker</span><span class="res">48 frame จาก YouTube · CZN ใช้ได้ ~17 ภาพ</span></div><span class="tk" translate="no">27,601</span></li>
+                <li class="hand dk"><span class="id" translate="no">1c</span><div><span class="who" translate="no">Kesh → Bochek</span><span class="res">ประเมิน Levana: ช้า 3.8s/50 req, nav ล้น, tap &lt;44px</span></div><span class="tk" translate="no">33,072</span></li>
+              </ul>
+              <a class="more" href="?page=run">ดู run ทั้งหมด (8 handoff, ตีกลับ 2) <svg class="ico" aria-hidden="true"><use href="#i-next"/></svg></a>
+            </section>
+
+            <!-- RECENT RUNS -->
+            <section class="panel" style="order:5" aria-labelledby="h-recent">
+              <div class="ph"><span class="tag">Log</span><h2 id="h-recent">Run ล่าสุด</h2></div>
+              <ul class="rows">
+                <li><a class="row" href="?page=run"><span class="t" translate="no">levana-ux</span><span class="r"><b>265,323</b></span><span class="s"><span class="meta mono">10-29</span><span class="chip run">กำลังทำ</span></span></a></li>
+                <li><a class="row" href="#"><span class="t" translate="no">superpowers-lessons</span><span class="r"><b>124,150</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip bad"><svg class="ico" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ 1</span></span></a></li>
+                <li><a class="row" href="#"><span class="t" translate="no">levana-redesign</span><span class="r"><b>126,676</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>เสร็จ</span></span></a></li>
+                <li><a class="row" href="#"><span class="t" translate="no">levana-fetch-error</span><span class="r"><b>22,304</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip neu">เปิดอยู่</span></span></a></li>
+                <li class="dk"><a class="row" href="#"><span class="t" translate="no">external-md-vetting</span><span class="r"><b>17,163</b></span><span class="s"><span class="meta mono">10-28</span><span class="chip ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>เสร็จ</span></span></a></li>
+              </ul>
+              <a class="more" href="#">ดู run ทั้งหมด 29 รายการ <svg class="ico" aria-hidden="true"><use href="#i-next"/></svg></a>
+            </section>
+          </div>
+
+          <div class="col">
+            <!-- 5H BUDGET -->
+            <section class="panel dlg budget" style="order:2" aria-labelledby="h-5h">
+              <span class="corner"></span><span class="ticks" aria-hidden="true"></span>
+              <div class="ph"><span class="tag">5H window</span><h2 id="h-5h">งบ 5 ชั่วโมง</h2></div>
+              <p class="hero-fig num">17.7%<small>ใช้ไปแล้ว</small></p>
+              <div class="meter" role="img" aria-label="ใช้ไป 17.7 เปอร์เซ็นต์: Cheker 9.4, Bochek 4.5, Kotev 3.9; Tzayar จองไว้ 14.7">
+                <span style="width:9.35%;background:var(--c1)"></span><span style="width:4.48%;background:var(--c2)"></span><span style="width:3.85%;background:var(--c3)"></span><span class="rsv" style="width:14.67%"></span>
+              </div>
+              <ul class="legend">
+                <li><span class="key" style="background:var(--c1)"></span>Cheker <b class="mono" translate="no">140k</b></li>
+                <li><span class="key" style="background:var(--c2)"></span>Bochek <b class="mono" translate="no">67k</b></li>
+                <li><span class="key" style="background:var(--c3)"></span>Kotev <b class="mono" translate="no">58k</b></li>
+                <li><span class="key rsv"></span>Tzayar จอง <b class="mono" translate="no">220k</b></li>
+              </ul>
+              <p class="meta" style="margin-top:var(--s-3)"><span class="mono" translate="no">265,323 / 1,500,000</span> · 1% ≈ 15k · รีเซ็ต <span class="mono" translate="no">17:05</span> (อีก 2 ชม. 33 นาที)</p>
+            </section>
+
+            <!-- KPI -->
+            <section class="panel kpis" style="order:3" aria-label="ตัวเลขวันนี้">
+              <div class="kpi"><span class="meta">Handoff</span><span class="v num">8</span><span class="d">+1 กำลังทำ</span></div>
+              <div class="kpi"><span class="meta">ตีกลับ</span><span class="v num">25<small>%</small></span><span class="d bad">2 จาก 8</span></div>
+              <div class="kpi"><span class="meta">Issue เปิด</span><span class="v num">3</span><span class="d">ไม่มีใหม่วันนี้</span></div>
+            </section>
+
+            <!-- AGENTS TODAY (collapsed on mobile) -->
+            <details class="panel fold" style="order:6" data-open-desktop>
+              <summary><span class="tag">Agents</span><h2>Token ต่อ agent วันนี้</h2><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+              <ul class="abars" style="margin-top:var(--s-3)">
+                <li class="abar"><span class="who" translate="no">Cheker</span><span class="bar"><span style="width:100%;background:var(--c1)"></span></span><span class="n" translate="no">140,272</span></li>
+                <li class="abar"><span class="who" translate="no">Bochek</span><span class="bar"><span style="width:47.9%;background:var(--c2)"></span></span><span class="n" translate="no">67,227</span></li>
+                <li class="abar"><span class="who" translate="no">Kotev</span><span class="bar"><span style="width:41.2%;background:var(--c3)"></span></span><span class="n" translate="no">57,824</span></li>
+              </ul>
+              <p class="meta" style="margin-top:var(--s-3)">ตีกลับวันนี้: Kotev 1 (partial data), Cheker 1 (ภาพไม่พอ)</p>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- loading: skeleton mirrors the real layout ---------- -->
+      <div data-view="loading" aria-busy="true" aria-label="กำลังโหลด" hidden>
+        <div class="page-stack">
+          <div class="col">
+            <div class="panel" style="order:1"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div>
+            <div class="panel" style="order:4"><div class="sk sk-line" style="width:40%"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div>
+          </div>
+          <div class="col">
+            <div class="panel" style="order:2"><div class="sk sk-line" style="width:35%"></div><div class="sk sk-big"></div><div class="sk sk-bar"></div><div class="sk sk-line" style="width:70%"></div></div>
+            <div class="panel" style="order:3"><div class="sk sk-big" style="width:100%"></div></div>
+          </div>
+        </div>
+        <p class="meta" style="margin-top:var(--s-4)">กำลังดึงข้อมูลจาก GitHub (1 request)…</p>
+      </div>
+
+      <!-- ---------- empty: no run today ---------- -->
+      <div data-view="empty" hidden>
+        <div class="page-stack">
+          <div class="col">
+            <section class="panel lead" style="order:1"><span class="stripe"></span><span class="corner"></span>
+              <div class="ph"><span class="tag">Action</span><h2>ไม่มีเรื่องต้องจัดการ</h2></div>
+              <div class="state-note"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><div><p>ไม่มี issue เปิด, token ยังไม่ใกล้หมดอายุ และไม่มี run ค้าง</p></div></div>
+            </section>
+            <section class="panel" style="order:4"><span class="corner"></span>
+              <div class="ph"><span class="tag">Run</span><h2>ยังไม่มี run วันนี้</h2></div>
+              <div class="state-note"><svg class="ico" aria-hidden="true"><use href="#i-empty"/></svg><div><p>Run จะขึ้นที่นี่เมื่อ Kesh สร้างไฟล์ใน <span class="mono" translate="no">runs/</span> ของวันนี้</p><p class="meta">run ล่าสุด: levana-ux · 29 ต.ค.</p><a class="btn" href="?page=run">เปิด run ล่าสุด</a></div></div>
+            </section>
+          </div>
+          <div class="col">
+            <section class="panel dlg budget" style="order:2"><span class="corner"></span><span class="ticks" aria-hidden="true"></span>
+              <div class="ph"><span class="tag">5H window</span><h2>งบ 5 ชั่วโมง</h2></div>
+              <p class="hero-fig num">0%<small>ยังไม่ได้ใช้</small></p>
+              <div class="meter"></div>
+              <p class="meta">หน้าต่าง 5 ชม. เริ่มนับเมื่อใช้ token ครั้งแรก</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================== RUN DETAIL =============================== -->
+    <section data-page="run" aria-label="รายละเอียด run" hidden>
+      <div data-view="ready">
+      <div class="page-stack">
+        <section class="panel lead full namecard" aria-labelledby="h-req">
+          <span class="stripe"></span><span class="corner"></span>
+          <div class="ph"><span class="tag">Run · 2026-10-29</span><h2 id="h-req">คำขอ</h2><span class="chip run end"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>กำลังทำ · ขั้น 4 Tzayar</span></div>
+          <p class="req">ทำ Levana ให้เร็วขึ้นด้วย GraphQL request เดียว แล้วให้ทีม research และประเมิน UX/UI ใหม่ทั้งหมด เพราะ Rin ให้คะแนน UX/UI ต่ำมากและคาดหวังสูง</p>
+          <ol class="flow" aria-label="flow ที่อนุมัติ">
+            <li>1 GraphQL + ภาพเกม + ประเมิน</li><li>2 QA</li><li>3 ตรวจ research</li><li class="now">4 design 3 แบบ</li><li>5 Rin เลือก</li>
+          </ol>
+        </section>
+
+        <section class="panel kpis k4 full" aria-label="สรุป run">
+          <div class="kpi"><span class="meta">Tokens</span><span class="v num">265,323</span><span class="d">ไม่รวมขั้น 4</span></div>
+          <div class="kpi"><span class="meta">ของ 5 ชม.</span><span class="v num">17.7<small>%</small></span><span class="d">1% ≈ 15k</span></div>
+          <div class="kpi"><span class="meta">Handoff</span><span class="v num">8</span><span class="d">+1 กำลังทำ</span></div>
+          <div class="kpi"><span class="meta">ตีกลับ</span><span class="v num">2</span><span class="d bad">25% · Kotev, Cheker</span></div>
+        </section>
+
+        <div class="col">
+          <section class="panel" aria-labelledby="h-chart">
+            <span class="corner"></span>
+            <div class="ph"><span class="tag">Tokens</span><h2 id="h-chart">Token ต่อ handoff</h2>
+              <ul class="legend end"><li><span class="key" style="background:var(--c1)"></span>Cheker</li><li><span class="key" style="background:var(--c2)"></span>Bochek</li><li><span class="key" style="background:var(--c3)"></span>Kotev</li></ul></div>
+            <ol class="chart" data-tip>
+              <li class="hbar" tabindex="0" data-tip="#1a Kesh → Kotev · 40,738 tokens · สะสม 2.7% ของ 5 ชม."><span class="lab"><b>1a</b><span>Kotev</span></span><span class="track"><i style="width:74.1%;background:var(--c3)"></i></span><span class="val">40,738<small>2.7%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#2 Kesh → Bochek · 34,155 tokens · สะสม 5.0%"><span class="lab"><b>2</b><span>Bochek</span></span><span class="track"><i style="width:62.1%;background:var(--c2)"></i></span><span class="val">34,155<small>5.0%</small></span></li>
+              <li class="hbar bounce" tabindex="0" data-tip="#2' ตีกลับรอบ 1 · Kotev · 17,086 tokens · สะสม 6.1%"><span class="lab"><b>2'</b><span>Kotev <svg class="ico" style="width:14px;height:14px;vertical-align:-2px" role="img" aria-label="ตีกลับ"><use href="#i-bounce"/></svg></span></span><span class="track"><i style="width:31.1%;background:var(--c3)"></i></span><span class="val">17,086<small>6.1%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1b Kesh → Cheker · 54,980 tokens · สะสม 9.8%"><span class="lab"><b>1b</b><span>Cheker</span></span><span class="track"><i style="width:100%;background:var(--c1)"></i></span><span class="val">54,980<small>9.8%</small></span></li>
+              <li class="hbar bounce" tabindex="0" data-tip="#1b' ตีกลับรอบ 1 · Cheker · 26,446 tokens · สะสม 11.6%"><span class="lab"><b>1b'</b><span>Cheker <svg class="ico" style="width:14px;height:14px;vertical-align:-2px" role="img" aria-label="ตีกลับ"><use href="#i-bounce"/></svg></span></span><span class="track"><i style="width:48.1%;background:var(--c1)"></i></span><span class="val">26,446<small>11.6%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1c Kesh → Bochek · 33,072 tokens · สะสม 13.8%"><span class="lab"><b>1c</b><span>Bochek</span></span><span class="track"><i style="width:60.2%;background:var(--c2)"></i></span><span class="val">33,072<small>13.8%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1b'' Kesh → Cheker · 27,601 tokens · สะสม 15.6%"><span class="lab"><b>1b''</b><span>Cheker</span></span><span class="track"><i style="width:50.2%;background:var(--c1)"></i></span><span class="val">27,601<small>15.6%</small></span></li>
+              <li class="hbar" tabindex="0" data-tip="#1b''' Kesh → Cheker · 31,245 tokens · สะสม 17.7%"><span class="lab"><b>1b'''</b><span>Cheker</span></span><span class="track"><i style="width:56.8%;background:var(--c1)"></i></span><span class="val">31,245<small>17.7%</small></span></li>
+            </ol>
+            <div class="axis" aria-hidden="true"><span></span><span class="ticks"><span>0</span><span>25k</span><span>55k</span></span><span class="meta" style="text-align:right">สะสม</span></div>
+            <p class="meta" style="margin-top:var(--s-3)">แถบลายเฉียง = ตีกลับ · เรียงตามเวลาที่ทำ</p>
+          </section>
+
+          <section class="panel" aria-labelledby="h-hand">
+            <div class="ph"><span class="tag">Handoffs</span><h2 id="h-hand">ลำดับงาน</h2></div>
+            <div class="filters" role="group" aria-label="กรอง handoff">
+              <button class="fchip" type="button" aria-pressed="true">ทั้งหมด<b>9</b></button>
+              <button class="fchip" type="button" aria-pressed="false">ตีกลับ<b>2</b></button>
+              <button class="fchip" type="button" aria-pressed="false">Cheker<b>4</b></button>
+              <button class="fchip" type="button" aria-pressed="false">Kotev<b>2</b></button>
+            </div>
+            <ul class="hlist">
+              <li><details><summary><span class="id" translate="no">1a</span><span><b>Kesh → Kotev</b><span class="why">GraphQL request เดียวแทน REST 49 ตัว</span></span><span class="tk" translate="no">40,738</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>71f6efc (+142/−29) · 49 REST → 1 GraphQL · test 46/0</p><p class="meta">proxy cloud บล็อก api.github.com/graphql (403) จึงยังไม่ได้รัน query จริง</p></div></details></li>
+              <li><details><summary><span class="id" translate="no">2</span><span><b>Kesh → Bochek</b><span class="why">QA 1a + validate schema offline</span></span><span class="tk" translate="no">34,155</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>schema PASS · test 46/0 · Playwright 7 view ผ่าน</p><p class="meta">bug M: ได้ 200 + errors แล้วทั้งหน้าล่ม</p></div></details></li>
+              <li><details open><summary><span class="id" translate="no">2'</span><span><b>Kesh → Kotev</b> <span class="chip bad"><svg class="ico" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ 1</span><span class="why">partial data + path ในข้อความ error</span></span><span class="tk" translate="no">17,086</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>769edde (+27/−5) · test 48/0 · Kesh อ่าน diff และรัน test ผ่านเอง ไม่ส่ง Bochek ซ้ำเพราะแก้เล็กและมี test</p></div></details></li>
+              <li class="dk"><details><summary><span class="id" translate="no">1b</span><span><b>Kesh → Cheker</b><span class="why">เก็บภาพ UI เกม + dashboard</span></span><span class="tk" translate="no">54,980</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>64 ไฟล์ · Cyberpunk 14 ภาพเต็มใช้ได้ดี · Arknights/CZN เป็นแบนเนอร์ซ้ำกัน UI เล็ก</p></div></details></li>
+              <li class="dk"><details><summary><span class="id" translate="no">1b'</span><span><b>Kesh → Cheker</b> <span class="chip bad"><svg class="ico" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ 1</span><span class="why">ภาพ Arknights/CZN ไม่พอใช้ออกแบบ</span></span><span class="tk" translate="no">26,446</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+                <div class="body"><p>App Store 28 ภาพความละเอียดสูง · ยังขาด CZN home/deck</p></div></details></li>
+            </ul>
+            <a class="more" href="#">แสดงทั้งหมด 9 handoff <svg class="ico" aria-hidden="true"><use href="#i-down"/></svg></a>
+          </section>
+        </div>
+
+        <div class="col">
+          <details class="panel dlg fold" data-open-desktop>
+            <span class="corner"></span>
+            <summary><span class="tag">Agents</span><h2 id="h-split">แบ่งตาม agent</h2><span class="meta mono">Cheker 53%</span><svg class="ico chev" aria-hidden="true"><use href="#i-down"/></svg></summary>
+            <div class="split" role="img" aria-label="Cheker 52.9%, Bochek 25.3%, Kotev 21.8%"><span style="width:52.9%;background:var(--c1)"></span><span style="width:25.3%;background:var(--c2)"></span><span style="width:21.8%;background:var(--c3)"></span></div>
+            <table class="t" translate="no">
+              <thead><tr><th scope="col">Agent</th><th scope="col" class="r">Tokens</th><th scope="col" class="r">ส่วน</th><th scope="col" class="r">ตีกลับ</th></tr></thead>
+              <tbody>
+                <tr><td><span class="who" translate="no"><span class="key" style="background:var(--c1)"></span>Cheker</span></td><td class="r">140,272</td><td class="r">53%</td><td class="r">1/4</td></tr>
+                <tr><td><span class="who" translate="no"><span class="key" style="background:var(--c2)"></span>Bochek</span></td><td class="r">67,227</td><td class="r">25%</td><td class="r">0/2</td></tr>
+                <tr><td><span class="who" translate="no"><span class="key" style="background:var(--c3)"></span>Kotev</span></td><td class="r">57,824</td><td class="r">22%</td><td class="r">1/2</td></tr>
+              </tbody>
+            </table>
+          </details>
+
+          <section class="panel dk" aria-labelledby="h-cmp">
+            <div class="ph"><span class="tag">Compare</span><h2 id="h-cmp">เทียบ run ก่อนหน้า</h2></div>
+            <ul class="rows">
+              <li><div class="row"><span class="t" translate="no">levana-redesign</span><span class="r"><b>126,676</b></span><span class="s meta">10-28 · ตีกลับ 1 · 8.4%</span></div></li>
+              <li><div class="row"><span class="t" translate="no">levana-dashboard</span><span class="r"><b>203,282</b></span><span class="s meta">10-27 · ตีกลับ 2 · 13.6%</span></div></li>
+            </ul>
+            <p class="meta" style="margin-top:var(--s-2)">run นี้ใช้มากกว่า levana-redesign 2.1 เท่า ส่วนใหญ่มาจากการเก็บภาพ 4 รอบของ Cheker</p>
+          </section>
+        </div>
+      </div>
+      </div>
+
+      <div data-view="loading" aria-busy="true" hidden>
+        <div class="page-stack">
+          <div class="panel full"><div class="sk sk-line" style="width:25%"></div><div class="sk sk-line"></div><div class="sk sk-line" style="width:60%"></div></div>
+          <div class="panel full"><div class="sk sk-big" style="width:100%"></div></div>
+          <div class="col"><div class="panel"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+          <div class="col"><div class="panel"><div class="sk sk-bar"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+        </div>
+      </div>
+      <div data-view="empty" hidden>
+        <section class="panel"><div class="state-note"><svg class="ico" aria-hidden="true"><use href="#i-empty"/></svg><div><p><strong>run นี้ยังไม่มี handoff</strong></p><p class="meta">ตาราง Handoffs ในไฟล์ runs/2026-10-29-levana-ux.md ยังว่าง Kesh จะเพิ่มแถวเมื่อส่งงานให้ agent แรก</p><a class="btn" href="?page=today">กลับไปหน้าวันนี้</a></div></div></section>
+      </div>
+    </section>
+    </main>
+  </div>
+
+  <nav class="tabbar" aria-label="เมนูหลัก">
+    <a class="tab" href="?page=today" data-nav="today"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg>วันนี้</a>
+    <a class="tab" href="?page=run" data-nav="run"><svg class="ico" aria-hidden="true"><use href="#i-runs"/></svg>Runs</a>
+    <a class="tab" href="#"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg>Issues</a>
+    <a class="tab" href="#"><svg class="ico" aria-hidden="true"><use href="#i-agents"/></svg>Agents</a>
+    <a class="tab" href="#"><svg class="ico" aria-hidden="true"><use href="#i-more"/></svg>เพิ่มเติม</a>
+  </nav>
+</div>
+
+<details class="mock">
+  <summary>mockup</summary>
+  <div>
+    <span class="lbl">Page</span><a href="?page=today">วันนี้</a><a href="?page=run">Run detail</a>
+    <span class="lbl">State</span><a href="?state=ready" data-keep>ปกติ</a><a href="?state=loading" data-keep>กำลังโหลด</a><a href="?state=empty" data-keep>ว่าง</a><a href="?state=error" data-keep>ผิดพลาด</a>
+    <span class="lbl">Direction</span><a href="mockup-a.html">A · Terminal</a><a href="mockup-b.html">B · Codex</a><a href="mockup-c.html">C · Relay</a>
+  </div>
+</details>
+<div class="tip" role="tooltip" hidden></div>

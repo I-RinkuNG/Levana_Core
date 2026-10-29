@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e9eaef">
+<title>Run 029 · Levana D4</title>
+<script>(function(){var q=new URLSearchParams(location.search),m=q.get('mode');try{m=m||localStorage.getItem('lvn-mode')}catch(e){}document.documentElement.dataset.mode=m||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600&family=Anuphan:wght@600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* ===== Levana v2 · D4 "Sortie Formation" — final tokens =====
+   Layout + colour roles from D3, type + radius + spacing from D2, label tabs + operator cards from D1.
+   Colour rule: --act* (orange) = things you can press. --data* (cyan) = measured values. Status colours = state + icon + label.
+   --agent-* = identity only (initial block), always with letter + name. */
+:root{
+  /* type */
+  --font-body:"Noto Sans Thai","IBM Plex Sans Thai","Sarabun",system-ui,sans-serif;
+  --font-disp:"Anuphan","Noto Sans Thai",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",monospace;
+  --t-meta:13px;--t-small:15px;--t-body:17px;--t-h2:20px;--t-h1:28px;--t-val:32px;--t-hero:56px;
+  --lh:1.6;--lh-h:1.3;--lh-disp:1.15;
+  /* spacing (4-based scale only) */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;--s12:48px;
+  --pad:var(--s4);--gap:var(--s4);            /* mobile; desktop raises both to --s6 */
+  /* shape */
+  --r:14px;--r-in:10px;--r-tab:6px;--r-ctl:999px;--r-chip:999px;
+  --br:16px;--br-w:2px;--br-off:6px;          /* corner bracket arm, stroke, offset outside the card */
+  /* motion */
+  --dur:140ms;--ease:cubic-bezier(.2,0,0,1);
+  --tap:44px;
+
+  /* light */
+  --bg:#e9eaef;--surface:#ffffff;--surface-2:#f3f4f7;--sunken:#dfe1e7;--line:#cfd2db;--line-strong:#7d8291;
+  --ink:#14151b;--ink-2:#4a4d5a;
+  --slab:#14151b;--on-slab:#f4f4f7;--on-slab-2:#b3b6c2;
+  --act:#b8440b;--act-hover:#9a3807;--on-act:#ffffff;--act-ink:#a63d09;
+  --data:#0a7ea8;--data-ink:#0b6383;--data-bg:#d6ebf3;--data-tint:#e6f2f7;
+  --ok:#1b6e45;--ok-bg:#d9efe3;--bad:#b3192b;--bad-mark:#b3192b;--bad-bg:#f8dde0;
+  --focus:#0b6f94;
+  /* agent identity (initial block only; never on charts/data). Text on it = --on-agent. AA >= 6.9:1 */
+  --on-agent:#ffffff;
+  --agent-rosh:#4c4c9e;--agent-cheker:#645642;--agent-amet:#6b5600;--agent-zekher:#773b84;--agent-bona:#24569f;
+  --agent-kotev:#426323;--agent-bochek:#8b306a;--agent-tak:#585858;--agent-oseh:#455b6d;--agent-tzayar:#654199;
+}
+html[data-mode=dark]{
+  --bg:#0f1015;--surface:#181920;--surface-2:#1f2029;--sunken:#0a0a0e;--line:#2f313c;--line-strong:#5f6372;
+  --ink:#eeeef3;--ink-2:#a6a8b6;
+  --slab:#2c2e3a;--on-slab:#eeeef3;--on-slab-2:#a6a8b6;
+  --act:#ff8a3d;--act-hover:#ffa264;--on-act:#1a0d02;--act-ink:#ffa264;
+  --data:#249bce;--data-ink:#5cc8ef;--data-bg:#0f2a36;--data-tint:#132530;
+  --ok:#55d394;--ok-bg:#11291d;--bad:#ff7a85;--bad-mark:#ec5866;--bad-bg:#33161a;
+  --focus:#5cc8ef;
+  --on-agent:#14151b;
+  --agent-rosh:#b0b6ff;--agent-cheker:#c9bba9;--agent-amet:#d0be76;--agent-zekher:#dea6ea;--agent-bona:#91c0ff;
+  --agent-kotev:#aaca91;--agent-bochek:#f59ecf;--agent-tak:#bebebe;--agent-oseh:#acc1d3;--agent-tzayar:#c9acff;
+}
+@media (min-width:1024px){:root{--pad:var(--s6);--gap:var(--s6)}}
+@media (prefers-reduced-motion:reduce){:root{--dur:0ms}}
+
+/* ===== D4 components (consume tokens.css only) ===== */
+*,*::before,*::after{box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+html{-webkit-text-size-adjust:100%;color-scheme:light;scroll-padding-bottom:96px}
+html[data-mode=dark]{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--t-body)/var(--lh) var(--font-body);overflow-wrap:anywhere;word-break:normal;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h1,h2,h3,p,ol,ul,dl,dd,figure{margin:0}ol,ul{padding:0;list-style:none}
+h1,h2,h3{line-height:var(--lh-h);font-weight:600;text-wrap:balance;font-family:var(--font-disp)}
+h1{font-size:var(--t-h1)}h2{font-size:var(--t-h2)}h3{font-size:var(--t-body)}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.mono{font-family:var(--font-mono);font-size:var(--t-meta);letter-spacing:.06em;line-height:1.4}
+.meta{font-size:var(--t-meta);color:var(--ink-2);line-height:1.5}
+.ok-t{color:var(--ok)}.bad-t{color:var(--bad)}.data-t{color:var(--data-ink)}
+.ico{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.ico.sm{width:14px;height:14px;stroke-width:2;vertical-align:-2px;margin-right:4px}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;z-index:9;background:var(--surface);padding:var(--s3)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+
+/* ---- shell ---- */
+.app{min-height:100vh;position:relative}
+.col{padding:0 var(--s4) 96px;min-width:0}
+.page{display:flex;flex-direction:column;gap:var(--gap);max-width:1400px}
+.zone{display:contents}
+.topbar{display:flex;align-items:center;gap:var(--s2);min-height:64px;padding:var(--s3) 0 var(--s2)}
+.topbar .title{flex:1 1 auto;min-width:0}
+.crumb{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--act-ink);font-weight:600;font-size:var(--t-small);text-decoration:none;margin:0 0 -4px -8px;padding:0 8px 0 0}
+.fresh{display:flex;align-items:center;gap:6px}
+.fresh .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.iconbtn{flex:none;width:var(--tap);height:var(--tap);display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-ctl);cursor:pointer;transition:background var(--dur) var(--ease),border-color var(--dur)}
+.iconbtn:hover{border-color:var(--act);color:var(--act-ink)}
+
+/* status strip (D3): cells split by divider lines */
+.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface);border-radius:var(--r);padding:var(--s2) 0}
+.strip li{display:flex;flex-direction:column;gap:2px;padding:var(--s1) var(--s4);border-left:1px solid var(--line);min-width:0}
+.strip li:first-child{border-left:0}
+.strip .mono{color:var(--ink-2)}
+.strip b{font:600 var(--t-body)/1.3 var(--font-disp)}
+.strip .d-only{display:none}
+
+/* nav: bottom bar <1024, side rail >=1024 */
+.nav{position:fixed;z-index:5;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line)}
+.nav .brand,.nav .nav-foot,.nav .d-only,.nav .cnt{display:none}
+.nav nav{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s1);padding:var(--s1) var(--s2) calc(var(--s1) + env(safe-area-inset-bottom))}
+.nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;text-decoration:none;font-size:var(--t-meta);color:var(--ink-2);line-height:1.4;border-radius:var(--r-in);transition:background var(--dur)}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.nav a[aria-current=page]{color:var(--ink);font-weight:600}
+.nav a[aria-current=page] .ico{color:var(--act)}
+html.shot .nav{position:absolute}
+
+@media (max-width:1023.98px){.tri{display:flex;flex-direction:column;gap:var(--gap)}}
+/* ---- panel ---- */
+.blk{background:var(--surface);border-radius:var(--r);padding:var(--pad);position:relative;min-width:0}
+html[data-mode=dark] .blk{box-shadow:inset 0 0 0 1px var(--line)}
+/* corner brackets (D3) — only .br panels: queue, 5h budget, active run */
+.br{margin:var(--br-off)}
+.br::before{content:"";position:absolute;inset:calc(-1 * var(--br-off));pointer-events:none;--c:var(--line-strong);
+  background:linear-gradient(var(--c),var(--c)) 0 0/var(--br) var(--br-w),linear-gradient(var(--c),var(--c)) 0 0/var(--br-w) var(--br),
+  linear-gradient(var(--c),var(--c)) 100% 0/var(--br) var(--br-w),linear-gradient(var(--c),var(--c)) 100% 0/var(--br-w) var(--br),
+  linear-gradient(var(--c),var(--c)) 0 100%/var(--br) var(--br-w),linear-gradient(var(--c),var(--c)) 0 100%/var(--br-w) var(--br),
+  linear-gradient(var(--c),var(--c)) 100% 100%/var(--br) var(--br-w),linear-gradient(var(--c),var(--c)) 100% 100%/var(--br-w) var(--br);background-repeat:no-repeat}
+/* header row: numbered label tab (D1) + title + optional link; tab sits inside the padding, never flush */
+.hd{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);margin-bottom:var(--s4)}
+.hd h2{flex:1 1 auto;min-width:0}
+.tab{display:inline-flex;align-items:center;gap:6px;background:var(--slab);color:var(--on-slab);border-radius:var(--r-tab);padding:3px var(--s2);font:600 var(--t-meta)/1.4 var(--font-mono);letter-spacing:.08em;white-space:nowrap}
+.tab b{color:var(--on-slab);font-weight:600}
+.tab::before{content:"";width:6px;height:6px;background:var(--data);transform:rotate(45deg);flex:none}
+.tab.act::before{background:var(--act)}
+.more{display:inline-flex;align-items:center;justify-content:center;min-height:var(--tap);min-width:var(--tap);color:var(--act-ink);font-weight:600;font-size:var(--t-small);text-underline-offset:3px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);min-height:var(--tap);padding:0 var(--s4);font:600 var(--t-small)/1.4 var(--font-body);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);text-decoration:none;cursor:pointer;border-radius:var(--r-ctl);white-space:nowrap;transition:background var(--dur),border-color var(--dur),color var(--dur)}
+.btn:hover{border-color:var(--act);color:var(--act-ink)}
+.btn.primary{background:var(--act);color:var(--on-act);border-color:var(--act)}
+.btn.primary:hover{background:var(--act-hover);color:var(--on-act)}
+.chip{display:inline-flex;align-items:center;font-size:var(--t-meta);font-weight:600;line-height:1.4;padding:2px var(--s2);border-radius:var(--r-chip);white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.bad{background:var(--bad-bg);color:var(--bad)}.chip.run{background:var(--data-bg);color:var(--data-ink)}
+
+.brief{display:flex;gap:var(--s3);align-items:baseline;padding:var(--s3) var(--s4);background:var(--slab);color:var(--on-slab);border-radius:var(--r);font-size:var(--t-small)}
+.brief .mono{color:var(--on-slab-2);flex:none}
+.brief .bad-t{color:#ffb3bd}
+html[data-mode=dark] .brief .bad-t{color:var(--bad)}
+
+/* ---- action queue (D3 numbered list 01-03) ---- */
+.q-list{counter-reset:q}
+.q{display:grid;grid-template-columns:48px 1fr;grid-template-areas:"n verb" "n body" "n btn";gap:2px var(--s3);padding:var(--s4) 0;border-top:1px solid var(--line);counter-increment:q}
+.q:first-child{border-top:0;padding-top:0}.q:last-child{padding-bottom:0}
+.q::before{content:"0" counter(q);grid-area:n;font:600 28px/1 var(--font-disp);color:var(--ink-2)}
+.q-verb{grid-area:verb;color:var(--ink-2);font-weight:600}
+.q-bad .q-verb,.q-bad::before{color:var(--bad)}
+.q-body{grid-area:body;display:flex;flex-direction:column;min-width:0}
+.q-body b{line-height:1.5}
+.q .btn{grid-area:btn;justify-self:start;margin-top:var(--s2)}
+
+/* ---- 5h budget: countdown hero (D2) ---- */
+.m-hero{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:var(--s2) var(--s4);margin-bottom:var(--s4)}
+.m-hero .lbl{display:block}
+.cd{font:600 var(--t-hero)/var(--lh-disp) var(--font-disp);letter-spacing:.01em;white-space:nowrap}
+.m-pct{display:flex;align-items:baseline;gap:var(--s2)}
+.m-pct b{font:600 var(--t-h1)/var(--lh-disp) var(--font-disp);color:var(--data-ink)}
+.bar{position:relative;height:16px;display:flex;gap:2px;background:var(--sunken);border-radius:4px;overflow:hidden}
+.seg{width:var(--w);height:100%}
+.seg.used{background:var(--data);border-radius:4px 0 0 4px}
+.seg.resv{background:repeating-linear-gradient(135deg,var(--data) 0 2px,transparent 2px 6px);box-shadow:inset 0 0 0 1px var(--data)}
+.legend{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin-top:var(--s3)}
+.legend li{display:flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;display:inline-block;flex:none;border-radius:2px}
+.sw.used{background:var(--data)}.sw.resv{background:repeating-linear-gradient(135deg,var(--data) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--data)}.sw.left{background:var(--sunken);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.foot{margin-top:var(--s3)}
+
+/* ---- KPIs ---- */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s3)}
+.kpi{display:flex;flex-direction:column;gap:2px;background:var(--surface-2);border-radius:var(--r-in);padding:var(--s3);min-width:0}
+.kpi .mono{color:var(--ink-2)}
+.val{font:600 var(--t-val)/var(--lh-disp) var(--font-disp)}
+
+/* ---- stage track: diamonds (D3) + step numbers ---- */
+.stages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4) var(--s2)}
+.stages li{display:flex;flex-direction:column;min-width:0}
+.stages b{font-size:var(--t-small);line-height:1.4}
+.dia{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2);font:600 var(--t-meta)/1 var(--font-mono);color:var(--ink-2)}
+.dia::before{content:"";width:14px;height:14px;transform:rotate(45deg);border:2px solid var(--line-strong);background:var(--surface);margin:4px}
+.stages .done .dia::before{background:var(--data);border-color:var(--data)}
+.stages .now .dia{color:var(--data-ink)}
+.stages .now .dia{gap:var(--s3)}
+.stages .now .dia::before{width:18px;height:18px;margin:2px;background:var(--data);border-color:var(--data);outline:2px solid var(--data);outline-offset:3px}
+.stages .now b{color:var(--data-ink)}
+.stages .bounced .dia::before{background:var(--bad-mark);border-color:var(--bad-mark)}
+
+/* ---- run rows ---- */
+.rows li{display:grid;grid-template-columns:44px 1fr auto;grid-template-areas:"id name tok" "id chip chip";gap:2px var(--s3);padding:var(--s3) 0;border-top:1px solid var(--line);align-items:center}
+.rows li:first-child{border-top:0;padding-top:0}
+.rid{grid-area:id;font:600 var(--t-small)/1.4 var(--font-mono);color:var(--ink-2)}
+.rname{grid-area:name;font-weight:600;font-size:var(--t-small)}
+.rows .chip{grid-area:chip;justify-self:start}
+.rtok{grid-area:tok;font-size:var(--t-small);color:var(--ink-2)}
+
+/* ---- operator cards (D1) ---- */
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.op{display:flex;flex-direction:column;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-in);overflow:hidden;min-width:0}
+.op-ini{height:64px;display:flex;align-items:flex-end;padding:0 var(--s3);font:600 48px/.95 var(--font-disp);background:var(--ag,var(--agent-tak));color:var(--on-agent);position:relative}
+.op-ini .mono{position:absolute;top:var(--s2);right:var(--s3);color:var(--on-agent);font-size:var(--t-meta)}
+.op-name{background:var(--slab);color:var(--on-slab);padding:2px var(--s3);font:600 var(--t-small)/1.5 var(--font-disp);letter-spacing:.04em}
+.op-body{padding:var(--s2) var(--s3) var(--s3);display:flex;flex-direction:column;gap:2px}
+.op-val{font:600 24px/1.2 var(--font-disp)}
+.op-bar{height:6px;background:var(--sunken);border-radius:3px;position:relative;margin:var(--s1) 0}
+.op-bar::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--data);border-radius:3px}
+.op.warn{border-color:var(--bad)}
+.op.warn{box-shadow:inset 0 0 0 1px var(--bad)} /* identity block stays; warn = red 2px edge + icon + red text */
+.op dl{display:grid;grid-template-columns:1fr auto;gap:2px var(--s2);margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
+.op dt{color:var(--ink-2)}.op dd{font-weight:600;text-align:right}
+.bnc{height:6px;background:var(--sunken);border-radius:3px;position:relative;margin:var(--s1) 0 2px}
+.bnc i{position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--data);border-radius:3px}
+.bnc.over i{background:var(--bad-mark)}
+.bnc::after{content:"";position:absolute;left:40%;top:-3px;bottom:-3px;width:2px;background:var(--ink)}/* 20% line on a 0-50% scale */
+.group+.group{margin-top:var(--s6)}
+.group>h3{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s3)}
+
+/* ---- sys ---- */
+.sys-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3)}
+.sys-row p{flex:1 1 160px;min-width:0}.sys-row .chip{margin-left:var(--s2)}
+
+/* ---- handoff timeline (run detail) ---- */
+.tl{counter-reset:h}
+.tl li{display:grid;grid-template-columns:32px 1fr auto;gap:var(--s1) var(--s3);padding:var(--s3) 0;border-top:1px solid var(--line);position:relative}
+.tl li:first-child{border-top:0;padding-top:0}
+.tl .hn{font:600 var(--t-small)/1.6 var(--font-mono);color:var(--ink-2)}
+.tl .who{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1) var(--s2);font-weight:600}
+.tl .who .ico{color:var(--ink-2)}
+.tl .tk{display:grid;grid-template-columns:1fr 56px;align-items:center;gap:var(--s2);grid-column:2/-1}
+.tl .res-c{grid-column:3;grid-row:1;align-self:start}
+.tl .tk .op-bar{margin:0}
+.tl .tk b{text-align:right;font-size:var(--t-small)}
+.tl .why{grid-column:2/-1;background:var(--bad-bg);border-radius:var(--r-in);padding:var(--s2) var(--s3);font-size:var(--t-small);line-height:1.6}
+.tl-head{display:none}
+.reasons li{display:grid;grid-template-columns:1fr auto;gap:var(--s1) var(--s3);padding:var(--s2) 0}
+.reasons .op-bar{grid-column:1/-1;margin:0}
+.approve p{margin-bottom:var(--s4)}
+.approve .acts{display:flex;flex-wrap:wrap;gap:var(--s2)}
+
+/* ---- states ---- */
+.banner{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;padding:var(--s3) var(--s4);background:var(--bad-bg);color:var(--ink);border-radius:var(--r)}
+.banner .ico{color:var(--bad)}.banner p{flex:1 1 240px}
+[data-state=error] .page .blk:not(.keep) .hd h2::after{content:" · ข้อมูล 13:58";font:400 var(--t-meta)/1.5 var(--font-body);color:var(--ink-2)}
+.empty{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;padding:var(--s4);background:var(--surface-2);border-radius:var(--r-in)}
+.empty>.ico{color:var(--data-ink)}
+.empty p{flex:1 1 220px}
+.sk{display:flex;flex-direction:column;gap:var(--s3)}
+.sk i{display:block;height:56px;border-radius:var(--r-in);background:var(--sunken);animation:sk 1.2s ease-in-out infinite alternate}
+.sk i.s{height:24px;width:60%}
+@keyframes sk{to{opacity:.5}}
+[data-state=loading] .ld-hide{display:none!important}
+[data-state=loading] .strip b{color:transparent;background:var(--sunken);border-radius:4px}
+.ld-note{display:flex;align-items:center;gap:var(--s2)}
+
+/* mockup switcher (not part of the design) */
+.mock{position:fixed;right:8px;bottom:84px;z-index:6;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-in);padding:var(--s1) var(--s2);font-size:var(--t-meta)}
+.mock select{min-height:var(--tap);font:inherit;background:var(--surface);color:var(--ink)}
+html.shot .mock{display:none}
+
+@media (min-width:600px){
+  .col{padding:0 var(--s6) 96px}
+  .q{grid-template-columns:56px 1fr auto;grid-template-areas:"n verb btn" "n body btn"}
+  .q .btn{align-self:center;margin:0}
+  .stages{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .strip{grid-template-columns:repeat(5,minmax(0,1fr))}.strip .d-only{display:flex}
+}
+@media (min-width:1024px){
+  .app{display:grid;grid-template-columns:232px minmax(0,1fr)}
+  .nav{position:sticky;top:0;height:100vh;border-top:0;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:var(--s4) 0}
+  html.shot .nav{position:relative;height:auto}
+  .nav .brand{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s4) var(--s6)}
+  .nav .brand b{font-family:var(--font-disp);letter-spacing:.08em}
+  .nav .brand .tag{font:400 var(--t-meta)/1 var(--font-mono);color:var(--ink-2)}
+  .nav .d-only{display:flex}.nav .m-only{display:none}.nav .cnt{display:inline}
+  .nav nav{display:flex;flex-direction:column;gap:var(--s1);padding:0 var(--s3)}
+  .nav a{flex-direction:row;justify-content:flex-start;gap:var(--s3);min-height:var(--tap);padding:0 var(--s3);font-size:var(--t-small);border-radius:var(--r-ctl)}
+  .nav a[aria-current=page]{background:var(--slab);color:var(--on-slab)}
+  .nav a .cnt{margin-left:auto;font:600 var(--t-meta)/1 var(--font-mono);color:var(--ink-2)}
+  .nav a[aria-current=page] .cnt{color:var(--on-slab-2)}
+  .nav .nav-foot{display:block;margin-top:auto;padding:var(--s4)}
+  .col{padding:0 var(--s8) var(--s8)}
+  .mock{bottom:8px}
+  /* three columns (D3), each column stacks its own panels so rows never couple */
+  .tri{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr) minmax(0,4fr);gap:var(--gap);align-items:start}
+  .tri>.zone{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
+  .zone .stages{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .zone.wide .stages{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .q{grid-template-columns:56px 1fr auto}
+  .tl li{grid-template-columns:40px minmax(0,1fr) minmax(0,1fr) 112px;align-items:center}
+  .tl .tk,.tl .res-c{grid-column:auto;grid-row:auto;align-self:center}
+  .tl .why{grid-column:2/-1}
+  .tl-head{display:grid;grid-template-columns:40px minmax(0,1fr) minmax(0,1fr) 112px;gap:var(--s3);padding-bottom:var(--s2);border-bottom:1px solid var(--line);margin-bottom:var(--s3)}
+  .agents .cards{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+.mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--slab);color:var(--on-slab)}
+.mark svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5}
+.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}.o7{order:7}
+.sub{margin:calc(-1 * var(--s2)) 0 var(--s3)}
+@media (min-width:1024px){.tri>.zone>*{order:0}}
+@media (max-width:599.98px){
+  .m-hide{display:none!important}
+  .q{grid-template-columns:40px 1fr auto;grid-template-areas:"n verb btn" "n body body";align-items:center}
+  .q .btn{margin:0;padding:0 var(--s3)}
+  .q::before{align-self:center;font-size:24px}
+  .op-ini{height:40px;font-size:32px}
+}
+@media (min-width:1024px){
+  .tri .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .agents .cards{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .tri .kpis{grid-template-columns:1fr;gap:var(--s2)}
+  .tri .kpi{flex-direction:row;align-items:baseline;flex-wrap:wrap;column-gap:var(--s3);padding:var(--s2) var(--s3)}
+  .tri .kpi .mono{min-width:72px}
+}
+.tl .who .meta{flex-basis:100%;font-weight:400}
+@media (min-width:1024px){.tri-run{grid-template-columns:minmax(0,3fr) minmax(0,7fr) minmax(0,4fr)}}
+.flat .hd{margin-bottom:var(--s2)}
+@media (min-width:1024px){html{scroll-padding-bottom:0}}
+
+/* agent identity hooks */
+.op[data-ag=rosh]{--ag:var(--agent-rosh)}.op[data-ag=cheker]{--ag:var(--agent-cheker)}.op[data-ag=amet]{--ag:var(--agent-amet)}.op[data-ag=zekher]{--ag:var(--agent-zekher)}.op[data-ag=bona]{--ag:var(--agent-bona)}.op[data-ag=kotev]{--ag:var(--agent-kotev)}.op[data-ag=bochek]{--ag:var(--agent-bochek)}.op[data-ag=tak]{--ag:var(--agent-tak)}.op[data-ag=oseh]{--ag:var(--agent-oseh)}.op[data-ag=tzayar]{--ag:var(--agent-tzayar)}
+/* SYS folded into strip: API cell = full-width row on mobile, 2 columns on >=600 */
+.strip .api{grid-column:1/-1;flex-direction:row;align-items:center;gap:var(--s3);border-left:0;border-top:1px solid var(--line);margin-top:var(--s2);padding-top:var(--s2)}
+.strip .api .ico{flex:none;color:var(--ink-2)}
+.strip .api div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.strip .api b{font-size:var(--t-small)}
+.strip .api .meta{color:var(--ink-2)}
+.strip .api .iconbtn{flex:none}
+@media (min-width:600px){.strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,2fr)}.strip .api{grid-column:auto;border-top:0;margin-top:0;padding-top:var(--s1);border-left:1px solid var(--line)}}
+.m-only{display:none}
+@media (max-width:599.98px){.m-only{display:flex}}
+.sq-alert{align-items:center;justify-content:space-between;gap:var(--s2);margin-top:var(--s2);font-size:var(--t-small)}.sq-alert p{display:flex;align-items:center;gap:var(--s1);min-width:0}
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></symbol>
+  <symbol id="i-runs" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12"/><path d="M18 4l2 2-2 2"/></symbol>
+  <symbol id="i-issues" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  <symbol id="i-agents" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+  <symbol id="i-usage" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-lessons" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></symbol>
+  <symbol id="i-files" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+  <symbol id="i-errors" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16A8 8 0 0 0 12 4z" fill="currentColor"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bounce" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-empty" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M3 13h5l2 2h4l2-2h5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l12 8-12 8z"/></symbol>
+</svg>
+
+<a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+<div class="app" data-state="ready">
+  <aside class="nav" aria-label="เมนูหลัก">
+    <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3v18h14" /><path d="M10 3v13h9" /></svg></span><b>LEVANA</b><span class="tag" translate="no">core</span></div>
+    <nav>
+      <a href="mockup-today.html"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg><span>วันนี้</span></a>
+      <a href="mockup-run.html" aria-current="page"><svg class="ico" aria-hidden="true"><use href="#i-runs"/></svg><span>Runs</span><span class="cnt">29</span></a>
+      <a href="#"><svg class="ico" aria-hidden="true"><use href="#i-issues"/></svg><span>Issues</span><span class="cnt">3</span></a>
+      <a href="mockup-agents.html"><svg class="ico" aria-hidden="true"><use href="#i-agents"/></svg><span>Agents</span><span class="cnt">10</span></a>
+      <a href="#" class="m-only"><svg class="ico" aria-hidden="true"><use href="#i-more"/></svg><span>เพิ่มเติม</span></a>
+      <a href="#" class="d-only"><svg class="ico" aria-hidden="true"><use href="#i-usage"/></svg><span>การใช้ token</span></a>
+      <a href="#" class="d-only"><svg class="ico" aria-hidden="true"><use href="#i-lessons"/></svg><span>Lessons</span><span class="cnt">9</span></a>
+      <a href="#" class="d-only"><svg class="ico" aria-hidden="true"><use href="#i-files"/></svg><span>ไฟล์</span></a>
+      <a href="#" class="d-only"><svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg><span>Errors</span><span class="cnt">1</span></a>
+    </nav>
+    <p class="nav-foot meta mono" translate="no">claude-dotfiles<br>main · 1a4e9f3</p>
+  </aside>
+  <div class="col">
+    <header class="topbar">
+      <div class="title">
+        <a class="crumb" href="#"><svg class="ico" aria-hidden="true"><use href="#i-back"/></svg>Runs</a>
+        <h1><span class="num" translate="no">Run 029</span> levana-redesign-d4</h1>
+        <p class="fresh meta" aria-live="polite"><span class="dot" aria-hidden="true"></span><span data-hide="loading">อัปเดต <span class="num" translate="no">14:32</span> (2 นาทีที่แล้ว)</span><span data-show="loading" hidden>กำลังโหลด run…</span></p>
+      </div>
+      <button class="iconbtn" type="button" aria-label="รีเฟรชข้อมูล"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="iconbtn" type="button" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><svg class="ico" aria-hidden="true"><use href="#i-theme"/></svg></button>
+    </header>
+    <main id="main" class="page">
+      <ul class="strip" aria-label="สรุป run">
+        <li><span class="mono" translate="no">TOKEN</span><b class="num"><span data-hide="empty">212k</span><span data-show="empty" hidden>2k</span></b></li>
+        <li><span class="mono" translate="no">HANDOFF</span><b class="num"><span data-hide="empty">6</span><span data-show="empty" hidden>0</span></b></li>
+        <li><span class="mono" translate="no">BOUNCE</span><b class="num"><span data-hide="empty">1</span><span data-show="empty" hidden>0</span></b></li>
+        <li class="d-only"><span class="mono" translate="no">5H SHARE</span><b class="num">14%</b></li>
+        <li class="d-only"><span class="mono" translate="no">ELAPSED</span><b class="num">1:12</b></li>
+      </ul>
+      <div class="banner keep" role="alert" data-show="error" hidden>
+        <svg class="ico" aria-hidden="true"><use href="#i-errors"/></svg>
+        <p><b>โหลด handoff ล่าสุดไม่ได้</b> GitHub ตอบ 502 ตอน 14:31 ที่เห็นคือข้อมูลเวลา 14:20 ถ้ายังไม่หาย ตรวจ token ในหน้า วันนี้ › ระบบ</p>
+        <button class="btn" type="button">ลองอีกครั้ง</button>
+      </div>
+
+      <div class="tri tri-run">
+        <div class="zone">
+          <section class="blk o5 m-hide" aria-labelledby="h-sum">
+            <div class="hd"><span class="tab" translate="no">RUN 029</span><h2 id="h-sum">สรุป</h2></div>
+            <div class="sk" data-show="loading" hidden aria-hidden="true"><i></i></div>
+            <dl class="kpis" data-hide="loading">
+              <div class="kpi"><dt class="mono">TOKEN</dt><dd class="num val">212k</dd><dd class="meta">≈ 14% ของ 5h</dd></div>
+              <div class="kpi"><dt class="mono">BOUNCE</dt><dd class="num val">17%</dd><dd class="meta ok-t"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ต่ำกว่า 20%</dd></div>
+              <div class="kpi"><dt class="mono">TIME</dt><dd class="num val">1:12</dd><dd class="meta">ชม.:นาที</dd></div>
+            </dl>
+          </section>
+          <section class="blk o6" aria-labelledby="h-ta">
+            <div class="hd"><span class="tab" translate="no">AGENT 05</span><h2 id="h-ta">Token ต่อ agent ใน run นี้</h2></div>
+            <div class="sk" data-show="loading" hidden aria-hidden="true"><i></i><i></i></div>
+            <p class="meta" data-show="empty" hidden>ยังไม่มี agent ใช้ token ใน run นี้</p>
+            <ul class="reasons" data-hide="loading empty">
+              <li><b translate="no">Tzayar</b><b class="num">134k</b><span class="op-bar" style="--w:100%"></span></li>
+              <li><b translate="no">Kotev</b><b class="num">41k</b><span class="op-bar" style="--w:31%"></span></li>
+              <li><b translate="no">Kesh</b><b class="num">28k</b><span class="op-bar" style="--w:21%"></span></li>
+              <li><b translate="no">Amet</b><b class="num">9k</b><span class="op-bar" style="--w:7%"></span></li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="zone">
+          <section class="blk br relay o2" aria-labelledby="h-st">
+            <div class="hd"><span class="tab" translate="no">STAGE <b data-hide="empty">4/6</b><b data-show="empty" hidden>1/6</b></span><h2 id="h-st">ขั้นตอน</h2></div>
+            <div class="sk" data-show="loading" hidden aria-hidden="true"><i></i></div>
+            <ol class="stages" data-hide="loading">
+              <li class="done"><span class="dia num">01</span><b>Kesh</b><span class="meta">แตกงาน</span></li>
+              <li class="done bounced"><span class="dia num">02</span><b>Tzayar</b><span class="meta bad-t">ออกแบบ · ตีกลับ 1</span></li>
+              <li class="done"><span class="dia num">03</span><b>Amet</b><span class="meta">ตรวจข้อเท็จจริง</span></li>
+              <li class="now"><span class="dia num">04</span><b>Kotev</b><span class="meta">กำลังรัน · 41k</span></li>
+              <li><span class="dia num">05</span><b>Bochek</b><span class="meta">ทดสอบ</span></li>
+              <li><span class="dia num">06</span><b>Rin</b><span class="meta">อนุมัติ</span></li>
+            </ol>
+          </section>
+          <section class="blk o3" aria-labelledby="h-ho">
+            <div class="hd"><span class="tab" translate="no">HANDOFF <b data-hide="empty">06</b><b data-show="empty" hidden>00</b></span><h2 id="h-ho">ไทม์ไลน์ handoff</h2></div>
+            <div class="sk" data-show="loading" hidden aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="empty" data-show="empty" hidden><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><p><b>ยังไม่มี handoff</b> Kesh เพิ่งรับงาน (14:30) handoff แรกมักมาภายใน 5 นาที หน้านี้อัปเดตเอง</p></div>
+            <div data-hide="loading empty">
+              <div class="tl-head meta mono" aria-hidden="true"><span>#</span><span>จาก → ถึง</span><span>TOKEN</span><span>ผล</span></div>
+              <ol class="tl">
+                <li><span class="hn num">01</span><span class="who">Rin <svg class="ico sm" aria-hidden="true"><use href="#i-next"/></svg><span class="sr">ส่งให้</span> Kesh <span class="meta">13:20</span></span><span class="tk"><span class="op-bar" style="--w:17%"></span><b class="num">16k</b></span><span class="res-c"><span class="chip ok"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ผ่าน</span></span></li>
+                <li><span class="hn num">02</span><span class="who">Kesh <svg class="ico sm" aria-hidden="true"><use href="#i-next"/></svg><span class="sr">ส่งให้</span> Tzayar <span class="meta">13:24</span></span><span class="tk"><span class="op-bar" style="--w:13%"></span><b class="num">12k</b></span><span class="res-c"><span class="chip ok"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ผ่าน</span></span></li>
+                <li><span class="hn num">03</span><span class="who">Tzayar <svg class="ico sm" aria-hidden="true"><use href="#i-next"/></svg><span class="sr">ส่งให้</span> Amet <span class="meta">13:51</span></span><span class="tk"><span class="op-bar" style="--w:100%"></span><b class="num">96k</b></span><span class="res-c"><span class="chip bad"><svg class="ico sm" aria-hidden="true"><use href="#i-bounce"/></svg>ตีกลับ</span></span>
+                  <p class="why"><b>เหตุ:</b> ตัวเลข contrast ใน DESIGN.md ไม่ตรงกับ tokens.css (เขียน 4.8:1 วัดจริง 4.1:1)</p></li>
+                <li><span class="hn num">04</span><span class="who">Tzayar <svg class="ico sm" aria-hidden="true"><use href="#i-next"/></svg><span class="sr">ส่งให้</span> Amet <span class="meta">14:02</span></span><span class="tk"><span class="op-bar" style="--w:40%"></span><b class="num">38k</b></span><span class="res-c"><span class="chip ok"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ผ่าน</span></span></li>
+                <li><span class="hn num">05</span><span class="who">Amet <svg class="ico sm" aria-hidden="true"><use href="#i-next"/></svg><span class="sr">ส่งให้</span> Kotev <span class="meta">14:09</span></span><span class="tk"><span class="op-bar" style="--w:9%"></span><b class="num">9k</b></span><span class="res-c"><span class="chip ok"><svg class="ico sm" aria-hidden="true"><use href="#i-check"/></svg>ผ่าน</span></span></li>
+                <li><span class="hn num">06</span><span class="who">Kotev <svg class="ico sm" aria-hidden="true"><use href="#i-next"/></svg><span class="sr">ส่งให้</span> Bochek <span class="meta">กำลังรัน</span></span><span class="tk"><span class="op-bar" style="--w:43%"></span><b class="num">41k</b></span><span class="res-c"><span class="chip run"><svg class="ico sm" aria-hidden="true"><use href="#i-play"/></svg>กำลังรัน</span></span></li>
+              </ol>
+            </div>
+          </section>
+        </div>
+
+        <div class="zone">
+          <section class="blk approve keep o1" aria-labelledby="h-ap">
+            <div class="hd"><span class="tab act" translate="no">ACTION 01</span><h2 id="h-ap">รอคุณอนุมัติ</h2></div>
+            <div class="sk" data-show="loading" hidden aria-hidden="true"><i class="s"></i><i></i></div>
+            <p data-hide="loading empty">Kotev จะส่งต่อให้ Bochek เมื่อรันเสร็จ (ประมาณ 10 นาที) อนุมัติล่วงหน้าได้ หรือรอผลทดสอบ</p>
+            <p data-show="empty" hidden>ยังไม่มีอะไรให้อนุมัติ จะแจ้งที่ วันนี้ เมื่อถึงขั้น Rin</p>
+            <div class="acts" data-hide="loading empty"><button class="btn primary" type="button">อนุมัติ run 029</button><button class="btn" type="button">ส่งกลับให้แก้</button></div>
+          </section>
+          <section class="blk o4" aria-labelledby="h-bn">
+            <div class="hd"><span class="tab" translate="no">BOUNCE <b data-hide="empty">01</b><b data-show="empty" hidden>00</b></span><h2 id="h-bn">เหตุตีกลับ</h2></div>
+            <div class="sk" data-show="loading" hidden aria-hidden="true"><i></i><i></i></div>
+            <p class="meta" data-show="empty" hidden>ยังไม่มีการตีกลับใน run นี้</p>
+            <div data-hide="loading empty">
+              <p class="meta sub">ทั้งระบบ 7 วัน (25 handoff ตีกลับ 6)</p>
+              <ul class="reasons">
+                <li><span>test ขาด / ไม่ผ่าน</span><b class="num">3</b><span class="op-bar" style="--w:100%"></span></li>
+                <li><span>ตัวเลขไม่ตรงแหล่ง</span><b class="num">2</b><span class="op-bar" style="--w:67%"></span></li>
+                <li><span>ไม่ตรง spec</span><b class="num">1</b><span class="op-bar" style="--w:33%"></span></li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+<div class="mock" role="group" aria-label="ตัวเลือก mockup (ไม่ใช่ส่วนของ design)">
+  <label>สถานะ <select data-mock="state"><option value="ready">ปกติ</option><option value="loading">กำลังโหลด</option><option value="empty">ว่าง</option><option value="error">ผิดพลาด</option></select></label>
+</div>
+<script>
+(function(){
+  var d=document.documentElement,q=new URLSearchParams(location.search);
+  if(q.get('shot'))d.classList.add('shot');
+  function meta(){var m=document.querySelector('meta[name=theme-color]');if(m)m.content=getComputedStyle(d).getPropertyValue('--bg').trim();}
+  meta();
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){
+    b.setAttribute('aria-pressed',d.dataset.mode==='dark');
+    b.addEventListener('click',function(){d.dataset.mode=d.dataset.mode==='dark'?'light':'dark';try{localStorage.setItem('lvn-mode',d.dataset.mode)}catch(e){}b.setAttribute('aria-pressed',d.dataset.mode==='dark');meta();});
+  });
+  var root=document.querySelector('.app'),sel=document.querySelector('[data-mock=state]');
+  function setState(s){
+    root.dataset.state=s;
+    document.querySelectorAll('[data-show]').forEach(function(el){el.hidden=el.dataset.show.split(' ').indexOf(s)<0;});
+    document.querySelectorAll('[data-hide]').forEach(function(el){el.hidden=el.dataset.hide.split(' ').indexOf(s)>=0;});
+    root.setAttribute('aria-busy',s==='loading');
+  }
+  var st=q.get('state')||'ready';setState(st);
+  if(sel){sel.value=st;sel.addEventListener('change',function(){setState(sel.value)});}
+  var cd=document.querySelector('[data-countdown]');
+  if(cd&&!q.get('shot')){var t=1*3600+48*60+20;setInterval(function(){t=Math.max(0,t-1);var h=t/3600|0,m=(t%3600)/60|0,s=t%60;cd.textContent=[h,m,s].map(function(n){return String(n).padStart(2,'0')}).join(':');},1000);}
+})();
+
+</script>
+</body>
+</html>

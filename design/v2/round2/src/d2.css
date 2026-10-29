@@ -1,0 +1,112 @@
+/* ===== D2 · Formation — CZN team-formation / stage-select: rounded card deck, pill controls, countdown ===== */
+:root{--font-body:"Noto Sans Thai","IBM Plex Sans Thai",system-ui,sans-serif;--font-disp:"Anuphan","Noto Sans Thai",sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --r:14px;--r-ctl:999px;--r-chip:999px;
+  --bg:#eeecf5;--surface:#ffffff;--surface-2:#f4f2fa;--sunken:#e3dff0;--line:#d6d0e6;--line-strong:#9c94b8;
+  --ink:#1c1830;--ink-2:#4f4866;--slab:#231d3a;--on-slab:#f3f0fb;--on-slab-2:#c4bcdd;
+  --accent:#5b35c9;--accent-hover:#4a28ad;--on-accent:#fff;--accent-ink:#4f2bb8;--hi:#e8590c;--on-hi:#fff;
+  --ok:#11735c;--ok-bg:#d8f1ea;--bad:#b8233a;--bad-bg:#fadde2;--run:#4f2bb8;--run-bg:#e6defc;--focus:#5b35c9;
+  --c1:#5b35c9;--t1:#e2d9fb;--t2:#fde0cf;--t3:#fbd5dc;--t4:#cfeee7;--rar1:#5b35c9;--rar2:#e8590c;--rar3:#0f9d8a}
+html[data-mode=dark]{--bg:#0f0d17;--surface:#1a1726;--surface-2:#221e31;--sunken:#0b0a11;--line:#312b46;--line-strong:#5d5578;
+  --ink:#efebfa;--ink-2:#ada5c8;--slab:#2b2445;--on-slab:#efebfa;--on-slab-2:#b9b0d6;
+  --accent:#a58bff;--accent-hover:#bba6ff;--on-accent:#140f26;--accent-ink:#b9a5ff;--hi:#ff8a3d;--on-hi:#1a0d02;
+  --ok:#4fd6ae;--ok-bg:#0f2a24;--bad:#ff7d8e;--bad-bg:#3a1520;--run:#b9a5ff;--run-bg:#2a2148;--focus:#a58bff;
+  --c1:#9271f0;--t1:#2f2652;--t2:#45291a;--t3:#47202b;--t4:#173a33;--rar1:#9271f0;--rar2:#ff8a3d;--rar3:#2ec4a6}
+
+[data-dir=d2] .blk{border-radius:var(--r)}
+html[data-mode=dark][data-dir=d2] .blk{box-shadow:inset 0 0 0 1px var(--line)}
+[data-dir=d2] .hd h2{font-family:var(--font-disp);font-size:20px}
+[data-dir=d2] .hd .code{border:1px solid var(--line-strong);border-radius:999px;padding:2px var(--s3)}
+/* header = dark capsule like a codex title bar */
+[data-dir=d2] .topbar{gap:var(--s3)}
+[data-dir=d2] .brand-sm{display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:var(--slab);color:var(--on-slab);letter-spacing:0}
+[data-dir=d2] .topbar h1{font-family:var(--font-disp)}
+[data-dir=d2] .res li{border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+[data-dir=d2] .iconbtn{border-radius:999px}
+[data-dir=d2] .finding{border-radius:999px;background:var(--slab);color:var(--on-slab);padding:var(--s3) var(--s6)}
+[data-dir=d2] .finding .code{color:var(--on-slab-2)}
+[data-dir=d2] .finding .bad-t{color:#ffb3bd}
+html[data-mode=light][data-dir=d2] .finding{border-radius:var(--r)}
+
+/* queue = a hand of mission cards; rarity bar at the foot, big numeral bottom-left */
+[data-dir=d2] .queue{background:none;padding:0;box-shadow:none!important}
+[data-dir=d2] .q{border-radius:var(--r);background:var(--surface);grid-template-columns:1fr auto;grid-template-areas:"verb id" "body body" "btn btn";padding:var(--s4) var(--s4) calc(var(--s4) + 6px);position:relative;overflow:hidden}
+html[data-mode=dark][data-dir=d2] .q{box-shadow:inset 0 0 0 1px var(--line)}
+[data-dir=d2] .q::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;background:var(--rar,var(--rar1))}
+[data-dir=d2] .q-bad{--rar:var(--bad)}[data-dir=d2] .q-issue{--rar:var(--rar3)}
+[data-dir=d2] .q-verb{display:inline-flex;grid-area:verb;justify-self:start;align-items:center;padding:2px var(--s3);border-radius:999px;background:var(--sunken);color:var(--ink-2);font-weight:600}
+[data-dir=d2] .q-bad .q-verb{background:var(--bad-bg);color:var(--bad)}
+[data-dir=d2] .q-id{grid-area:id;font-size:32px;text-align:right}
+[data-dir=d2] .q .btn{justify-self:stretch}
+[data-dir=d2] .q .btn.primary .ico{border:1.5px solid currentColor;border-radius:999px;padding:2px;width:22px;height:22px}
+
+/* meter = countdown screen: thin HUD frame with tick corners, countdown is the large figure */
+[data-dir=d2] .meter{background:var(--slab);color:var(--on-slab)}
+[data-dir=d2] .meter .meta,[data-dir=d2] .meter .code{color:var(--on-slab-2)}
+[data-dir=d2] .meter .code{border-color:var(--on-slab-2)}
+[data-dir=d2] .meter::before,[data-dir=d2] .meter::after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--hi)}
+[data-dir=d2] .meter::before{top:8px;left:8px;border-right:0;border-bottom:0}
+[data-dir=d2] .meter::after{bottom:8px;right:8px;border-left:0;border-top:0}
+[data-dir=d2] .m-top{flex-direction:row-reverse;justify-content:space-between}
+[data-dir=d2] .m-cd{align-items:flex-start}
+[data-dir=d2] .cd{font-size:44px;line-height:1.1;letter-spacing:.02em}
+[data-dir=d2] .hero{font-size:32px}[data-dir=d2] .unit{font-size:20px}
+[data-dir=d2] .m-big{justify-content:flex-end;text-align:right}
+[data-dir=d2] .bar{border-radius:999px;overflow:hidden;border-color:var(--on-slab-2);background:rgba(255,255,255,.08)}
+[data-dir=d2] .seg.used{background:var(--hi)}
+[data-dir=d2] .seg.resv{background:repeating-linear-gradient(135deg,var(--hi) 0 2px,transparent 2px 6px);box-shadow:inset 0 0 0 1px var(--hi)}
+[data-dir=d2] .sw.used{background:var(--hi)}[data-dir=d2] .sw.resv{background:repeating-linear-gradient(135deg,var(--hi) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--hi)}
+[data-dir=d2] .sw.left{background:transparent;box-shadow:inset 0 0 0 1px var(--on-slab-2)}
+[data-dir=d2] .ticks{display:none}
+html[data-mode=dark][data-dir=d2] .meter{background:#2b2445}
+
+/* kpis = pill counters */
+[data-dir=d2] .kpis{box-shadow:none!important}
+[data-dir=d2] .kpi{border-radius:var(--r)}
+html[data-mode=dark][data-dir=d2] .kpi{box-shadow:inset 0 0 0 1px var(--line)}
+[data-dir=d2] .val{font-size:28px}
+
+/* relay = stage-select pills joined by chevrons */
+[data-dir=d2] .stages{gap:var(--s2)}
+[data-dir=d2] .stages li{padding:var(--s2) var(--s3);border-radius:var(--r);background:var(--surface-2)}
+[data-dir=d2] .stages .now{background:var(--accent);color:var(--on-accent)}
+[data-dir=d2] .stages .now b,[data-dir=d2] .stages .now .meta{color:var(--on-accent)}
+[data-dir=d2] .node{border-radius:999px;width:auto;height:auto;padding:2px var(--s2);justify-self:start;align-self:flex-start;border:0;background:var(--sunken)}
+[data-dir=d2] .stages .done .node{background:var(--slab);color:var(--on-slab)}
+[data-dir=d2] .stages .now .node{background:var(--on-accent);color:var(--accent);outline:0}
+
+/* runs rows as pill rows */
+[data-dir=d2] .rows li{border-top:0;background:var(--surface-2);border-radius:12px;padding:var(--s2) var(--s3);margin-top:var(--s2)}
+
+/* squad = combatant cards: portrait-ratio, big initial, value bottom-left, name bottom-right, rarity bar */
+[data-dir=d2] .op{border-radius:12px;overflow:hidden;grid-template-columns:1fr auto;grid-template-areas:"ini ini" "val name" "b role" "bar bar";padding:0 0 0;background:var(--surface-2);row-gap:0}
+[data-dir=d2] .op>*:not(.op-ini):not(.op-bar){margin:0 var(--s3)}
+[data-dir=d2] .op-ini{width:100%;height:88px;font-size:48px;border-radius:0;place-items:center}
+[data-dir=d2] .op-name{text-align:right;align-self:end}
+[data-dir=d2] .op-role{text-align:right}
+[data-dir=d2] .op-val{font-size:28px;margin-top:var(--s1)!important}
+[data-dir=d2] .op-bar{height:6px;margin:var(--s2) 0 0}
+[data-dir=d2] .op-bar::after{background:var(--rar1)}
+[data-dir=d2] .op.warn .op-bar::after{background:var(--bad)}
+[data-dir=d2] .chip{padding:2px var(--s3)}
+
+@media (min-width:600px){[data-dir=d2] .q-list{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+  [data-dir=d2] .q{grid-template-columns:1fr auto;grid-template-areas:"verb id" "body body" "btn btn";align-content:space-between}
+  [data-dir=d2] .q .btn{justify-self:stretch}}
+@media (min-width:1024px){
+  [data-dir=d2] .nav{background:var(--bg);border-right:0}
+  [data-dir=d2] .nav a{border-radius:999px}
+  [data-dir=d2] .nav a[aria-current=page]{background:var(--slab);color:var(--on-slab)}
+  [data-dir=d2] .nav a[aria-current=page] .cnt{color:var(--on-slab-2)}
+  [data-dir=d2] .mark{border-radius:999px}
+  [data-dir=d2] .today{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s4);grid-template-areas:"find find find" "queue queue meter" "relay relay kpis" "squad squad runs" "sys sys runs";align-items:start}
+  [data-dir=d2] .finding{grid-area:find}[data-dir=d2] .queue{grid-area:queue}[data-dir=d2] .meter{grid-area:meter;align-self:stretch}[data-dir=d2] .kpis{grid-area:kpis;grid-template-columns:1fr;align-self:stretch}
+  [data-dir=d2] .kpi{flex-direction:row;align-items:baseline;flex-wrap:wrap;column-gap:var(--s3)}
+  [data-dir=d2] .relay{grid-area:relay}[data-dir=d2] .runs{grid-area:runs}[data-dir=d2] .squad{grid-area:squad}[data-dir=d2] .sys{grid-area:sys}
+  [data-dir=d2] .q{min-height:240px}
+  [data-dir=d2] .q-id{font-size:40px}
+}
+/* round-2 fixes: countdown never wraps; squad card name gets its own row */
+[data-dir=d2] .op{grid-template-areas:"ini ini" "name role" "val val" "b b" "bar bar"}
+[data-dir=d2] .op-name{text-align:left;align-self:auto;margin-top:var(--s2)!important}
+[data-dir=d2] .op-role{align-self:end;margin-top:var(--s2)!important}
+@media (min-width:1024px){[data-dir=d2] .m-top{flex-direction:column;align-items:stretch}[data-dir=d2] .m-big{justify-content:flex-start;text-align:left}}
