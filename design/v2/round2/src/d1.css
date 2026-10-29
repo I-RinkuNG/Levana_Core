@@ -1,0 +1,94 @@
+/* ===== D1 · Depot — Arknights home-menu tiles: industrial slabs, cut corners, condensed numerals ===== */
+:root{--font-body:"IBM Plex Sans Thai","Sarabun","Noto Sans Thai",system-ui,sans-serif;--font-disp:"Barlow Condensed","IBM Plex Sans Thai",sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:0;--r-ctl:0;--cut:14px;
+  --bg:#e3e5e8;--surface:#f7f8f9;--surface-2:#eceef0;--sunken:#d6dade;--line:#c3c8cd;--line-strong:#8a9199;
+  --ink:#111315;--ink-2:#495057;--slab:#16191c;--on-slab:#f2f4f5;--on-slab-2:#b9c0c7;
+  --accent:#00679c;--accent-hover:#00557f;--on-accent:#fff;--accent-ink:#005d8c;--hi:#ffd60a;--on-hi:#111315;
+  --ok:#1b6e35;--ok-bg:#dcefe2;--bad:#b3192b;--bad-bg:#f8dde0;--run:#00598a;--run-bg:#d7ebf6;--focus:#00679c;
+  --c1:#0a85c2;--t1:#cfe6f3;--t2:#f2e6c2;--t3:#f3d3dc;--t4:#d9e7d4}
+html[data-mode=dark]{--bg:#0d0f11;--surface:#181b1e;--surface-2:#1f2327;--sunken:#0a0b0d;--line:#30363c;--line-strong:#59616a;
+  --ink:#eceff2;--ink-2:#a7afb7;--slab:#eceff2;--on-slab:#0d0f11;--on-slab-2:#3d444b;
+  --accent:#4cc3f5;--accent-hover:#7ad3f8;--on-accent:#06141c;--accent-ink:#6fd0f7;--hi:#ffd60a;--on-hi:#111315;
+  --ok:#5ad37f;--ok-bg:#12291a;--bad:#ff7a85;--bad-bg:#33161a;--run:#6fd0f7;--run-bg:#0f2a38;--focus:#4cc3f5;
+  --c1:#1e95cc;--t1:#173548;--t2:#3a3216;--t3:#3d1d27;--t4:#1d3320}
+
+/* cut-corner frame: outer layer = line colour, inner = surface (two-layer clip-path) */
+[data-dir=d1] .blk{background:var(--line-strong);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
+[data-dir=d1] .blk::before{content:"";position:absolute;inset:1px;background:var(--surface);clip-path:polygon(0 0,calc(100% - var(--cut) + .42px) 0,100% calc(var(--cut) - .42px),100% 100%,0 100%);z-index:0}
+[data-dir=d1] .blk>*{position:relative;z-index:1}
+/* slab label: black tab bleeding to the left edge, like a terminal tile caption */
+[data-dir=d1] .hd{margin-left:calc(-1 * var(--s4))}
+[data-dir=d1] .hd h2{font-size:20px;order:2}
+[data-dir=d1] .hd .code{order:1;background:var(--slab);color:var(--on-slab);padding:4px var(--s3) 4px var(--s4);align-self:center}
+[data-dir=d1] .hd .more,[data-dir=d1] .hd .chev{order:3}
+[data-dir=d1] .topbar h1{font-size:28px}
+[data-dir=d1] .res li{background:var(--slab);color:var(--on-slab)}
+[data-dir=d1] .res li .mono{color:var(--on-slab-2)}
+html[data-mode=dark][data-dir=d1] .res li .mono{color:#3d444b}
+[data-dir=d1] .res .ok-t{color:inherit}
+[data-dir=d1] .res li:nth-child(2) b::before{content:"";display:inline-block;width:8px;height:8px;background:#2fb35a;margin-right:6px}
+[data-dir=d1] .finding{background:var(--hi);color:var(--on-hi);font-weight:400}
+[data-dir=d1] .finding .code{color:var(--on-hi);font-weight:600}
+[data-dir=d1] .finding .bad-t{color:#8f0f1f}
+
+/* queue = home-menu tiles; the lead tile is the black "Combat" slab with a caution stripe */
+[data-dir=d1] .queue{background:none;clip-path:none;padding:0}
+[data-dir=d1] .queue::before{display:none}
+[data-dir=d1] .queue .hd{margin-left:0}
+[data-dir=d1] .q{background:var(--surface);border:1px solid var(--line-strong);grid-template-columns:1fr;grid-template-areas:"verb" "body" "btn";padding:var(--s4);position:relative;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+[data-dir=d1] .q-verb{display:block;grid-area:verb;font:600 32px/1 var(--font-disp);letter-spacing:.02em;color:var(--ink-2)}
+[data-dir=d1] .q-id{position:absolute;top:var(--s4);right:var(--s4);font-size:28px;color:var(--ink-2)}
+[data-dir=d1] .q .btn{justify-self:start}
+[data-dir=d1] .q-run{background:var(--slab);color:var(--on-slab);border-color:var(--slab)}
+[data-dir=d1] .q-run::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:repeating-linear-gradient(135deg,var(--hi) 0 10px,var(--slab) 10px 20px)}
+[data-dir=d1] .q-run .q-verb,[data-dir=d1] .q-run .q-id{color:var(--on-slab)}
+[data-dir=d1] .q-run .meta{color:var(--on-slab-2)}
+html[data-mode=dark][data-dir=d1] .q-run .meta{color:#3d444b}
+html[data-mode=dark][data-dir=d1] .q-run .btn.primary{background:#00598a;color:#fff;border-color:#00598a}
+[data-dir=d1] .q-bad .q-verb,[data-dir=d1] .q-bad .q-id{color:var(--bad)}
+
+/* meter = sanity readout */
+[data-dir=d1] .hero{font-size:72px;line-height:1}
+[data-dir=d1] .unit{font-size:28px}
+[data-dir=d1] .unit::after{content:" / 100";font-size:20px;color:var(--ink-2)}
+[data-dir=d1] .cd{font-size:32px}
+[data-dir=d1] .bar{height:20px}
+
+/* kpis: three condensed counters on one slab rail */
+[data-dir=d1] .kpis{clip-path:none;background:none;padding:0}
+[data-dir=d1] .kpis::before{display:none}
+[data-dir=d1] .kpi{border:1px solid var(--line-strong);border-top:4px solid var(--slab)}
+[data-dir=d1] .kpi .code{color:var(--ink-2)}
+[data-dir=d1] .val{font-size:40px;line-height:1.1}
+
+/* relay = stage map: nodes on a rail, caution stripe at the foot */
+[data-dir=d1] .stages li::before{content:"";position:absolute;top:20px;left:32px;right:calc(-1 * var(--s2));height:2px;background:var(--line-strong);z-index:-1}
+[data-dir=d1] .stages li:last-child::before,[data-dir=d1] .stages li:nth-child(3)::before{display:none}
+[data-dir=d1] .stages .done::before{background:var(--ink)}
+[data-dir=d1] .relay::after{content:"";position:absolute;left:1px;right:1px;bottom:1px;height:4px;background:var(--hi);z-index:1}
+
+/* squad = operator cards: big initial as the "portrait", name on a slab band */
+[data-dir=d1] .op{grid-template-columns:1fr;grid-template-areas:"ini" "name" "role" "val" "bar" "b";padding:0 0 var(--s3);background:var(--surface-2);border:1px solid var(--line)}
+[data-dir=d1] .op>*:not(.op-ini){margin-left:var(--s3);margin-right:var(--s3)}
+[data-dir=d1] .op-ini{width:100%;height:72px;font-size:56px;place-items:end start;padding:0 var(--s3);line-height:.9;margin-bottom:0}
+[data-dir=d1] .op-name{background:var(--slab);color:var(--on-slab);margin:0 0 var(--s1)!important;padding:2px var(--s3)}
+[data-dir=d1] .op.warn{border-color:var(--bad)}
+
+@media (min-width:600px){[data-dir=d1] .hd{margin-left:calc(-1 * var(--s6))}[data-dir=d1] .queue .hd{margin-left:0}
+  [data-dir=d1] .stages li:nth-child(3)::before{display:block}}
+@media (min-width:1024px){
+  [data-dir=d1] .nav{background:var(--slab);color:var(--on-slab);border-right:0}
+  [data-dir=d1] .nav a{color:var(--on-slab-2)}
+  html[data-mode=dark][data-dir=d1] .nav a{color:#3d444b}
+  [data-dir=d1] .nav a[aria-current=page]{background:var(--hi);color:var(--on-hi)}
+  [data-dir=d1] .nav a .cnt,[data-dir=d1] .nav .brand .tag,[data-dir=d1] .nav .nav-foot{color:inherit}
+  [data-dir=d1] .nav a[aria-current=page] .cnt{color:var(--on-hi)}
+  [data-dir=d1] .today{display:grid;grid-template-columns:5fr 7fr;gap:var(--s4);grid-template-areas:"find find" "meter queue" "kpis queue" "relay relay" "runs squad" "sys squad";align-items:start}
+  [data-dir=d1] .finding{grid-area:find}[data-dir=d1] .queue{grid-area:queue}[data-dir=d1] .meter{grid-area:meter}[data-dir=d1] .kpis{grid-area:kpis}
+  [data-dir=d1] .relay{grid-area:relay}[data-dir=d1] .runs{grid-area:runs}[data-dir=d1] .squad{grid-area:squad}[data-dir=d1] .sys{grid-area:sys}
+  [data-dir=d1] .q-list{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+  [data-dir=d1] .q-run{grid-row:span 2;align-content:space-between}
+  [data-dir=d1] .q-run .q-verb{font-size:56px}
+  [data-dir=d1] .q:not(.q-run) .q-verb{font-size:32px}
+  [data-dir=d1] .cards{grid-template-columns:repeat(4,1fr)}
+}

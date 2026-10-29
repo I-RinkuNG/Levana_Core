@@ -1,0 +1,86 @@
+/* ===== D3 · Sortie — hybrid HUD: three-zone deploy screen, bracket frames, segmented gauge, pill actions ===== */
+:root{--font-body:"IBM Plex Sans Thai","Sarabun","Noto Sans Thai",system-ui,sans-serif;--font-disp:"Chakra Petch","IBM Plex Sans Thai",sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:0;--r-ctl:999px;--r-chip:2px;--br:14px;
+  --bg:#e7e8ed;--surface:#f8f8fb;--surface-2:#eef0f4;--sunken:#d9dbe2;--line:#c4c7d1;--line-strong:#7d8291;
+  --ink:#14151b;--ink-2:#4a4d5a;--slab:#14151b;--on-slab:#f4f4f7;--on-slab-2:#b3b6c2;
+  --accent:#b8440b;--accent-hover:#9a3807;--on-accent:#fff;--accent-ink:#a63d09;--hi:#b8440b;
+  --ok:#1b6e45;--ok-bg:#d9efe3;--bad:#b3192b;--bad-bg:#f8dde0;--run:#0b6383;--run-bg:#d6ebf3;--focus:#0b6f94;
+  --c1:#0a7ea8;--t1:#d3e8f1;--t2:#f6dfcf;--t3:#f3d3dc;--t4:#dfe4d1}
+html[data-mode=dark]{--bg:#0f1015;--surface:#181920;--surface-2:#1f2029;--sunken:#0a0a0e;--line:#2f313c;--line-strong:#5f6372;
+  --ink:#eeeef3;--ink-2:#a6a8b6;--slab:#eeeef3;--on-slab:#0f1015;--on-slab-2:#3c3e4a;
+  --accent:#ff8a3d;--accent-hover:#ffa264;--on-accent:#1a0d02;--accent-ink:#ffa264;--hi:#ff8a3d;
+  --ok:#55d394;--ok-bg:#11291d;--bad:#ff7a85;--bad-bg:#33161a;--run:#5cc8ef;--run-bg:#0f2a36;--focus:#5cc8ef;
+  --c1:#38b6e8;--t1:#14303d;--t2:#3d2616;--t3:#3d1d27;--t4:#262d1a}
+
+/* bracket frame: four L corners, no full outline (HUD target box) */
+[data-dir=d3] .blk{background:var(--surface);
+  background-image:linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong)),linear-gradient(var(--line-strong),var(--line-strong));
+  background-size:var(--br) 2px,2px var(--br),var(--br) 2px,2px var(--br),var(--br) 2px,2px var(--br),var(--br) 2px,2px var(--br);
+  background-position:0 0,0 0,100% 0,100% 0,0 100%,0 100%,100% 100%,100% 100%;background-repeat:no-repeat}
+[data-dir=d3] .hd h2{font-size:20px}
+[data-dir=d3] .hd .code{color:var(--accent-ink);font-weight:600}
+[data-dir=d3] .hd .code::before{content:"";display:inline-block;width:8px;height:8px;background:currentColor;margin-right:6px;transform:rotate(45deg) translateY(-1px)}
+[data-dir=d3] .topbar h1{font-family:var(--font-disp);font-size:28px}
+[data-dir=d3] .res li{border-left:2px solid var(--line-strong)}
+[data-dir=d3] .finding{background:var(--slab);color:var(--on-slab)}
+[data-dir=d3] .finding .code{color:var(--on-slab-2)}
+[data-dir=d3] .finding .bad-t{color:#ffb3bd}
+html[data-mode=dark][data-dir=d3] .finding .bad-t{color:#a3101f}
+
+/* queue = mission brief: numbered lines with tactical index, verb, pill action */
+[data-dir=d3] .q-list{gap:0;counter-reset:q}
+[data-dir=d3] .q{background:none;border-top:1px solid var(--line);padding:var(--s3) 0;grid-template-columns:48px 1fr;grid-template-areas:"n verb" "n body" "n btn";counter-increment:q}
+[data-dir=d3] .q:first-child{border-top:0}
+[data-dir=d3] .q::before{content:"0" counter(q);grid-area:n;align-self:start;font:600 28px/1 var(--font-disp);color:var(--ink-2)}
+[data-dir=d3] .q-run::before{color:var(--accent-ink)}
+[data-dir=d3] .q-verb{display:block;grid-area:verb;font-weight:600;color:var(--ink-2)}
+[data-dir=d3] .q-bad .q-verb,[data-dir=d3] .q-bad::before{color:var(--bad)}
+[data-dir=d3] .q-id{display:none}
+[data-dir=d3] .q-body b{font-size:17px}
+
+/* meter = segmented energy gauge (20 cells) */
+[data-dir=d3] .bar{height:24px;border:0;background:var(--sunken)}
+[data-dir=d3] .ticks{opacity:1;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 3px),var(--surface) calc(5% - 3px) 5%)}
+[data-dir=d3] .hero{font-size:56px}
+[data-dir=d3] .cd{font-size:28px}
+[data-dir=d3] .m-cd{padding:var(--s1) var(--s3);background:var(--surface-2)}
+
+/* kpis */
+[data-dir=d3] .kpis{background:none;padding:0}
+[data-dir=d3] .kpi{background-color:var(--surface)}
+[data-dir=d3] .kpi .code{color:var(--ink-2)}
+
+/* relay = diamond stage nodes */
+[data-dir=d3] .node{transform:rotate(45deg);width:18px;height:18px;margin:6px 0 10px 6px}
+[data-dir=d3] .stages .done .node{background:var(--ink-2);border-color:var(--ink-2)}
+[data-dir=d3] .stages .now .node{width:22px;height:22px;margin:4px 0 8px 4px}
+[data-dir=d3] .stages .node{font-size:0}
+[data-dir=d3] .stages .now .node{outline-offset:3px}
+
+/* squad = roster rows */
+[data-dir=d3] .cards{grid-template-columns:1fr;gap:0}
+[data-dir=d3] .op{grid-template-columns:auto 1fr auto;grid-template-areas:"ini name val" "ini role b" "bar bar bar";background:none;border-top:1px solid var(--line);padding:var(--s2) 0}
+[data-dir=d3] .op:first-child{border-top:0}
+[data-dir=d3] .op-ini{border-radius:2px}
+[data-dir=d3] .op-val{margin:0;font-size:20px;text-align:right}
+[data-dir=d3] .op-b{text-align:right}
+[data-dir=d3] .rows li{grid-template-columns:40px 1fr auto}
+
+@media (min-width:600px){[data-dir=d3] .q{grid-template-columns:56px 1fr auto;grid-template-areas:"n verb btn" "n body btn"}}
+@media (min-width:1024px){
+  [data-dir=d3] .nav{background:var(--surface)}
+  [data-dir=d3] .nav a{border-radius:999px}
+  [data-dir=d3] .nav a[aria-current=page]{background:var(--slab);color:var(--on-slab)}
+  [data-dir=d3] .nav a[aria-current=page] .cnt{color:var(--on-slab-2)}
+  [data-dir=d3] .today{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr) minmax(0,4fr);gap:var(--s4);align-items:start;max-width:1400px;
+    grid-template-areas:"find find find" "meter queue squad" "kpis relay runs" "sys relay runs"}
+  [data-dir=d3] .finding{grid-area:find}[data-dir=d3] .queue{grid-area:queue}[data-dir=d3] .meter{grid-area:meter}[data-dir=d3] .kpis{grid-area:kpis;grid-template-columns:1fr}
+  [data-dir=d3] .relay{grid-area:relay}[data-dir=d3] .runs{grid-area:runs}[data-dir=d3] .squad{grid-area:squad}[data-dir=d3] .sys{grid-area:sys}
+  [data-dir=d3] .kpi{flex-direction:row;align-items:baseline;flex-wrap:wrap;column-gap:var(--s3)}
+  [data-dir=d3] .queue{--br:24px;background-color:var(--surface)}
+  [data-dir=d3] .q{grid-template-columns:56px 1fr;grid-template-areas:"n verb" "n body" "n btn"}
+  [data-dir=d3] .q .btn{justify-self:start}
+  [data-dir=d3] .stages{grid-template-columns:repeat(3,1fr)}
+  [data-dir=d3] .m-top{flex-direction:column;align-items:stretch}
+  [data-dir=d3] .m-cd{align-items:flex-start}
+}
