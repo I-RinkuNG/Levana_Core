@@ -69,7 +69,7 @@ test("mapGraphql: files, partial, issues, commits in REST shape", () => {
   const m = L.mapGraphql(gqlData);
   assert.deepEqual(m.files.map((f) => [f.dir, f.name]), [["runs", "r1"], ["agents", "kotev"]]);
   assert.deepEqual(m.partial, ["runs/big.md", "runs/bin.md"]);
-  assert.deepEqual(m.issues[0], { number: 7, title: "T", state: "closed", body: "", created_at: "2026-10-01T00:00:00Z", closed_at: "2026-10-02T00:00:00Z", html_url: "u", user: { login: "ghost" }, comments: 3, labels: [{ name: "bug" }] });
+  assert.deepEqual(m.issues[0], { number: 7, title: "T", state: "closed", body: "", created_at: "2026-10-01T00:00:00Z", closed_at: "2026-10-02T00:00:00Z", html_url: "u", user: { login: "ghost" }, comments: 3, labels: [{ name: "bug" }], assignee: "" });
   assert.deepEqual(m.commits, [{ sha: "abc1234567", commit: { message: "feat: x\n\nbody", author: { name: "Rin", date: "2026-10-28T01:00:00Z" } } }]);
   assert.equal(m.branchFound, true);
 });

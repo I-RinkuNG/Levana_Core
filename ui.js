@@ -15,7 +15,7 @@ const KeshUI = (() => {
   };
   const icon = (name, cls) => {
     const s = document.createElementNS(SVG, "svg"), u = document.createElementNS(SVG, "use");
-    s.setAttribute("class", "ico" + (cls ? " " + cls : ""));
+    s.setAttribute("class", "i" + (cls ? " " + cls : ""));
     s.setAttribute("aria-hidden", "true");
     u.setAttribute("href", "#i-" + name);
     s.append(u);
@@ -32,8 +32,34 @@ const KeshUI = (() => {
   };
   const strip = (cells, label, api) => h("ul", { className: "strip", "aria-label": label },
     cells.map((c) => h("li", { className: c.d ? "d-only" : "" }, h("span", { className: "mono", translate: "no" }, c.k), h("b", { className: "num" + (c.cls ? " " + c.cls : "") }, c.v), c.sub ? h("span", { className: "meta" }, c.sub) : null)), api);
-  const KIND = { ok: "check", bad: "bounce", run: "play" };
-  const chip = (kind, text) => h("span", { className: "chip " + kind }, icon(KIND[kind] || "check", "sm"), text);
+  const KIND = { ok: "check", bad: "warn", run: "clock", warn: "clock", flag: "flag" };
+  const chip = (kind, text, ic) => h("span", { className: "chip " + kind }, icon(ic || KIND[kind] || "check"), text);
+  const ring = (pct, state, label) => {
+    const C = 2 * Math.PI * 58, v = Math.max(0, Math.min(100, Number(pct) || 0)), off = C * (1 - v / 100);
+    const e = h("div", { className: "ring" + (state && state !== "live" ? " " + (state === "missing" ? "off" : state) : ""), role: "img", "aria-label": label });
+    e.innerHTML = '<svg viewBox="0 0 140 140" aria-hidden="true"><circle class="trk" cx="70" cy="70" r="58"/><circle class="val" cx="70" cy="70" r="58" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/></svg>';
+    const c = h("div", { className: "c", "aria-hidden": "true" }, state === "missing" ? "—" : [Math.round(v) + "%", h("small", state === "stale" ? "ข้อมูลเก่า" : "ใช้แล้ว")]);
+    e.append(c);
+    return e;
+  };
+  const dots = (pct, state, label) => {
+    const n = state === "missing" ? 0 : Math.round((Number(pct) || 0) / 5);
+    return h("div", { className: "dots" + (state === "stale" ? " stale" : ""), role: "img", "aria-label": label }, Array.from({ length: 20 }, (_, i) => h("i", { className: i < n ? "f" : null })));
+  };
+  const dl = (items) => h("dl", { className: "kpis" }, items.map((x) => h("div", h("dt", x.dt), h("dd", { className: "v" + (x.cls ? " " + x.cls : "") }, x.v), x.c ? h("dd", { className: "c" }, x.c) : null)));
+  const table = (cols, rows, o = {}) => h("table", { className: o.cls || null, id: o.id || null },
+    h("thead", h("tr", cols.map((c) => h("th", { className: (c.n ? "n " : "") + (c.hide ? "hide-s" : "") || null, scope: "col" }, c.label)))),
+    h("tbody", rows.map((r, ri) => h("tr", { className: r.cls || null }, (r.cells || r).map((cell, i) => h("td", { className: ((cols[i] && cols[i].n ? "n " : "") + (cols[i] && cols[i].hide ? "hide-s " : "") + (cell && cell.cls ? cell.cls : "")).trim() || null, "data-l": cols[i] && cols[i].stackLabel || null }, cell && cell.node !== undefined ? cell.node : cell))))));
+  const labelChip = (l) => h("span", { className: "chip lbl", style: l.color ? "--c:#" + String(l.color).replace(/[^0-9a-fA-F]/g, "").slice(0, 6) : null }, h("i"), l.name);
+  const issueRow = (i, now) => {
+    const L = KeshLogic;
+    return h("li", h("a", { className: "issue", href: "#/issue/" + i.number },
+      h("span", { className: "st", title: i.state === "open" ? "เปิดอยู่" : "ปิดแล้ว" }, icon(i.state === "open" ? "issue" : "check"), h("span", { className: "sr" }, i.state === "open" ? "เปิดอยู่" : "ปิดแล้ว")),
+      h("h3", h("span", { className: "mono" }, "#" + i.number), i.title),
+      h("p", { className: "ex" }, L.excerpt(i.body, 240)),
+      h("div", { className: "lb" }, (i.labels || []).map(labelChip)),
+      h("div", { className: "meta" }, h("span", icon("clock"), L.ageText(now - Date.parse(i.created_at))), h("span", icon("chat"), (i.comments || 0) + " ความเห็น"), i.assignee ? h("span", i.assignee) : null)));
+  };
   const btn = (text, o = {}) => {
     const cls = "btn" + (o.primary ? " primary" : "");
     const kids = [h("span", text), o.icon ? icon(o.icon) : null];
@@ -46,25 +72,8 @@ const KeshUI = (() => {
   const skeleton = (n) => h("div", { className: "sk", "aria-hidden": "true" }, Array.from({ length: n || 2 }, () => h("i")));
   const skeletonBlk = ([word, title, n]) => blk({ tab: tab(word), title, children: skeleton(n) });
   const banner = (title, text, onRetry) => h("div", { className: "banner keep", role: "alert" }, icon("errors"), h("p", h("b", title), " " + text), onRetry ? btn("ลองอีกครั้ง", { onclick: onRetry }) : null);
-  const meter = ({ segs, label, legend }) => h("div", {},
-    h("div", { className: "bar", role: "img", "aria-label": label }, h("span", { className: "seg used", style: "--w:" + segs.used + "%" }), segs.reserved ? h("span", { className: "seg resv", style: "--w:" + segs.reserved + "%" }) : null),
-    h("ul", { className: "legend meta" }, legend.map(([cls, kids]) => h("li", h("i", { className: "sw " + cls }), kids))));
   const stages = (model, meta) => h("ol", { className: "stages" }, model.map((s) => h("li", { className: (s.state === "bounced" ? "done bounced" : s.state) },
     h("span", { className: "dia num" }, String(s.n).padStart(2, "0")), h("b", cap(s.agent)), h("span", { className: "meta" + (s.bounces ? " bad-t" : "") }, meta(s)))));
-  const opCard = (c, full) => {
-    const bad = c.level === "bad", pct = Math.round(c.bounceRate * 100), L = KeshLogic;
-    return h("li", { className: "op" + (bad ? " warn" : ""), "data-ag": c.name },
-      h("span", { className: "op-ini", "aria-hidden": "true" }, c.name[0].toUpperCase(), h("span", { className: "mono" }, String(c.rank).padStart(2, "0"))),
-      h("b", { className: "op-name", translate: "no" }, c.name.toUpperCase()),
-      h("div", { className: "op-body" }, h("span", { className: "meta" }, c.role), h("b", { className: "num op-val" }, L.fmtTok(c.tokens)),
-        h("span", { className: "op-bar", style: "--w:" + c.relPct + "%", role: full ? "img" : null, "aria-label": full ? "token 7 วัน " + L.fmtTok(c.tokens) : null }),
-        full ? [
-          h("dl", h("dt", { className: "meta" }, "handoff"), h("dd", { className: "num" }, String(c.handoffs)), h("dt", { className: "meta" }, "ตีกลับ"),
-            h("dd", { className: "num" + (bad ? " bad-t" : "") }, bad ? icon("errors", "sm") : null, pct + "%")),
-          h("span", { className: "bnc" + (bad ? " over" : ""), role: "img", "aria-label": "ตีกลับ " + pct + "% เกณฑ์ 20%" + (bad ? " เกินเกณฑ์" : "") }, h("i", { style: "--w:" + L.bounceBarPct(c.bounceRate) + "%" })),
-          h("a", { className: "more", href: "#lessons" }, "lessons " + c.lessons)
-        ] : h("span", { className: "meta" + (bad ? " bad-t" : "") }, bad ? icon("errors", "sm") : null, "ตีกลับ " + pct + "%")));
-  };
   const runRow = (r, seq) => {
     const c = KeshLogic.runChip(r);
     return h("li", h("a", { className: "row", href: "#run/" + encodeURIComponent(r.run_id) }, h("span", { className: "num rid", translate: "no" }, String(seq).padStart(3, "0")),
@@ -77,5 +86,5 @@ const KeshUI = (() => {
     } else el.append(h("pre", src));
     return el;
   };
-  return { runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, meter, stages, opCard, md };
+  return { ring, dots, dl, table, issueRow, labelChip, runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, stages, md };
 })();

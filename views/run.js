@@ -6,22 +6,22 @@ KeshViews.run = (() => {
   const reasonList = (rs) => h("ul", { className: "reasons" }, rs.map((r) => h("li", h("span", r.reason), h("b", { className: "num" }, String(r.count)), bar((r.count / rs[0].count) * 100))));
   return {
     skel: ["Run", [["STAGE", "ขั้นตอน", 1], ["HANDOFF", "ไทม์ไลน์ handoff", 4]]],
-    crumb: () => ["Runs", "#runs"],
+    crumb: () => ["Runs", "#/runs"],
     load: async (id) => { const w = await A.ws(); return { run: w.runs.find((r) => r.run_id === id), runs: w.runs, id }; },
     render: ({ run, runs, id }) => {
-      const crumb = ["Runs", "#runs"];
-      if (!run) return { h1: "ไม่พบ run", crumb, nodes: [empty({ icon: "empty", title: "ไม่พบ run " + id, next: "run นี้อาจอยู่นอก snapshot ล่าสุด", action: btn("ดู Runs ทั้งหมด", { href: "#runs", primary: true }) })] };
+      const crumb = ["Runs", "#/runs"];
+      if (!run) return { h1: "ไม่พบ run", crumb, nodes: [empty({ icon: "empty", title: "ไม่พบ run " + id, next: "run นี้อาจอยู่นอก snapshot ล่าสุด", action: btn("ดู Runs ทั้งหมด", { href: "#/runs", primary: true }) })] };
       const seq = runs.slice().sort((a, b) => String(a.run_id).localeCompare(String(b.run_id))).findIndex((r) => r.run_id === id) + 1;
       const stg = L.stageModel(run), rows = L.handoffRows(run), ag = L.agentTokens(run), rs = L.bounceReasons(run);
       const tokens = run.tokens_total || 0, nowI = stg.findIndex((s) => s.state === "now");
       const rate = rows.length ? run.bounce_count / rows.length : 0, bad = L.bounceLevel(rate) === "bad";
       const tk = {};
       ag.forEach((x) => { tk[x.agent] = x.tokens; });
-      const st = strip([{ k: "TOKEN", v: L.fmtTok(tokens) }, { k: "HANDOFF", v: String(rows.length) }, { k: "BOUNCE", v: String(run.bounce_count) }, { k: "5H SHARE", v: Math.round(L.pct5h(tokens)) + "%", d: 1 }, { k: "STATUS", v: { done: "เสร็จ", pending: "ค้าง", open: "กำลังรัน" }[run.status], d: 1 }], "สรุป run");
+      const st = strip([{ k: "TOKEN", v: L.fmtTok(tokens) }, { k: "HANDOFF", v: String(rows.length) }, { k: "BOUNCE", v: String(run.bounce_count) }, { k: "STATUS", v: { done: "เสร็จ", open: "กำลังรัน" }[run.status] + (run.has_followups ? " · มีงานค้างต่อ" : ""), d: 1 }], "สรุป run");
       const summary = blk({
         tab: tab("RUN", pad(seq)), title: "สรุป", cls: "o5 m-hide",
         children: h("div", { className: "kpis" },
-          h("div", { className: "kpi" }, h("span", { className: "mono" }, "TOKEN"), h("b", { className: "num val" }, L.fmtTok(tokens)), h("span", { className: "meta" }, "≈ " + Math.round(L.pct5h(tokens)) + "% ของ 5h")),
+          h("div", { className: "kpi" }, h("span", { className: "mono" }, "TOKEN"), h("b", { className: "num val" }, L.fmtTok(tokens)), h("span", { className: "meta" }, "รวมทั้ง run")),
           h("div", { className: "kpi" }, h("span", { className: "mono" }, "BOUNCE"), h("b", { className: "num val" }, Math.round(rate * 100) + "%"), h("span", { className: "meta " + (bad ? "bad-t" : "ok-t") }, icon(bad ? "errors" : "check", "sm"), bad ? "เกิน 20%" : "ต่ำกว่า 20%")),
           h("div", { className: "kpi" }, h("span", { className: "mono" }, "HANDOFF"), h("b", { className: "num val" }, String(rows.length)), h("span", { className: "meta" }, run.date || "")))
       });

@@ -12,25 +12,41 @@ const open = log("Kesh → Tzayar → Amet → Kotev → Bochek", [
 ]);
 const done = log("Kesh → Kotev", [["Kesh → Kotev", "a", "ok", "58,000"]], true);
 
-test("parseRoute: defaults, args, odd chars", () => {
-  assert.deepEqual(L.parseRoute(""), { page: "today", arg: null });
-  assert.deepEqual(L.parseRoute("#nope"), { page: "today", arg: null });
-  assert.deepEqual(L.parseRoute("#agents"), { page: "agents", arg: null });
-  assert.deepEqual(L.parseRoute("#run/2026-10-29-a%20b"), { page: "run", arg: "2026-10-29-a b" });
-  assert.deepEqual(L.parseRoute("#run/%E0%A4%A"), { page: "run", arg: "%E0%A4%A" });
-  assert.deepEqual(L.parseRoute("#run"), { page: "runs", arg: null });
-  assert.deepEqual(L.parseRoute("#issue/41"), { page: "issue", arg: "41" });
+test("parseRoute: six pages, args, query, redirects", () => {
+  assert.deepEqual(L.parseRoute(""), { page: "summary", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/"), { page: "summary", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/agents"), { page: "agents", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#agents"), { page: "agents", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/run/2026-10-29-a%20b"), { page: "run", arg: "2026-10-29-a b", query: {} });
+  assert.deepEqual(L.parseRoute("#/run/%E0%A4%A"), { page: "run", arg: "%E0%A4%A", query: {} });
+  assert.deepEqual(L.parseRoute("#/run"), { page: "runs", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/issue/41"), { page: "issue", arg: "41", query: {} });
+  assert.deepEqual(L.parseRoute("#/files/lessons/kotev.md?view=graph&gm=b"), { page: "files", arg: "lessons/kotev.md", query: { view: "graph", gm: "b" } });
+  assert.deepEqual(L.parseRoute("#/log"), { page: "log", arg: null, query: {} });
 });
 
-test("navModel: bottom 5, rail 3 groups, active mapping", () => {
-  const n = L.navModel({ runs: 29 }, "run");
-  assert.equal(n.bottom.length, 5);
-  assert.equal(n.rail.length, 3);
+test("parseRoute: legacy routes redirect", () => {
+  const r = (h) => L.parseRoute(h).redirect;
+  assert.equal(r("#/today"), "#/");
+  assert.equal(r("#/usage"), "#/");
+  assert.equal(r("#/more"), "#/");
+  assert.equal(r("#/errors"), "#/log");
+  assert.equal(r("#/lessons"), "#/files/lessons");
+  assert.equal(r("#/lessons/kotev"), "#/files/lessons/kotev.md");
+  assert.equal(r("#/nope"), "#/");
+  assert.equal(r("#today"), "#/");
+  assert.equal(r("#/runs"), undefined);
+  assert.equal(L.parseRoute("#/lessons/kotev").page, "files");
+});
+
+test("navModel: six items, active mapping", () => {
+  const n = L.navModel("run");
+  assert.deepEqual(n.items.map((i) => i.label), ["สรุป", "Runs", "Issues", "Agents", "Files", "Log"]);
+  assert.deepEqual(n.items.map((i) => i.href), ["#/", "#/runs", "#/issues", "#/agents", "#/files", "#/log"]);
   assert.equal(n.activeKey, "runs");
-  assert.equal(n.rail[1][0].count, 29);
-  assert.equal(L.navModel({}, "lessons").activeBottom, "more");
-  assert.equal(L.navModel({}, "lessons").activeKey, "lessons");
-  assert.equal(L.navModel({}, "issue").activeKey, "issues");
+  assert.equal(L.navModel("issue").activeKey, "issues");
+  assert.equal(L.navModel("summary").activeKey, "summary");
+  assert.equal(n.items.some((i) => "count" in i), false);
 });
 
 test("bounceLevel: exactly 20% ok, above bad", () => {
@@ -48,19 +64,10 @@ test("bounceBarPct: 0-50% scale, clamps, tick at 40", () => {
   assert.equal(L.BOUNCE_TICK, 40);
 });
 
-test("meterSegments: sums to 100 and clamps", () => {
-  assert.deepEqual(L.meterSegments(62, 8), { used: 62, reserved: 8, rest: 30 });
-  assert.deepEqual(L.meterSegments(120, 8), { used: 100, reserved: 0, rest: 0 });
-  assert.deepEqual(L.meterSegments(95, 20), { used: 95, reserved: 5, rest: 0 });
-  assert.deepEqual(L.meterSegments(-5, undefined), { used: 0, reserved: 0, rest: 100 });
-});
-
-test("fmtCountdown / projection / ageText / fmtTok", () => {
-  assert.equal(L.fmtCountdown(6500000), "01:48:20");
-  assert.equal(L.fmtCountdown(-5), "00:00:00");
-  assert.equal(L.fmtCountdown(5 * 3600000), "05:00:00");
-  assert.equal(L.projection(50, 2.5 * 3600000).pctAtReset, 100);
-  assert.equal(L.projection(40, 0).pctAtReset, 40);
+test("fmtDur / ageText / fmtTok", () => {
+  assert.equal(L.fmtDur(88 * 60000), "1 ชม. 28 น.");
+  assert.equal(L.fmtDur(3600000), "1 ชม.");
+  assert.equal(L.fmtDur(-5), "0 น.");
   assert.equal(L.ageText(30000), "เมื่อครู่");
   assert.equal(L.ageText(2 * 60000), "2 นาทีที่แล้ว");
   assert.equal(L.ageText(3 * 3600000), "3 ชั่วโมงที่แล้ว");
@@ -68,27 +75,13 @@ test("fmtCountdown / projection / ageText / fmtTok", () => {
   assert.equal(L.fmtTok(482000), "482k");
   assert.equal(L.fmtTok(1460000), "1.46M");
   assert.equal(L.fmtTok(900), "900");
+  assert.equal(L.fmtTok(999600), "1M");
+  assert.equal(L.fmtTok(999400), "999k");
+  assert.equal(L.fmtTok(999), "999");
   assert.equal(L.fmtTok(null), "0");
 });
 
-test("window5h: estimated block from midnight; reset edge; started_at path", () => {
-  const now = new Date(2026, 9, 29, 7, 30).getTime();
-  const w = L.window5h([{ run_id: "2026-10-29-a", tokens_total: 150000 }, { run_id: "2026-10-28-b", tokens_total: 999 }], now);
-  assert.equal(w.estimated, true);
-  assert.equal(w.startMs, new Date(2026, 9, 29, 5, 0).getTime());
-  assert.equal(w.remainingMs, 2.5 * 3600000);
-  assert.equal(w.usedTokens, 150000);
-  assert.equal(w.usedPct, 10);
-  const edge = new Date(2026, 9, 29, 10, 0).getTime();
-  assert.equal(L.window5h([], edge).remainingMs, 5 * 3600000);
-  const t = L.window5h([{ run_id: "x", started_at: new Date(now - 3600000).toISOString(), tokens_total: 30000 }, { run_id: "y", started_at: new Date(now - 6 * 3600000).toISOString(), tokens_total: 50000 }], now);
-  assert.equal(t.estimated, false);
-  assert.equal(t.startMs, now - 3600000);
-  assert.equal(t.usedTokens, 30000);
-  assert.equal(L.window5h(null, now).usedTokens, 0);
-});
-
-test("activeRun: newest non-done, null when none", () => {
+test("activeRun: newest open run, null when none", () => {
   assert.equal(L.activeRun([done]), null);
   assert.equal(L.activeRun([]), null);
   assert.equal(L.activeRun([done, open]).run_id, open.run_id);
@@ -135,31 +128,6 @@ test("bounceReasons and agentTokens", () => {
   assert.deepEqual(L.agentTokens(null), []);
 });
 
-test("reservedTokens: mean of next agent's last 10 handoffs", () => {
-  const mk = (id, v) => ({ run_id: id, handoffs: [{ to: "bochek", tokens: v, bounce_round: 0 }] });
-  const hist = Array.from({ length: 12 }, (_, i) => mk("2026-10-" + String(10 + i).padStart(2, "0"), i < 2 ? 1000000 : 10000));
-  const r = L.reservedTokens(open, hist, 10);
-  assert.equal(r.agent, "bochek");
-  assert.equal(r.tokens, 10000);
-  assert.ok(Math.abs(r.pct - 10000 / 15000) < 1e-9);
-  assert.equal(L.reservedTokens(open, [], 10), null);
-  assert.equal(L.reservedTokens(done, hist, 10), null);
-  assert.equal(L.reservedTokens(null, hist, 10), null);
-});
-
-test("actionQueue: order approve > alert > issue, cap 3, danger", () => {
-  const issues = [{ number: 41, title: "t", state: "open", created_at: "2026-10-27T00:00:00Z" }, { number: 50, title: "n", state: "open", created_at: "2026-10-28T00:00:00Z" }, { number: 3, title: "c", state: "closed", created_at: "2026-01-01T00:00:00Z" }];
-  const now = Date.parse("2026-10-29T00:00:00Z");
-  const q = L.actionQueue({ runs: [open], issues, apiStatus: { ok: true }, rates: [{ agent: "bochek", handoffs: 25, rejects: 6, rate: 0.24 }, { agent: "amet", handoffs: 10, rejects: 1, rate: 0.1 }], now });
-  assert.deepEqual(q.map((x) => x.kind), ["APPROVE", "ALERT", "ISSUE"]);
-  assert.equal(q[1].danger, true);
-  assert.equal(q[2].title, "Issue #41 เปิดค้าง 2 วัน");
-  const many = L.actionQueue({ runs: [open], issues, apiStatus: { ok: false, checkedAt: 0 }, rates: [{ agent: "a", handoffs: 5, rejects: 3, rate: 0.6 }, { agent: "b", handoffs: 5, rejects: 3, rate: 0.6 }], now });
-  assert.equal(many.length, 3);
-  assert.equal(many[1].title, "GitHub token API ใช้ไม่ได้");
-  assert.deepEqual(L.actionQueue({ runs: [], issues: [], apiStatus: { ok: true }, rates: [], now }), []);
-});
-
 test("agentCards: 10 cards, groups, 7-day window, bounce level", () => {
   const w = {
     runs: [
@@ -184,11 +152,12 @@ test("agentCards: 10 cards, groups, 7-day window, bounce level", () => {
 });
 
 test("runRows: sort desc, filters", () => {
-  const rs = [{ run_id: "2026-10-01-a", title: "Alpha", status: "done", bounce_count: 0, handoffs: [{ to: "kotev" }] }, { run_id: "2026-10-03-b", title: "Beta", status: "open", bounce_count: 1, handoffs: [] }, { run_id: "2026-10-02-c", title: "Gamma", status: "pending", bounce_count: 0, handoffs: [] }];
+  const rs = [{ run_id: "2026-10-01-a", title: "Alpha", status: "done", bounce_count: 0, handoffs: [{ to: "kotev" }] }, { run_id: "2026-10-03-b", title: "Beta", status: "open", bounce_count: 1, handoffs: [] }, { run_id: "2026-10-02-c", title: "Gamma", status: "done", has_followups: true, bounce_count: 0, handoffs: [] }];
   assert.deepEqual(L.runRows(rs).map((r) => r.title), ["Beta", "Gamma", "Alpha"]);
   assert.deepEqual(L.runRows(rs, { q: "ALP" }).map((r) => r.title), ["Alpha"]);
   assert.deepEqual(L.runRows(rs, { status: "bounce" }).map((r) => r.title), ["Beta"]);
-  assert.deepEqual(L.runRows(rs, { status: "done" }).map((r) => r.title), ["Alpha"]);
+  assert.deepEqual(L.runRows(rs, { status: "done" }).map((r) => r.title), ["Gamma", "Alpha"]);
+  assert.deepEqual(L.runRows(rs, { status: "followups" }).map((r) => r.title), ["Gamma"]);
   assert.deepEqual(L.runRows(rs, { agent: "kotev" }).map((r) => r.title), ["Alpha"]);
   assert.deepEqual(L.runRows(rs, { q: "zzz" }), []);
   assert.deepEqual(L.runRows(null), []);

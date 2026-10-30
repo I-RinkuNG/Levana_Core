@@ -6,12 +6,6 @@ const L = require("../logic.js");
 const run = (id, hs) => ({ run_id: id, handoffs: hs });
 const hd = (to, tokens, bounce_round = 0) => ({ from: "x", to, tokens, bounce_round });
 
-test("pct5h: 1% = 15,000 tokens", () => {
-  assert.equal(L.pct5h(15000), 1);
-  assert.equal(L.pct5h(1500000), 100);
-  assert.equal(L.pct5h(null), 0);
-});
-
 test("isToday matches run_id prefix", () => {
   assert.ok(L.isToday({ run_id: "2026-10-28-x" }, "2026-10-28"));
   assert.ok(!L.isToday({ run_id: "2026-10-27-x" }, "2026-10-28"));
