@@ -17,11 +17,11 @@ KeshViews.run = (() => {
       const rate = rows.length ? run.bounce_count / rows.length : 0, bad = L.bounceLevel(rate) === "bad";
       const tk = {};
       ag.forEach((x) => { tk[x.agent] = x.tokens; });
-      const st = strip([{ k: "TOKEN", v: L.fmtTok(tokens) }, { k: "HANDOFF", v: String(rows.length) }, { k: "BOUNCE", v: String(run.bounce_count) }, { k: "5H SHARE", v: Math.round(L.pct5h(tokens)) + "%", d: 1 }, { k: "STATUS", v: { done: "เสร็จ", open: "กำลังรัน" }[run.status] + (run.has_followups ? " · มีงานค้างต่อ" : ""), d: 1 }], "สรุป run");
+      const st = strip([{ k: "TOKEN", v: L.fmtTok(tokens) }, { k: "HANDOFF", v: String(rows.length) }, { k: "BOUNCE", v: String(run.bounce_count) }, { k: "STATUS", v: { done: "เสร็จ", open: "กำลังรัน" }[run.status] + (run.has_followups ? " · มีงานค้างต่อ" : ""), d: 1 }], "สรุป run");
       const summary = blk({
         tab: tab("RUN", pad(seq)), title: "สรุป", cls: "o5 m-hide",
         children: h("div", { className: "kpis" },
-          h("div", { className: "kpi" }, h("span", { className: "mono" }, "TOKEN"), h("b", { className: "num val" }, L.fmtTok(tokens)), h("span", { className: "meta" }, "≈ " + Math.round(L.pct5h(tokens)) + "% ของ 5h")),
+          h("div", { className: "kpi" }, h("span", { className: "mono" }, "TOKEN"), h("b", { className: "num val" }, L.fmtTok(tokens)), h("span", { className: "meta" }, "รวมทั้ง run")),
           h("div", { className: "kpi" }, h("span", { className: "mono" }, "BOUNCE"), h("b", { className: "num val" }, Math.round(rate * 100) + "%"), h("span", { className: "meta " + (bad ? "bad-t" : "ok-t") }, icon(bad ? "errors" : "check", "sm"), bad ? "เกิน 20%" : "ต่ำกว่า 20%")),
           h("div", { className: "kpi" }, h("span", { className: "mono" }, "HANDOFF"), h("b", { className: "num val" }, String(rows.length)), h("span", { className: "meta" }, run.date || "")))
       });

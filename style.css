@@ -379,3 +379,8 @@ tr.jr[hidden]{display:none}
 .cmt{padding:var(--s3) 0;border-top:1px solid var(--line)}
 .page .md{max-width:72ch}
 .stat-row{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center}
+main .sec:first-of-type{margin-top:var(--s8)}
+.usage .ufacts{margin:0}
+.usage .ufacts>div{display:block}
+.nm small.hm{display:none}
+@media (max-width:599px){.nm small.hm{display:block}}

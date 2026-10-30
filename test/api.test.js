@@ -78,3 +78,18 @@ test("partial GraphQL errors do not mark the API as OK", async () => {
   assert.equal(m.notes.length, 1);
   A.clear();
 });
+
+test("usage: 404 and bad JSON give null, good JSON parsed, no throw", async () => {
+  store.levana_token = "tkn";
+  A.clear();
+  globalThis.fetch = async () => resp({ message: "Not Found" }, { status: 404 });
+  assert.equal(await A.usage(), null);
+  globalThis.fetch = async () => ({ ok: true, status: 200, headers: { get: () => null }, text: async () => "{not json" });
+  assert.equal(await A.usage(true), null);
+  let url;
+  globalThis.fetch = async (u) => { url = u; return { ok: true, status: 200, headers: { get: () => null }, text: async () => '{"schema":1,"five_hour":{"used_percentage":5,"resets_at":1}}' }; };
+  const u = await A.usage(true);
+  assert.equal(u.five_hour.used_percentage, 5);
+  assert.match(url, /contents\/usage\.json\?ref=levana-usage$/);
+  A.clear();
+});

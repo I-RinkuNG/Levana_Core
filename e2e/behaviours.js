@@ -1,39 +1,22 @@
 // Dev-only behaviour checks: NODE_PATH=<global node_modules> node e2e/behaviours.js
 const { chromium } = require("playwright");
-const http = require("node:http"), fs = require("node:fs"), path = require("node:path");
-const F = require("./fixtures");
-const ROOT = path.join(__dirname, "..");
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2" };
-const server = http.createServer((q, r) => {
-  const p = path.join(ROOT, decodeURIComponent(q.url.split("?")[0]).replace(/\/$/, "/index.html"));
-  fs.readFile(p, (e, b) => e ? (r.writeHead(404), r.end()) : (r.writeHead(200, { "content-type": MIME[path.extname(p)] || "text/plain" }), r.end(b)));
-});
+const H = require("./harness"), F = H.F;
 const results = [];
 const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok ? "ok   " : "FAIL ") + name + (ok ? "" : " :: " + info)); };
 (async () => {
-  await new Promise((r) => server.listen(0, r));
-  const base = "http://localhost:" + server.address().port + "/";
+  const { server, base } = await H.startServer();
   const browser = await chromium.launch();
-  const open = async (width, mode, hash, { gql, tokenless } = {}) => {
-    const ctx = await browser.newContext({ viewport: { width, height: 844 }, colorScheme: mode || "light" });
-    const state = { mode: gql || "ok" };
+  const open = async (width, mode, hash, { gql, usage, tokenless, cfg, init } = {}) => {
+    const ctx = await browser.newContext({ viewport: { width, height: 844 }, colorScheme: mode || "light", locale: "th-TH" });
+    const state = { gql: gql || "ok", usage: usage || "live" }, sb = [];
     if (!tokenless) await ctx.addInitScript(() => { if (!localStorage.getItem("levana_token")) localStorage.setItem("levana_token", "ghp_test"); });
-    await ctx.route("https://api.github.com/**", (r) => {
-      const req = r.request(), u = req.url();
-      if (req.method() === "OPTIONS") return r.fulfill({ status: 204, headers: F.CORS });
-      const hd = Object.assign({ "x-ratelimit-remaining": "4990", "content-type": "application/json" }, F.CORS);
-      if (u.endsWith("/graphql")) {
-        if (state.mode === "401") return r.fulfill({ status: 401, headers: hd, body: JSON.stringify({ message: "Bad credentials" }) });
-        if (state.mode === "502") return r.fulfill({ status: 502, headers: hd, body: "{}" });
-        return r.fulfill({ status: 200, headers: hd, body: JSON.stringify({ data: state.mode === "empty" ? F.empty() : F.data() }) });
-      }
-      if (u.endsWith("/rate_limit")) return state.mode === "401" ? r.fulfill({ status: 401, headers: hd, body: JSON.stringify({ message: "Bad credentials" }) }) : r.fulfill({ status: 200, headers: hd, body: "{}" });
-      r.fulfill({ status: 200, headers: hd, body: "[]" });
-    });
+    if (cfg) await ctx.addInitScript((c) => { window.LEVANA_CFG = c; }, cfg);
+    if (init) await ctx.addInitScript(init);
+    await H.routes(ctx, state, sb);
     const page = await ctx.newPage();
     await page.goto(base + hash);
     await page.waitForSelector("#main[aria-busy=false]", { timeout: 15000 });
-    return { page, state, ctx };
+    return { page, state, ctx, sb };
   };
   let t = await open(390, "light", "#/");
   check("390: sidebar hidden, header title shown", !(await t.page.isVisible("#side")) && (await t.page.textContent("#mtitle")) === "สรุป");
@@ -76,6 +59,29 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
   await t.page.reload(); await t.page.waitForSelector("#main[aria-busy=false]");
   check("theme toggle persists", m1 === "dark" && (await t.page.evaluate(() => document.documentElement.dataset.mode)) === "dark");
   await t.ctx.close();
+
+  t = await open(1440, "light", "#/");
+  check("usage live: ring + reset + token chip", (await t.page.isVisible(".usage .ring")) && (await t.page.textContent(".usage")).includes("21%") && (await t.page.textContent(".tapi")).includes("ใช้ได้"));
+  check("get token link: new tab, noopener, sr text", (await t.page.getAttribute(".tapi a", "rel")) === "noopener noreferrer" && (await t.page.textContent(".tapi a")).includes("เปิดแท็บใหม่"));
+  check("PC: 5 issue rows", (await t.page.$$eval("#main .issues > li", (l) => l.length)) === 5);
+  await t.ctx.close();
+  t = await open(1440, "light", "#/", { usage: "stale" });
+  check("usage stale: chip ข้อมูลเก่า + reset-passed text", (await t.page.textContent(".usage")).includes("ข้อมูลเก่า") && (await t.page.textContent(".usage")).includes("รอบนี้รีเซ็ตแล้วตอน"));
+  await t.ctx.close();
+  t = await open(1440, "light", "#/", { usage: "missing" });
+  check("usage missing: dashed ring + cause", (await t.page.isVisible(".usage .ring.off")) && (await t.page.textContent(".usage")).includes("ยังไม่มีค่า 5 ชั่วโมง"));
+  await t.ctx.close();
+  t = await open(1440, "light", "#/", { usage: "404" });
+  check("usage 404: same as missing, page still renders", (await t.page.isVisible(".usage .ring.off")) && (await t.page.isVisible("#agTable")));
+  await t.ctx.close();
+  t = await open(390, "light", "#/");
+  check("390: 3 issue rows", (await t.page.$$eval("#main .issues > li", (l) => l.length)) === 3);
+  check("390: dot matrix visible, ring hidden", (await t.page.isVisible(".usage .dots")) && !(await t.page.isVisible(".usage .ring")));
+  check("390: agent table shows first 5 rows, then expands", (await t.page.$$eval("#agTable tbody tr", (r) => r.filter((x) => x.offsetParent !== null).length)) === 5);
+  await t.page.click("#agMore");
+  check("390: show all 10 agents", (await t.page.$$eval("#agTable tbody tr", (r) => r.filter((x) => x.offsetParent !== null).length)) === 10);
+  await t.ctx.close();
+
   await browser.close(); server.close();
   const bad = results.filter((r) => !r[1]);
   console.log(bad.length ? bad.length + " FAILED" : "ALL " + results.length + " OK");

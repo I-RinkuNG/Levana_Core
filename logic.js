@@ -1,7 +1,5 @@
 const KeshLogic = (() => {
   const P = typeof KeshParse !== "undefined" ? KeshParse : require("./parse.js");
-  const TOKENS_PER_PCT = 15000;
-  const pct5h = (tokens) => (Number(tokens) || 0) / TOKENS_PER_PCT;
   const isToday = (r, today) => String(r.run_id || "").startsWith(today);
   const tokensByAgent = (runs, computeTokens) => {
     const out = {};
@@ -131,12 +129,15 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     const t = String(body || "").replace(/```[\s\S]*?```/g, " ").replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/<[^>]+>/g, " ").replace(/[#>*_`|-]+/g, " ").replace(/\s+/g, " ").trim();
     return t.length > n ? t.slice(0, n) + "…" : t;
   };
-  const BOUNCE_WARN = 0.2, BOUNCE_TICK = 40, H5 = 5 * 3600000, DAY = 86400000;
+  const BOUNCE_WARN = 0.2, BOUNCE_TICK = 40, DAY = 86400000;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const pad2 = (n) => String(n).padStart(2, "0");
   const ymd = (ms) => { const d = new Date(ms); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); };
   const hhmm = (ms) => { const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); };
-  const fmtCountdown = (ms) => { const s = Math.floor(Math.max(0, ms) / 1000); return [s / 3600 | 0, (s % 3600) / 60 | 0, s % 60].map(pad2).join(":"); };
+  const fmtDur = (ms) => {
+    const m = Math.max(0, Math.round(ms / 60000)), hh = Math.floor(m / 60), mm = m % 60;
+    return hh ? (hh + " ชม. " + (mm ? mm + " น." : "")).trim() : mm + " น.";
+  };
   const ageText = (ms) => {
     const m = Math.floor(Math.max(0, ms) / 60000);
     if (m < 1) return "เมื่อครู่";
@@ -152,12 +153,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const bounceLevel = (rate) => (rate > BOUNCE_WARN + 1e-9 ? "bad" : "ok");
   const bounceBarPct = (rate) => clamp((rate / (BOUNCE_WARN * 2.5)) * 100, 0, 100);
-  const meterSegments = (usedPct, reservedPct) => {
-    const used = clamp(Number(usedPct) || 0, 0, 100);
-    const reserved = clamp(Number(reservedPct) || 0, 0, 100 - used);
-    return { used, reserved, rest: 100 - used - reserved };
-  };
-  const projection = (usedPct, elapsedMs) => ({ pctAtReset: elapsedMs > 0 ? usedPct * (H5 / elapsedMs) : usedPct });
 
   const PAGES = ["summary", "runs", "run", "issues", "issue", "agents", "files", "log"];
   const REDIRECT = { today: "#/", usage: "#/", lessons: "#/files/lessons", errors: "#/log", more: "#/" };
@@ -196,25 +191,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
 
   const runDay = (r) => (r.date || String(r.run_id || "").slice(0, 10) || "");
   const runTokens = (r) => (r.tokens_total != null ? r.tokens_total : 0);
-  const window5h = (runs, nowMs) => {
-    const rs = runs || [];
-    const timed = rs.filter((r) => r.started_at && !isNaN(Date.parse(r.started_at)) && nowMs - Date.parse(r.started_at) < H5 && Date.parse(r.started_at) <= nowMs);
-    let startMs, used, estimated;
-    if (timed.length) {
-      startMs = Math.min(...timed.map((r) => Date.parse(r.started_at)));
-      used = rs.filter((r) => r.started_at && Date.parse(r.started_at) >= startMs).reduce((s, r) => s + runTokens(r), 0);
-      estimated = false;
-    } else {
-      const d = new Date(nowMs), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      startMs = mid + Math.floor((nowMs - mid) / H5) * H5;
-      used = rs.filter((r) => isToday(r, ymd(nowMs))).reduce((s, r) => s + runTokens(r), 0);
-      estimated = true;
-    }
-    const resetMs = startMs + H5;
-    return { startMs, resetMs, remainingMs: Math.max(0, resetMs - nowMs), usedTokens: used, usedPct: pct5h(used), estimated };
-  };
-
-  const activeRun = (runs) => (runs || []).filter((r) => r.status !== "done").sort((a, b) => String(b.run_id).localeCompare(String(a.run_id)))[0] || null;
+  const activeRun = (runs) => (runs || []).filter((r) => r.status === "open").sort((a, b) => String(b.run_id).localeCompare(String(a.run_id)))[0] || null;
   const stageModel = (run) => {
     if (!run) return [];
     const hs = run.handoffs || [];
@@ -261,6 +238,69 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     BUILD: [["kotev", "เขียนโค้ด"], ["tzayar", "ออกแบบ"], ["bona", "วางโครงสร้าง"], ["oseh", "รันคำสั่ง"], ["tak", "ปรับโค้ด"]],
     CHECK: [["bochek", "ทดสอบ"], ["amet", "ตรวจข้อเท็จจริง"], ["rosh", "วางแผนวิจัย"], ["cheker", "ดึงข้อมูล"], ["zekher", "ดูแล lessons"]]
   };
+  const USAGE_STALE_MS = 15 * 60 * 1000;
+  const usageState = (u, now) => {
+    const f = u && u.five_hour;
+    if (!f || typeof f.used_percentage !== "number") return { state: "missing" };
+    const cap = Date.parse(u.captured_at), capturedAt = isNaN(cap) ? null : cap;
+    const resetsAt = typeof f.resets_at === "number" ? f.resets_at * 1000 : null;
+    const base = { pct: clamp(f.used_percentage, 0, 100), resetsAt, capturedAt };
+    const resetPassed = resetsAt != null && now > resetsAt;
+    if (resetPassed || capturedAt == null || now - capturedAt > USAGE_STALE_MS) return Object.assign({ state: "stale", resetPassed }, base);
+    return Object.assign({ state: "live" }, base);
+  };
+  const SKIP = ["kesh", "rin", "other"];
+  const inWindow = (runs, from, to) => (runs || []).filter((r) => { const d = runDay(r); return d >= from && d < to; });
+  const tally = (runs) => {
+    let handoffs = 0, tokens = 0, bounces = 0;
+    const per = {};
+    for (const r of runs) {
+      const t = P.computeTokens(r.handoffs || []);
+      tokens += t.total || 0;
+      for (const h of r.handoffs || []) {
+        handoffs++;
+        const a = per[h.to] || (per[h.to] = { agent: h.to, handoffs: 0, rejects: 0 });
+        a.handoffs++;
+        if (h.bounce_round > 0) { bounces++; a.rejects++; }
+      }
+      for (const k of Object.keys(t.perAgent)) (per[k] || (per[k] = { agent: k, handoffs: 0, rejects: 0 })).tokens = (per[k].tokens || 0) + t.perAgent[k];
+    }
+    return { handoffs, tokens, bounces, per };
+  };
+  const lessonCount7d = (texts, nowMs) => {
+    const from = ymd(nowMs - 7 * DAY), agents = new Set();
+    let count = 0;
+    for (const t of texts || []) {
+      if (String(t.name).startsWith("_")) continue;
+      for (const l of String(t.md).split(/\r?\n/)) {
+        const m = /^\s*-\s+.*?(\d{4}-\d{2}-\d{2})/.exec(l);
+        if (m && m[1] >= from) { count++; agents.add(t.name); }
+      }
+    }
+    return { count, agents: agents.size };
+  };
+  const kpis7d = (runs, lessonsTexts, now) => {
+    const n = now == null ? Date.now() : now;
+    const cur = tally(inWindow(runs, ymd(n - 7 * DAY), "9999")), prev = tally(inWindow(runs, ymd(n - 14 * DAY), ymd(n - 7 * DAY)));
+    const tph = cur.handoffs ? cur.tokens / cur.handoffs : null, prevTph = prev.handoffs ? prev.tokens / prev.handoffs : null;
+    const worst = Object.values(cur.per).filter((a) => a.handoffs > 0 && !SKIP.includes(a.agent)).sort((a, b) => b.rejects / b.handoffs - a.rejects / a.handoffs || b.rejects - a.rejects)[0] || null;
+    const open = (runs || []).filter((r) => r.status === "open");
+    return {
+      tph, prevTph, deltaPct: tph != null && prevTph ? Math.round(((tph - prevTph) / prevTph) * 100) : null,
+      bounces: cur.bounces, handoffs: cur.handoffs, bouncePct: cur.handoffs ? Math.round((cur.bounces / cur.handoffs) * 100) : 0,
+      worst: worst && worst.rejects ? { agent: worst.agent, rejects: worst.rejects, handoffs: worst.handoffs } : null,
+      done: (runs || []).filter((r) => r.status === "done").length, open: open.length, openDay: open[0] ? runDay(open[0]) : null,
+      lessons: lessonCount7d(lessonsTexts, n)
+    };
+  };
+  const agentTable = (runs, days, now) => {
+    const n = now == null ? Date.now() : now;
+    const t = tally(inWindow(runs, ymd(n - (days || 7) * DAY), "9999"));
+    const names = Object.values(AGENT_GROUPS).flat().map((x) => x[0]);
+    const rows = names.map((a) => { const x = t.per[a] || {}; const tokens = x.tokens || 0, handoffs = x.handoffs || 0, rejects = x.rejects || 0; return { agent: a, tokens, handoffs, rejects, tph: handoffs ? tokens / handoffs : 0, share: t.tokens ? (tokens / t.tokens) * 100 : 0, rate: handoffs ? rejects / handoffs : 0, hot: handoffs > 0 && rejects / handoffs > BOUNCE_WARN + 1e-9 }; });
+    return rows.sort((a, b) => b.tokens - a.tokens || a.agent.localeCompare(b.agent));
+  };
+  const issueRows = (issues, n) => (issues || []).filter((i) => i.state === "open").sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, n);
   const agentCards = (w, windowDays, nowMs) => {
     const days = windowDays || 7, from = ymd((nowMs == null ? Date.now() : nowMs) - days * DAY);
     const runs = ((w && w.runs) || []).filter((r) => runDay(r) >= from);
@@ -287,35 +327,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     const rates = (cards || []).filter((c) => c.handoffs > 0 && c.name !== "rin" && c.name !== "kesh").map((c) => ({ agent: c.name, handoffs: c.handoffs, rejects: Math.round(c.bounceRate * c.handoffs), rate: c.bounceRate })).sort((a, b) => b.rate - a.rate || b.rejects - a.rejects);
     const handoffs = rates.reduce((s, r) => s + r.handoffs, 0), bounces = rates.reduce((s, r) => s + r.rejects, 0);
     return { handoffs, bounces, rate: handoffs ? bounces / handoffs : 0, rates };
-  };
-  const actionQueue = ({ runs, issues, apiStatus, rates, now }) => {
-    const out = [];
-    const ar = activeRun(runs);
-    if (ar) {
-      const st = stageModel(ar).find((s) => s.state === "now");
-      out.push({ kind: "APPROVE", title: "Run " + (ar.title || ar.run_id) + " รออนุมัติ", meta: (st ? "อยู่ขั้น " + st.agent + " · " : "") + (ar.handoffs || []).length + " handoff", href: "#run/" + encodeURIComponent(ar.run_id), danger: false });
-    }
-    if (apiStatus && apiStatus.ok === false) out.push({ kind: "ALERT", title: "GitHub token API ใช้ไม่ได้", meta: "ตรวจล่าสุด " + (apiStatus.checkedAt ? hhmm(apiStatus.checkedAt) : "-"), href: "#errors", danger: true });
-    for (const r of (rates || []).filter((x) => bounceLevel(x.rate) === "bad" && x.agent !== "rin" && x.agent !== "kesh")) {
-      out.push({ kind: "ALERT", title: r.agent + " ตีกลับงาน " + Math.round(r.rate * 100) + "% (เกิน 20%)", meta: r.rejects + " จาก " + r.handoffs + " handoff", href: "#agents", danger: true });
-    }
-    const t = now == null ? Date.now() : now;
-    const oldest = (issues || []).filter((i) => i.state === "open").sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))[0];
-    if (oldest) out.push({ kind: "ISSUE", title: "Issue #" + oldest.number + " เปิดค้าง " + Math.max(0, Math.floor((t - Date.parse(oldest.created_at)) / DAY)) + " วัน", meta: oldest.title, href: "#issue/" + oldest.number, danger: false });
-    return out.slice(0, 3);
-  };
-  const reservedTokens = (run, runs, n) => {
-    const next = stageModel(run).filter((s) => s.state === "todo" && s.agent !== "rin" && s.agent !== "kesh")[0];
-    if (!next) return null;
-    const vals = [];
-    for (const r of runs || []) {
-      const d = handoffTokens(r.handoffs || []);
-      (r.handoffs || []).forEach((h, i) => { if (h.to === next.agent && d[i] != null) vals.push({ id: r.run_id, i, v: d[i] }); });
-    }
-    const last = vals.sort((a, b) => String(a.id).localeCompare(String(b.id)) || a.i - b.i).slice(-(n || 10));
-    if (!last.length) return null;
-    const tokens = last.reduce((s, x) => s + x.v, 0) / last.length;
-    return { tokens, pct: pct5h(tokens), agent: next.agent };
   };
   const runChip = (r) => {
     if (r.bounce_count > 0) return { kind: "bad", text: "ตีกลับ " + r.bounce_count };
@@ -355,6 +366,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (i < t.length) out.push({ t: t.slice(i), hit: false });
     return out;
   };
-  return { excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
+  return { excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, USAGE_STALE_MS, usageState, kpis7d, agentTable, issueRows, fmtDur, parseRoute, navModel, bounceLevel, bounceBarPct, activeRun, stageModel, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;

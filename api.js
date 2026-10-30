@@ -102,6 +102,11 @@ const snap = () => get("g", () => retrying(() => onceGql(KeshLogic.gqlVars(OWNER
   if (!m || !m.branchFound) throw { code: "404", path: "graphql", message: "repository or branch not found" };
   return m;
 }));
+const cfg = () => Object.assign({ usageBranch: "levana-usage", usagePath: "usage.json" }, (typeof window !== "undefined" && window.LEVANA_CFG) || globalThis.LEVANA_CFG || {});
+const usage = (force) => {
+  if (force) delete cache.u;
+  return get("u", () => once("/contents/" + cfg().usagePath + "?ref=" + encodeURIComponent(cfg().usageBranch), true).then((t) => { const v = JSON.parse(t); return v && typeof v === "object" ? v : null; }).catch((e) => { if (e && e.code === "auth") throw e; return null; }));
+};
 const issues = () => snap().then((m) => m.issues);
 const commits = () => snap().then((m) => m.commits);
 const mdFiles = async (d) => {
@@ -130,6 +135,6 @@ const recheck = async () => {
 };
 const clear = () => { cache = {}; };
 const clearLog = () => { try { localStorage.removeItem(LOGKEY); } catch (e) {} };
-return { OWNER, REPO, st, apiStatus, onStatus: (f) => subs.push(f), recheck, clear, clearLog, token, readLog, logErr, api, get, dir, text, snap, issues, commits, mdFiles, ws, partial: () => partial, notes: () => notes };
+return { OWNER, REPO, st, apiStatus, onStatus: (f) => subs.push(f), recheck, clear, clearLog, token, readLog, logErr, api, get, dir, text, snap, usage, issues, commits, mdFiles, ws, partial: () => partial, notes: () => notes };
 })();
 if (typeof module !== "undefined") module.exports = KeshApi;

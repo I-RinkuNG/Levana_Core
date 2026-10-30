@@ -43,7 +43,7 @@ const data = () => ({
     runs: tree(Object.entries(RUNS()).map(([k, v]) => [k, v])),
     agents: tree(AGENTS.map((a) => [a, `---\nname: ${a}\ndescription: "${a} agent"\ntools: Read, Grep\nmodel: sonnet\n---\n\nbody`])),
     lessons: tree(AGENTS.slice(0, 6).map((a, i) => [a, "# lessons\n\n" + Array.from({ length: 3 + i * 2 }, (_, j) => `- 2026-10-2${j % 9} ${a} ใช้ grep แทน find ได้ผล (run ${j})`).join("\n")])),
-    issues: { nodes: [issue(41, "หน้า Files โหลดช้าบนมือถือ", "OPEN", ago(2)), issue(40, "เพิ่ม search lessons", "OPEN", ago(5)), issue(30, "แก้ token form", "CLOSED", ago(9))] }
+    issues: { nodes: [issue(41, "หน้า Files โหลดช้าบนมือถือ", "OPEN", ago(2)), issue(40, "เพิ่ม search lessons", "OPEN", ago(5)), issue(39, "log ต้องอ่านย้อนหลังได้", "OPEN", ago(6)), issue(38, "parser รับ Handoff เอกพจน์", "OPEN", ago(7)), issue(37, "dark mode contrast", "OPEN", ago(8)), issue(36, "statusline usage", "OPEN", ago(9)), issue(30, "แก้ token form", "CLOSED", ago(9))] }
   }
 });
 const empty = () => ({ rateLimit: { cost: 1, remaining: 4990 }, repository: { ref: { target: { history: { nodes: [] } } }, runs: null, agents: null, lessons: null, issues: { nodes: [] } } });
@@ -54,3 +54,11 @@ const CORS = {
   "access-control-expose-headers": "ETag, Link, Retry-After, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-RateLimit-Used, X-RateLimit-Resource"
 };
 module.exports = { data, empty, CORS, ago };
+
+const usage = (kind) => {
+  const now = Date.now();
+  if (kind === "live") return { schema: 1, five_hour: { used_percentage: 21, resets_at: Math.floor((now + 88 * 60000) / 1000) }, seven_day: { used_percentage: 12, resets_at: Math.floor((now + 4 * 86400000) / 1000) }, captured_at: new Date(now - 2 * 60000).toISOString() };
+  if (kind === "stale") return { schema: 1, five_hour: { used_percentage: 21, resets_at: Math.floor((now - 3600000) / 1000) }, seven_day: null, captured_at: new Date(now - 4 * 3600000).toISOString() };
+  return null;
+};
+module.exports.usage = usage;
