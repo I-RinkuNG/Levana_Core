@@ -96,7 +96,7 @@ const ws = () => get("ws", async () => {
   notes = m.notes;
   const is = m.issues, got = m.files;
   const of = (d) => got.filter((x) => x.dir === d);
-  const runs = of("runs").map((x) => KeshParse.parseRunLog(x.md, x.name + ".md"));
+  const runs = of("runs").filter((x) => !x.name.startsWith("_")).map((x) => KeshParse.parseRunLog(x.md, x.name + ".md")).filter((r) => KeshParse.isRun(r.run_id, r));
   const agents = of("agents").map((x) => Object.assign({ name: x.name }, KeshParse.parseFrontmatter(x.md)));
   const l = of("lessons"), lessons = {};
   for (const x of l) lessons[x.name] = KeshParse.countLessons(x.md);

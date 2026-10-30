@@ -17,7 +17,7 @@ KeshViews.run = (() => {
       const rate = rows.length ? run.bounce_count / rows.length : 0, bad = L.bounceLevel(rate) === "bad";
       const tk = {};
       ag.forEach((x) => { tk[x.agent] = x.tokens; });
-      const st = strip([{ k: "TOKEN", v: L.fmtTok(tokens) }, { k: "HANDOFF", v: String(rows.length) }, { k: "BOUNCE", v: String(run.bounce_count) }, { k: "5H SHARE", v: Math.round(L.pct5h(tokens)) + "%", d: 1 }, { k: "STATUS", v: { done: "เสร็จ", pending: "ค้าง", open: "กำลังรัน" }[run.status], d: 1 }], "สรุป run");
+      const st = strip([{ k: "TOKEN", v: L.fmtTok(tokens) }, { k: "HANDOFF", v: String(rows.length) }, { k: "BOUNCE", v: String(run.bounce_count) }, { k: "5H SHARE", v: Math.round(L.pct5h(tokens)) + "%", d: 1 }, { k: "STATUS", v: { done: "เสร็จ", open: "กำลังรัน" }[run.status] + (run.has_followups ? " · มีงานค้างต่อ" : ""), d: 1 }], "สรุป run");
       const summary = blk({
         tab: tab("RUN", pad(seq)), title: "สรุป", cls: "o5 m-hide",
         children: h("div", { className: "kpis" },

@@ -286,12 +286,12 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   const runChip = (r) => {
     if (r.bounce_count > 0) return { kind: "bad", text: "ตีกลับ " + r.bounce_count };
     if (r.status === "done") return { kind: "ok", text: "เสร็จ" };
-    return r.status === "pending" ? { kind: "run", text: "ค้าง" } : { kind: "run", text: "กำลังรัน" };
+    return { kind: "run", text: "กำลังรัน" };
   };
   const runRows = (runs, f) => {
     const { q, status, agent } = f || {}, s = String(q || "").trim().toLowerCase();
     return (runs || []).filter((r) => (!s || (r.run_id + " " + r.title).toLowerCase().includes(s)) &&
-      (!status || status === "all" || (status === "bounce" ? r.bounce_count > 0 : r.status === status)) &&
+      (!status || status === "all" || (status === "bounce" ? r.bounce_count > 0 : status === "followups" ? !!r.has_followups : r.status === status)) &&
       (!agent || (r.handoffs || []).some((h) => h.to === agent))).sort((a, b) => String(b.run_id).localeCompare(String(a.run_id)));
   };
   const usageSeries = (agg, rates) => ({

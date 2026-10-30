@@ -184,11 +184,12 @@ test("agentCards: 10 cards, groups, 7-day window, bounce level", () => {
 });
 
 test("runRows: sort desc, filters", () => {
-  const rs = [{ run_id: "2026-10-01-a", title: "Alpha", status: "done", bounce_count: 0, handoffs: [{ to: "kotev" }] }, { run_id: "2026-10-03-b", title: "Beta", status: "open", bounce_count: 1, handoffs: [] }, { run_id: "2026-10-02-c", title: "Gamma", status: "pending", bounce_count: 0, handoffs: [] }];
+  const rs = [{ run_id: "2026-10-01-a", title: "Alpha", status: "done", bounce_count: 0, handoffs: [{ to: "kotev" }] }, { run_id: "2026-10-03-b", title: "Beta", status: "open", bounce_count: 1, handoffs: [] }, { run_id: "2026-10-02-c", title: "Gamma", status: "done", has_followups: true, bounce_count: 0, handoffs: [] }];
   assert.deepEqual(L.runRows(rs).map((r) => r.title), ["Beta", "Gamma", "Alpha"]);
   assert.deepEqual(L.runRows(rs, { q: "ALP" }).map((r) => r.title), ["Alpha"]);
   assert.deepEqual(L.runRows(rs, { status: "bounce" }).map((r) => r.title), ["Beta"]);
-  assert.deepEqual(L.runRows(rs, { status: "done" }).map((r) => r.title), ["Alpha"]);
+  assert.deepEqual(L.runRows(rs, { status: "done" }).map((r) => r.title), ["Gamma", "Alpha"]);
+  assert.deepEqual(L.runRows(rs, { status: "followups" }).map((r) => r.title), ["Gamma"]);
   assert.deepEqual(L.runRows(rs, { agent: "kotev" }).map((r) => r.title), ["Alpha"]);
   assert.deepEqual(L.runRows(rs, { q: "zzz" }), []);
   assert.deepEqual(L.runRows(null), []);

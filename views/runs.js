@@ -1,6 +1,6 @@
 KeshViews.runs = (() => {
   const { h, tab, blk, btn, empty, runRow } = KeshUI, A = KeshApi, L = KeshLogic;
-  const ST = [["all", "ทั้งหมด"], ["open", "กำลังรัน"], ["pending", "ค้าง"], ["done", "เสร็จ"], ["bounce", "ตีกลับ"]];
+  const ST = [["all", "ทั้งหมด"], ["open", "กำลังรัน"], ["followups", "มีงานค้างต่อ"], ["done", "เสร็จ"], ["bounce", "ตีกลับ"]];
   let q = "", status = "all";
   return {
     skel: ["Runs", [["LOG", "Run ทั้งหมด", 4]]],

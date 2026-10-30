@@ -249,7 +249,7 @@ const KeshParse = (() => {
         flush();
         current = h2[1];
         sectionLines = [];
-        inHandoffs = /^Handoffs\b/i.test(current);
+        inHandoffs = /^Handoffs?\b/i.test(current);
         tableState = 0;
         continue;
       }
@@ -284,7 +284,12 @@ const KeshParse = (() => {
       }
     }
     const dm = /tokens รวม[^:]*:\s*~?([\d,]+)/.exec(text);
-    const hasFinal = Object.keys(sections).some((k) => k.startsWith("ผลสุดท้าย"));
+    const nonEmpty = (v) => v != null && String(v).trim() !== "";
+    const last = handoffs[handoffs.length - 1];
+    const finished = Object.keys(sections).some((k) => /^(ผลสุดท้าย|สรุป|ผล|สถานะ)/.test(k)) ||
+      nonEmpty(meta["ผล"]) ||
+      (handoffs.length > 0 && handoffs.every((h) => nonEmpty(h.result)));
+    const status = finished ? "done" : !handoffs.length || !nonEmpty(last.result) ? "open" : "done";
 
     return {
       run_id: base,
@@ -299,9 +304,17 @@ const KeshParse = (() => {
       pending_items,
       declared_total: dm ? parseInt(dm[1].replace(/,/g, ""), 10) : null,
       tokens_total: tok.total,
-      status: pending_items.length ? "pending" : hasFinal ? "done" : "open",
+      status,
+      has_followups: pending_items.length > 0,
+      has_title: !!tm,
       bounce_count: handoffs.filter((h) => h.bounce_round > 0).length
     };
+  }
+
+  function isRun(name, run) {
+    if (String(name || "").startsWith("_")) return false;
+    if (!run) return false;
+    return run.handoffs.length > 0 || !!run.has_title;
   }
 
   function resultText(result) {
@@ -563,11 +576,11 @@ const KeshParse = (() => {
     }
 
     const weeks = {};
-    const wk = (w) => weeks[w] || (weeks[w] = { week: w, runs: { done: 0, pending: 0, open: 0 }, opened: 0, closed: 0 });
+    const wk = (w) => weeks[w] || (weeks[w] = { week: w, runs: { done: 0, open: 0 }, opened: 0, closed: 0 });
     for (const r of rs) {
       const w = weekStart(runDate(r));
       if (!w) continue;
-      const st = r.status === "done" || r.status === "pending" ? r.status : "open";
+      const st = r.status === "done" ? "done" : "open";
       wk(w).runs[st]++;
     }
     for (const i of issues || []) {
@@ -613,6 +626,7 @@ const KeshParse = (() => {
     parseList,
     countLessons,
     parseRunLog,
+    isRun,
     extractPayload,
     extractFileText,
     extractDir,

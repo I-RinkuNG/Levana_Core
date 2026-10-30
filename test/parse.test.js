@@ -74,7 +74,8 @@ test("fb-post-reader run: table continues across a blank line, or has none", { s
   assert.equal(b.bounce_round, 1);
   assert.equal(r.tokens_total, 105358);
   assert.equal(r.pending_items.length, 2);
-  assert.equal(r.status, "pending");
+  assert.equal(r.status, "done");
+  assert.equal(r.has_followups, true);
   assert.equal(r.handoffs[4].to, "cheker");
 });
 
@@ -268,4 +269,77 @@ test("aggregate over real runs", { skip }, () => {
   assert.equal(agg.g6.length, runs.length);
   assert.ok(agg.g7.self >= 2 && agg.g7.out_of_flow >= 1 && agg.g7.rin_feedback >= 1);
   assert.deepEqual(P.aggregate([], [], [], {}).g1, []);
+});
+
+const suffixes = ["channel-and-render-build", "followups", "session-close", "shutaf-next-steps", "retro-fixes", "ux-principles", "levana-fetch-error", "branch-cleanup", "merge-kesh-main", "lab-team-setup", "retro-skill", "autoharness-review", "zekher-z1-z2-z4"];
+const allRuns = () => {
+  const dir = path.join(ROOT, "runs");
+  return fs.readdirSync(dir).filter((f) => f.endsWith(".md") && !f.startsWith("_")).map((f) => P.parseRunLog(read("runs/" + f), f)).filter((r) => P.isRun(r.run_id, r));
+};
+
+test("real runs: _template and non-runs are excluded", { skip }, () => {
+  const names = fs.readdirSync(path.join(ROOT, "runs")).filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, ""));
+  const kept = names.filter((n) => P.isRun(n, P.parseRunLog(read("runs/" + n + ".md"), n + ".md")));
+  assert.ok(!kept.includes("_template"));
+  for (const x of ["affiliate-pipeline-research-qc1", "ai-mascot-research-qc1", "2026-10-29-retro"]) assert.ok(!kept.some((n) => n.endsWith(x)), x);
+});
+
+test("real runs: known finished runs are done", { skip }, () => {
+  const rs = allRuns();
+  for (const sfx of suffixes) {
+    const r = rs.find((x) => x.run_id.endsWith(sfx));
+    assert.ok(r, sfx);
+    assert.equal(r.status, "done", sfx);
+  }
+  for (const sfx of ["autoharness-review", "zekher-z1-z2-z4"]) assert.ok(rs.find((x) => x.run_id.endsWith(sfx)).handoffs.length > 0);
+});
+
+test("real runs: former pending runs are done with followups", { skip }, () => {
+  const rs = allRuns();
+  const names = ["fb-post-reader", "levana-dashboard", "skills-review", "workspace-dashboard", "branch-main", "superpowers-lessons"];
+  for (const sfx of names) {
+    const r = rs.find((x) => x.run_id.endsWith(sfx));
+    assert.equal(r.status, "done", sfx);
+    assert.equal(r.has_followups, true, sfx);
+  }
+});
+
+test("real runs: at most 2 open", { skip }, () => {
+  assert.ok(allRuns().filter((r) => r.status === "open").length <= 2);
+});
+
+const mk = (body, extra) => P.parseRunLog("# Run: T (2026-01-01)\n" + (extra || "") + "\n" + body, "2026-01-01-t.md");
+const TBL = (res) => "| # | จาก → ถึง | เหตุผล | ผล | tokens |\n|---|---|---|---|---|\n| 1 | kesh → kotev | x | " + res + " | 10 |\n";
+
+test("fixture: ## สรุป section marks done", () => {
+  assert.equal(mk("## Handoffs\n" + TBL("") + "\n## สรุป\nok\n").status, "done");
+});
+
+test("fixture: singular ## Handoff heading parses the table", () => {
+  const r = mk("## Handoff\n" + TBL("ok"));
+  assert.equal(r.handoffs.length, 1);
+  assert.equal(r.status, "done");
+});
+
+test("fixture: meta ผล marks done", () => {
+  assert.equal(mk("## Handoffs\n" + TBL(""), "**ผล:** เสร็จแล้ว").status, "done");
+});
+
+test("fixture: all handoff results filled is done", () => {
+  assert.equal(mk("## Handoffs\n" + TBL("ok")).status, "done");
+});
+
+test("fixture: empty last handoff result is open", () => {
+  assert.equal(mk("## Handoffs\n" + TBL("")).status, "open");
+});
+
+test("fixture: followups do not override status", () => {
+  const r = mk("## Handoffs\n" + TBL("ok") + "\n## ค้าง\n- a\n");
+  assert.equal(r.status, "done");
+  assert.equal(r.has_followups, true);
+});
+
+test("fixture: _template name is not a run", () => {
+  assert.equal(P.isRun("_template", mk("## Handoffs\n" + TBL("ok"))), false);
+  assert.equal(P.isRun("2026-01-01-x", P.parseRunLog("# QC\n\nTally", "x.md")), false);
 });
