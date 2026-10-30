@@ -12,25 +12,41 @@ const open = log("Kesh → Tzayar → Amet → Kotev → Bochek", [
 ]);
 const done = log("Kesh → Kotev", [["Kesh → Kotev", "a", "ok", "58,000"]], true);
 
-test("parseRoute: defaults, args, odd chars", () => {
-  assert.deepEqual(L.parseRoute(""), { page: "today", arg: null });
-  assert.deepEqual(L.parseRoute("#nope"), { page: "today", arg: null });
-  assert.deepEqual(L.parseRoute("#agents"), { page: "agents", arg: null });
-  assert.deepEqual(L.parseRoute("#run/2026-10-29-a%20b"), { page: "run", arg: "2026-10-29-a b" });
-  assert.deepEqual(L.parseRoute("#run/%E0%A4%A"), { page: "run", arg: "%E0%A4%A" });
-  assert.deepEqual(L.parseRoute("#run"), { page: "runs", arg: null });
-  assert.deepEqual(L.parseRoute("#issue/41"), { page: "issue", arg: "41" });
+test("parseRoute: six pages, args, query, redirects", () => {
+  assert.deepEqual(L.parseRoute(""), { page: "summary", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/"), { page: "summary", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/agents"), { page: "agents", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#agents"), { page: "agents", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/run/2026-10-29-a%20b"), { page: "run", arg: "2026-10-29-a b", query: {} });
+  assert.deepEqual(L.parseRoute("#/run/%E0%A4%A"), { page: "run", arg: "%E0%A4%A", query: {} });
+  assert.deepEqual(L.parseRoute("#/run"), { page: "runs", arg: null, query: {} });
+  assert.deepEqual(L.parseRoute("#/issue/41"), { page: "issue", arg: "41", query: {} });
+  assert.deepEqual(L.parseRoute("#/files/lessons/kotev.md?view=graph&gm=b"), { page: "files", arg: "lessons/kotev.md", query: { view: "graph", gm: "b" } });
+  assert.deepEqual(L.parseRoute("#/log"), { page: "log", arg: null, query: {} });
 });
 
-test("navModel: bottom 5, rail 3 groups, active mapping", () => {
-  const n = L.navModel({ runs: 29 }, "run");
-  assert.equal(n.bottom.length, 5);
-  assert.equal(n.rail.length, 3);
+test("parseRoute: legacy routes redirect", () => {
+  const r = (h) => L.parseRoute(h).redirect;
+  assert.equal(r("#/today"), "#/");
+  assert.equal(r("#/usage"), "#/");
+  assert.equal(r("#/more"), "#/");
+  assert.equal(r("#/errors"), "#/log");
+  assert.equal(r("#/lessons"), "#/files/lessons");
+  assert.equal(r("#/lessons/kotev"), "#/files/lessons/kotev.md");
+  assert.equal(r("#/nope"), "#/");
+  assert.equal(r("#today"), "#/");
+  assert.equal(r("#/runs"), undefined);
+  assert.equal(L.parseRoute("#/lessons/kotev").page, "files");
+});
+
+test("navModel: six items, active mapping", () => {
+  const n = L.navModel("run");
+  assert.deepEqual(n.items.map((i) => i.label), ["สรุป", "Runs", "Issues", "Agents", "Files", "Log"]);
+  assert.deepEqual(n.items.map((i) => i.href), ["#/", "#/runs", "#/issues", "#/agents", "#/files", "#/log"]);
   assert.equal(n.activeKey, "runs");
-  assert.equal(n.rail[1][0].count, 29);
-  assert.equal(L.navModel({}, "lessons").activeBottom, "more");
-  assert.equal(L.navModel({}, "lessons").activeKey, "lessons");
-  assert.equal(L.navModel({}, "issue").activeKey, "issues");
+  assert.equal(L.navModel("issue").activeKey, "issues");
+  assert.equal(L.navModel("summary").activeKey, "summary");
+  assert.equal(n.items.some((i) => "count" in i), false);
 });
 
 test("bounceLevel: exactly 20% ok, above bad", () => {

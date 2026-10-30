@@ -55,7 +55,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     lessons: object(expression: $lessons) { ...D }
     issues(first: 100, states: [OPEN, CLOSED], orderBy: { field: CREATED_AT, direction: DESC }) {
       pageInfo { hasNextPage endCursor }
-      nodes { number title state body createdAt closedAt url author { login } comments { totalCount } labels(first: 20) { nodes { name } } }
+      nodes { number title state body createdAt closedAt url author { login } comments { totalCount } assignees(first: 1) { nodes { login } } labels(first: 20) { nodes { name color } } }
     }
   }
 }`;
@@ -64,7 +64,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   repository(owner: $owner, name: $name) {
     issues(first: 100, after: $after, states: [OPEN, CLOSED], orderBy: { field: CREATED_AT, direction: DESC }) {
       pageInfo { hasNextPage endCursor }
-      nodes { number title state body createdAt closedAt url author { login } comments { totalCount } labels(first: 20) { nodes { name } } }
+      nodes { number title state body createdAt closedAt url author { login } comments { totalCount } assignees(first: 1) { nodes { login } } labels(first: 20) { nodes { name color } } }
     }
   }
 }`;
@@ -117,7 +117,8 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
       created_at: i.createdAt, closed_at: i.closedAt, html_url: i.url,
       user: { login: (i.author && i.author.login) || "ghost" },
       comments: i.comments ? i.comments.totalCount : 0,
-      labels: ((i.labels && i.labels.nodes) || []).map((l) => ({ name: l.name }))
+      labels: ((i.labels && i.labels.nodes) || []).map((l) => (l.color ? { name: l.name, color: l.color } : { name: l.name })),
+      assignee: ((i.assignees && i.assignees.nodes && i.assignees.nodes[0]) || {}).login || ""
     }));
     const hist = repo.ref && repo.ref.target && repo.ref.target.history;
     const commits = ((hist && hist.nodes) || []).map((c) => ({
@@ -126,6 +127,10 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     return { files, partial, issues, commits, notes: gqlNotes(data._errors), branchFound: !!repo.ref };
   };
 
+  const excerpt = (body, n) => {
+    const t = String(body || "").replace(/```[\s\S]*?```/g, " ").replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/<[^>]+>/g, " ").replace(/[#>*_`|-]+/g, " ").replace(/\s+/g, " ").trim();
+    return t.length > n ? t.slice(0, n) + "…" : t;
+  };
   const BOUNCE_WARN = 0.2, BOUNCE_TICK = 40, H5 = 5 * 3600000, DAY = 86400000;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const pad2 = (n) => String(n).padStart(2, "0");
@@ -154,32 +159,39 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const projection = (usedPct, elapsedMs) => ({ pctAtReset: elapsedMs > 0 ? usedPct * (H5 / elapsedMs) : usedPct });
 
-  const PAGES = ["today", "runs", "run", "issues", "issue", "agents", "usage", "lessons", "files", "errors", "more"];
+  const PAGES = ["summary", "runs", "run", "issues", "issue", "agents", "files", "log"];
+  const REDIRECT = { today: "#/", usage: "#/", lessons: "#/files/lessons", errors: "#/log", more: "#/" };
+  const parseQuery = (q) => {
+    const out = {};
+    for (const kv of String(q || "").split("&")) {
+      if (!kv) continue;
+      const i = kv.indexOf("=");
+      const dec = (x) => { try { return decodeURIComponent(x); } catch (e) { return x; } };
+      out[dec(i < 0 ? kv : kv.slice(0, i))] = i < 0 ? "" : dec(kv.slice(i + 1));
+    }
+    return out;
+  };
   const parseRoute = (hash) => {
-    const s = String(hash || "").replace(/^#/, "");
+    let s = String(hash || "").replace(/^#\/?/, "");
+    const qi = s.indexOf("?");
+    const query = parseQuery(qi < 0 ? "" : s.slice(qi + 1));
+    if (qi >= 0) s = s.slice(0, qi);
+    if (!s) return { page: "summary", arg: null, query };
     const i = s.indexOf("/");
-    const page = i < 0 ? s : s.slice(0, i);
+    const head = i < 0 ? s : s.slice(0, i);
     let arg = i < 0 ? null : s.slice(i + 1);
     if (arg != null) try { arg = decodeURIComponent(arg); } catch (e) {}
-    if (!PAGES.includes(page)) return { page: "today", arg: null };
-    if ((page === "run" || page === "issue") && !arg) return { page: page + "s", arg: null };
-    return { page, arg: page === "run" || page === "issue" ? arg : null };
+    if (head === "summary") return { page: "summary", arg: null, query };
+    if (head === "lessons" && arg) return { page: "files", arg: "lessons/" + arg.replace(/\.md$/, "") + ".md", query, redirect: "#/files/lessons/" + arg.replace(/\.md$/, "") + ".md" };
+    if (REDIRECT[head]) return { page: head === "lessons" ? "files" : head === "errors" ? "log" : "summary", arg: head === "lessons" ? "lessons" : null, query, redirect: REDIRECT[head] };
+    if (!PAGES.includes(head)) return { page: "summary", arg: null, query, redirect: "#/" };
+    if ((head === "run" || head === "issue") && !arg) return { page: head + "s", arg: null, query };
+    return { page: head, arg: head === "run" || head === "issue" || head === "files" ? arg || null : null, query };
   };
-  const NAV = {
-    today: ["วันนี้", "today"], runs: ["Runs", "runs"], issues: ["Issues", "issues"], agents: ["Agents", "agents"], more: ["เพิ่มเติม", "more"],
-    usage: ["การใช้ token", "usage"], lessons: ["Lessons", "lessons"], files: ["ไฟล์", "files"], errors: ["Errors", "errors"]
-  };
-  const navModel = (counts, page) => {
-    const c = counts || {};
-    const item = (k) => ({ key: k, label: NAV[k][0], icon: NAV[k][1], href: "#" + k, count: c[k] == null ? null : c[k] });
+  const NAV = [["summary", "สรุป", "sum", "#/"], ["runs", "Runs", "runs", "#/runs"], ["issues", "Issues", "issue", "#/issues"], ["agents", "Agents", "agents", "#/agents"], ["files", "Files", "files", "#/files"], ["log", "Log", "log", "#/log"]];
+  const navModel = (page) => {
     const activeKey = { run: "runs", issue: "issues" }[page] || page;
-    const sub = ["usage", "lessons", "files", "errors"];
-    return {
-      bottom: ["today", "runs", "issues", "agents", "more"].map(item),
-      rail: [["today"], ["runs", "issues", "agents"], sub].map((g) => g.map(item)),
-      activeKey,
-      activeBottom: sub.includes(activeKey) ? "more" : activeKey
-    };
+    return { items: NAV.map(([key, label, icon, href]) => ({ key, label, icon, href })), activeKey };
   };
 
   const runDay = (r) => (r.date || String(r.run_id || "").slice(0, 10) || "");
@@ -343,6 +355,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (i < t.length) out.push({ t: t.slice(i), hit: false });
     return out;
   };
-  return { bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
+  return { excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;

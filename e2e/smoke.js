@@ -8,8 +8,9 @@ const server = http.createServer((q, r) => {
   const p = path.join(ROOT, decodeURIComponent(q.url.split("?")[0]).replace(/\/$/, "/index.html"));
   fs.readFile(p.startsWith(ROOT) ? p : "/nope", (e, b) => e ? (r.writeHead(404), r.end()) : (r.writeHead(200, { "content-type": MIME[path.extname(p)] || "text/plain" }), r.end(b)));
 });
-const PAGES = ["today", "runs", "run", "issues", "issue", "agents", "usage", "lessons", "files", "errors", "more"];
-const OUT = process.env.OUT || path.join(ROOT, "design/v2/build-shots");
+const PAGES = ["summary", "runs", "run", "issues", "issue", "agents", "files", "log"];
+const OUT = path.resolve(process.env.OUT || path.join(ROOT, "design/v3/build-shots"));
+for (const bad of ["design/v2", "design/shots"]) if (OUT === path.join(ROOT, bad) || OUT.startsWith(path.join(ROOT, bad) + path.sep)) { console.error("refusing to write shots into " + bad); process.exit(2); }
 const only = process.argv[2];
 (async () => {
   await new Promise((r) => server.listen(0, r));
@@ -18,7 +19,7 @@ const only = process.argv[2];
   const fails = [];
   fs.mkdirSync(OUT, { recursive: true });
   const runId = F.ago(0) + "-levana-redesign";
-  const hash = { run: "#run/" + runId, issue: "#issue/41" };
+  const hash = { summary: "#/", run: "#/run/" + runId, issue: "#/issue/41" };
   for (const width of [390, 1440]) for (const mode of ["light", "dark"]) {
     const ctx = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, colorScheme: mode, locale: "th-TH" });
     await ctx.addInitScript(() => { try { localStorage.setItem("levana_token", "ghp_test"); } catch (e) {} });
@@ -36,7 +37,7 @@ const only = process.argv[2];
     for (const name of PAGES) {
       if (only && only !== name) continue;
       errs.length = 0;
-      await page.goto(base + (hash[name] || "#" + name));
+      await page.goto(base + (hash[name] || "#/" + name));
       await page.evaluate((m) => { document.documentElement.dataset.mode = m; }, mode);
       await page.reload();
       await page.waitForSelector("#main[aria-busy=false]", { timeout: 8000 }).catch(() => fails.push(`${name} ${width} ${mode}: no h1 / still busy`));
