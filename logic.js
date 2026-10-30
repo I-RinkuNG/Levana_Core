@@ -140,7 +140,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     const list = (files || []).filter((f) => /\.md$/i.test(f.path));
     const paths = new Set(list.map((f) => f.path)), byBase = {};
     for (const f of list) (byBase[f.path.split("/").pop()] || (byBase[f.path.split("/").pop()] = [])).push(f.path);
-    const nodes = list.map((f) => ({ id: "f:" + f.path, kind: "file", label: f.path.split("/").pop(), path: f.path }));
+    const nodes = list.map((f) => { const b = f.path.split("/").pop(), d = f.path.split("/").slice(-2, -1)[0]; return { id: "f:" + f.path, kind: "file", label: byBase[b].length > 1 && d ? d + "/" + b : b, path: f.path }; });
     const links = [], seen = new Set();
     const add = (source, target, kind) => { if (source === target) return; const k = source + "|" + target + "|" + kind; if (seen.has(k)) return; seen.add(k); links.push({ source, target, kind }); };
     const B = mode === "b";

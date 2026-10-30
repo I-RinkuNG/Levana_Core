@@ -46,3 +46,8 @@ test("dedupe and no self links", () => {
   const g = L.buildGraph([{ path: "a.md", text: "[a](a.md) [b](b.md) [b](b.md) a.md" }, { path: "b.md", text: "" }], [], [], "a");
   assert.equal(g.links.length, 1);
 });
+
+test("duplicate basenames get folder-prefixed labels, ids stay path-unique", () => {
+  const g = L.buildGraph([{ path: "lessons/kotev.md", text: "" }, { path: "agents/kotev.md", text: "" }, { path: "README.md", text: "" }], [], [], "a");
+  assert.deepEqual(g.nodes.map((n) => [n.id, n.label]), [["f:lessons/kotev.md", "lessons/kotev.md"], ["f:agents/kotev.md", "agents/kotev.md"], ["f:README.md", "README.md"]]);
+});

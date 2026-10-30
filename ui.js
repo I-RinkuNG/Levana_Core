@@ -44,7 +44,7 @@ const KeshUI = (() => {
   };
   const dots = (pct, state, label) => {
     const n = state === "missing" ? 0 : Math.round((Number(pct) || 0) / 5);
-    return h("div", { className: "dots", role: "img", "aria-label": label }, Array.from({ length: 20 }, (_, i) => h("i", { className: i < n ? "f" : null })));
+    return h("div", { className: "dots" + (state === "stale" ? " stale" : ""), role: "img", "aria-label": label }, Array.from({ length: 20 }, (_, i) => h("i", { className: i < n ? "f" : null })));
   };
   const dl = (items) => h("dl", { className: "kpis" }, items.map((x) => h("div", h("dt", x.dt), h("dd", { className: "v" + (x.cls ? " " + x.cls : "") }, x.v), x.c ? h("dd", { className: "c" }, x.c) : null)));
   const table = (cols, rows, o = {}) => h("table", { className: o.cls || null, id: o.id || null },

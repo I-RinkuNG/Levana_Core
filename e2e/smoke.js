@@ -73,14 +73,23 @@ const noTr = () => { try { delete self.Translator; } catch (e) {} };
       await page.click(".xbtn").catch(() => {});
       await shot(page, "log-expanded-1440-light");
     });
-    await session(390, "light", { gql: "ok", usage: "live" }, async (page) => {
-      await go(page, "#/menu-shot".replace("menu-shot", "files/lessons/kotev.md"));
-      await page.click("#treeBtn");
-      await shot(page, "tree-sheet-390-light");
-      await page.keyboard.press("Escape");
-      await page.click("#menuBtn");
-      await shot(page, "drawer-390-light");
-    });
+    const vshot = (page, tag) => page.screenshot({ path: path.join(OUT, tag + ".png") });
+    const settled = (page, sel) => page.waitForFunction((q) => { const e = document.querySelector(q); return e && getComputedStyle(e).visibility === "visible" && e.getAnimations().length === 0; }, sel, { timeout: 4000 }).then(() => page.waitForTimeout(400));
+    for (const mode of ["light", "dark"]) {
+      await session(390, mode, { gql: "ok", usage: "live" }, async (page) => {
+        await go(page, "#/files/lessons/kotev.md");
+        if (mode === "light") {
+          await page.click("#treeBtn");
+          await settled(page, ".tree.open");
+          await vshot(page, "tree-sheet-390-light");
+          await page.keyboard.press("Escape");
+          await page.waitForTimeout(400);
+        }
+        await page.click("#menuBtn");
+        await settled(page, ".side.open");
+        await vshot(page, "drawer-390-" + mode);
+      });
+    }
   }
   await browser.close(); server.close();
   console.log(fails.length ? "FAIL\n" + fails.join("\n") : "ALL OK");

@@ -33,7 +33,7 @@ const routes = async (ctx, state, sb) => {
       if (state.gql === "401") return send(401, { message: "Bad credentials" });
       if (state.gql === "502") return send(502, {});
       const aliases = (body.query || "").match(/f\d+: object\(expression: "[^"]+"\)/g);
-      if (aliases) return send(200, { data: Object.fromEntries(aliases.map((a) => { const m = /(f\d+): object\(expression: "[^:]*:([^"]+)"\)/.exec(a); return [m[1], { text: MD[m[2]] || "" }]; })) });
+      if (aliases) return send(200, { data: { repository: Object.fromEntries(aliases.map((a) => { const m = /(f\d+): object\(expression: "[^:]*:([^"]+)"\)/.exec(a); return [m[1], { text: MD[m[2]] || "" }]; })) } });
       return send(200, { data: state.gql === "empty" ? F.empty() : F.data() });
     }
     if (u.endsWith("/rate_limit")) return state.gql === "401" ? send(401, { message: "Bad credentials" }) : send(200, {});

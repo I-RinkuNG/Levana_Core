@@ -60,6 +60,31 @@ test("unconfigured: log stays local only, queue empty, flush is a no-op", async 
   assert.equal(K.configured(), false);
 });
 
+test("scrubs gho_/ghs_/ghu_ tokens", () => {
+  clear();
+  globalThis.LEVANA_CFG = { supabaseUrl: "", supabaseKey: "" };
+  K.log("info", "t", "a gho_abc123 b ghs_def456 c ghu_ghi789", { x: "ghu_zzz" });
+  const r = K.readLocal()[0];
+  assert.equal(r.message, "a [redacted] b [redacted] c [redacted]");
+  assert.equal(r.detail.x, "[redacted]");
+});
+
+test("refuses a service_role key (JWT or sb_secret_)", async () => {
+  clear();
+  const jwt = (role) => "eyJhbGciOiJIUzI1NiJ9." + Buffer.from(JSON.stringify({ role })).toString("base64url") + ".sig";
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return { status: 201 }; };
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: jwt("service_role") };
+  assert.equal(K.configured(), false);
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_secret_abc" };
+  assert.equal(K.configured(), false);
+  K.log("info", "e", "m");
+  await K.flush();
+  assert.equal(calls, 0);
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: jwt("anon") };
+  assert.equal(K.configured(), true);
+});
+
 test("configured: flush posts batches with headers; 4xx drops + logs locally; 5xx keeps", async () => {
   clear();
   globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_publishable_abc" };

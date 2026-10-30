@@ -40,7 +40,7 @@ const KeshGraph = (() => {
     const zoom = h("div", { className: "zoom" },
       h("button", { type: "button", "aria-label": "ซูมเข้า", onclick: () => g && g.zoom(g.zoom() * 1.4, 250) }, "+"),
       h("button", { type: "button", "aria-label": "ซูมออก", onclick: () => g && g.zoom(g.zoom() / 1.4, 250) }, "−"),
-      h("button", { type: "button", "aria-label": "พอดีจอ", style: "font-size:15px", onclick: () => g && g.zoomToFit(300, 30) }, "fit"));
+      h("button", { type: "button", "aria-label": "พอดีจอ", style: "font-size:15px", onclick: () => { if (!g) return; g.zoomToFit(300, 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 360); } }, "fit"));
     const panel = h("div", { className: "gpanel" });
     host.replaceChildren(h("div", { className: "gwrap", id: "graphView" }, h("div", { style: "display:grid;gap:8px" }, can, capped ? h("p", { className: "sub" }, "แสดง 400 ไฟล์แรกเท่านั้น") : null), panel));
     can.append(zoom);
@@ -49,21 +49,35 @@ const KeshGraph = (() => {
       const w = can.clientWidth || 600, hgt = can.clientHeight || 420;
       if (g) { g._destructor && g._destructor(); can.querySelectorAll("canvas,div.force-graph-container").forEach((x) => x.remove()); }
       const ink = css("--ink"), surface = css("--surface"), data_ = css("--data"), act = css("--act"), line = css("--line-strong"), onAgent = css("--on-agent");
+      const shownLabels = new Set();
+      let hover = null;
       const nodeObj = (n, ctx, k) => {
-        const fs = Math.max(13 / k, 4), r = 7;
+        const fs = 13 / k, r = 7;
         ctx.lineWidth = 2 / k;
         if (n.id === sel) { ctx.strokeStyle = act; ctx.lineWidth = 3 / k; ctx.beginPath(); ctx.arc(n.x, n.y, r + 5, 0, 2 * Math.PI); ctx.stroke(); ctx.lineWidth = 2 / k; }
         if (n.kind === "agent") { ctx.fillStyle = agentColor(n.agent); ctx.beginPath(); ctx.arc(n.x, n.y, r + 2, 0, 2 * Math.PI); ctx.fill(); ctx.fillStyle = onAgent; ctx.font = "600 " + fs + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(n.label[0], n.x, n.y); }
         else if (n.kind === "issue") { ctx.fillStyle = surface; ctx.strokeStyle = ink; ctx.beginPath(); ctx.moveTo(n.x, n.y - r - 3); ctx.lineTo(n.x + r + 3, n.y); ctx.lineTo(n.x, n.y + r + 3); ctx.lineTo(n.x - r - 3, n.y); ctx.closePath(); ctx.fill(); ctx.stroke(); }
         else { ctx.fillStyle = surface; ctx.strokeStyle = data_; ctx.beginPath(); ctx.rect(n.x - r, n.y - r, 2 * r, 2 * r); ctx.fill(); ctx.stroke(); }
+        if (!shownLabels.has(n.id)) return;
         ctx.fillStyle = ink; ctx.font = fs + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
         ctx.fillText(n.label, n.x, n.y + r + 4);
       };
+      const pickLabels = (ctx, k) => {
+        shownLabels.clear();
+        const fs = 13 / k, boxes = [];
+        ctx.font = fs + "px sans-serif";
+        const rank = (n) => n.id === sel ? 0 : n.id === hover ? 1 : n.kind === "file" ? 2 : n.kind === "agent" ? 3 : 4;
+        [...data.nodes].filter((n) => n.x != null).sort((a, b) => rank(a) - rank(b)).forEach((n) => {
+          const wd = ctx.measureText(n.label).width + 4 / k, x0 = n.x - wd / 2, y0 = n.y + 11, y1 = y0 + fs + 2 / k;
+          const hit = boxes.some((b) => x0 < b[2] && x0 + wd > b[0] && y0 < b[3] && y1 > b[1]);
+          if (!hit || rank(n) < 2) { shownLabels.add(n.id); boxes.push([x0, y0, x0 + wd, y1]); }
+        });
+      };
       g = FG()(can).width(w).height(hgt).graphData(data).nodeId("id").backgroundColor("rgba(0,0,0,0)")
-        .nodeCanvasObject(nodeObj).nodePointerAreaPaint((n, color, ctx) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, 2 * Math.PI); ctx.fill(); })
+        .onRenderFramePre(pickLabels).onNodeHover((n) => { hover = n ? n.id : null; can.style.cursor = n ? "pointer" : ""; }).nodeCanvasObject(nodeObj).nodePointerAreaPaint((n, color, ctx) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, 2 * Math.PI); ctx.fill(); })
         .linkColor(() => line).linkWidth((l) => l.kind === "relation" ? 1 : 1.5).linkLineDash((l) => l.kind === "mention" ? [4, 3] : l.kind === "relation" ? [1, 3] : null)
         .warmupTicks(reduce ? 100 : 0).cooldownTicks(reduce ? 0 : 120).onNodeClick((n) => { location.hash = hashFor(n); })
-        .onEngineStop(() => { if (!can.dataset.fit) { can.dataset.fit = "1"; g.zoomToFit(200, 30); } });
+        .onEngineStop(() => { if (!can.dataset.fit) { can.dataset.fit = "1"; g.zoomToFit(200, 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 260); } });
       if (reduce) setTimeout(() => g.zoomToFit(0, 30), 0);
       KeshApp.ev("info", "graph_open", "เปิดกราฟ", { mode: m, nodes: data.nodes.length, links: data.links.length });
     };

@@ -42,7 +42,7 @@ const data = () => ({
     ref: { target: { history: { nodes: [{ oid: "1a4e9f3aaaaaaa", message: "init", author: { name: "Rin", date: ago(0) + "T01:00:00Z" } }] } } },
     runs: tree(Object.entries(RUNS()).map(([k, v]) => [k, v])),
     agents: tree(AGENTS.map((a) => [a, `---\nname: ${a}\ndescription: "${a} agent"\ntools: Read, Grep\nmodel: sonnet\n---\n\nbody`])),
-    lessons: tree(AGENTS.slice(0, 6).map((a, i) => [a, "# lessons\n\n" + Array.from({ length: 3 + i * 2 }, (_, j) => `- 2026-10-2${j % 9} ${a} ใช้ grep แทน find ได้ผล (run ${j})`).join("\n")])),
+    lessons: tree(AGENTS.slice(0, 6).map((a, i) => [a, "# lessons\n\n" + Array.from({ length: 3 + i * 2 }, (_, j) => `- 2026-10-2${j % 9} ${a} ใช้ grep แทน find ได้ผล (run ${j})`).join("\n") + (a === "kotev" ? "\n- ดู [rosh](rosh.md) และ agents/bochek.md" : a === "rosh" ? "\n- ดู [kotev](kotev.md)" : "")])),
     issues: { nodes: [issue(41, "หน้า Files โหลดช้าบนมือถือ", "OPEN", ago(2)), issue(40, "เพิ่ม search lessons", "OPEN", ago(5)), issue(39, "log ต้องอ่านย้อนหลังได้", "OPEN", ago(6)), issue(38, "parser รับ Handoff เอกพจน์", "OPEN", ago(7)), issue(37, "dark mode contrast", "OPEN", ago(8)), issue(36, "statusline usage", "OPEN", ago(9)), issue(30, "แก้ token form", "CLOSED", ago(9))] }
   }
 });

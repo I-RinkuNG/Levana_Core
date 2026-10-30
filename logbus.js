@@ -2,14 +2,21 @@ const KeshLog = (() => {
   const G = typeof window !== "undefined" ? window : globalThis;
   const QK = "levana_logq", LK = "levana_log_local", AK = "levana_log_auth", Q_CAP = 500, LOCAL_CAP = 1000, BATCH = 50, LEVELS = ["debug", "info", "warn", "error"];
   const cfg = () => G.LEVANA_CFG || {};
-  const configured = () => !!(cfg().supabaseUrl && cfg().supabaseKey);
+  // A service_role key bypasses RLS and must never ship to a browser: treat it as not configured.
+  const isServiceKey = (k) => {
+    if (/^sb_secret_/.test(k)) return true;
+    const p = /^eyJ[\w-]*\.([\w-]+)\./.exec(k);
+    if (!p) return false;
+    try { const b = p[1].replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(b + "=".repeat((4 - b.length % 4) % 4))).role === "service_role"; } catch (e) { return false; }
+  };
+  const configured = () => !!(cfg().supabaseUrl && cfg().supabaseKey) && !isServiceKey(String(cfg().supabaseKey));
   const pad = (n, l) => String(n).padStart(l || 2, "0");
   const isoOffset = (d) => {
     const o = -d.getTimezoneOffset(), a = Math.abs(o);
     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + "." + pad(d.getMilliseconds(), 3) + (o >= 0 ? "+" : "-") + pad(Math.floor(a / 60)) + ":" + pad(a % 60);
   };
   const sid = Math.random().toString(36).slice(2, 12);
-  const scrub = (v) => typeof v === "string" ? v.replace(/(ghp_|github_pat_|sb_secret_)[A-Za-z0-9_]+/g, "[redacted]") : v;
+  const scrub = (v) => typeof v === "string" ? v.replace(/(ghp_|gho_|ghs_|ghu_|github_pat_|sb_secret_)[A-Za-z0-9_]+/g, "[redacted]") : v;
   const scrubDeep = (v, d = 0) => d > 4 ? null : Array.isArray(v) ? v.map((x) => scrubDeep(x, d + 1)) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).filter(([k]) => !/token|authorization|secret|password|apikey/i.test(k)).map(([k, x]) => [k, scrubDeep(x, d + 1)])) : scrub(v);
   const device = () => {
     const n = typeof navigator !== "undefined" ? navigator : {}, u = n.userAgentData;

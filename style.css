@@ -167,6 +167,8 @@ html.shot .tree,html.shot .dbar{position:static!important;height:auto!important;
 .dots{display:none;grid-template-columns:repeat(10,1fr);gap:var(--s2);width:100%}
 .dots i{aspect-ratio:1;max-width:28px;border-radius:50%;border:2px solid var(--line-strong)}
 .dots i.f{background:var(--data);border-color:var(--data)}
+.dots.stale i.f{background:var(--line-strong);border-color:var(--line-strong)}
+.dmain.stale b{color:var(--ink-2)}
 .dmain{display:none;width:100%;align-items:baseline;gap:var(--s3);margin-bottom:var(--s3)}
 .dmain b{font:600 var(--t-hero)/1.1 var(--font-disp)}
 @media (max-width:599px){.ring{display:none}.dots,.dmain{display:grid}.dmain{display:flex}}
@@ -238,6 +240,8 @@ td .tags{display:flex;gap:6px;flex-wrap:wrap}
   table.stack,table.stack tbody,table.stack tr,table.stack td{display:block}
   table.stack tr{padding:var(--s3) 0;border-bottom:1px solid var(--line)}
   table.stack td{border:0;padding:2px var(--s2)}
+  table.stack td.n{text-align:left}
+  table.stack td[data-l]{display:inline-block;margin-right:var(--s3)}
   table.stack td[data-l]::before{content:attr(data-l) " ";color:var(--ink-2);font-size:var(--t-meta)}
   table.stack tbody tr:hover td{background:none}
 }
@@ -313,7 +317,8 @@ td .tags{display:flex;gap:6px;flex-wrap:wrap}
 tr.jr td{background:var(--sunken)!important;padding:var(--s3) var(--s4)}
 tr.jr pre{margin:0;font:400 13px/1.6 var(--font-mono);overflow-x:auto;white-space:pre-wrap}
 tr.jr[hidden]{display:none}
-.lmsg{max-width:44ch}table.log td.mono,table.log td.e,table.log .lv{white-space:nowrap}table.log td.dv{min-width:150px}
+.lmsg{min-width:32ch;max-width:60ch}table.log td.mono,table.log .lv{white-space:nowrap}table.log td.e{min-width:14ch;overflow-wrap:anywhere}table.log td.rt{white-space:normal;width:150px;max-width:150px;overflow-wrap:anywhere;word-break:break-all}table.log td.dv{min-width:150px}
+@media (min-width:600px) and (max-width:1599px){table.log th:nth-child(6),table.log td.tz{display:none}}
 @media (max-width:599px){
   table.log thead{display:none}
   table.log,table.log tbody,table.log tr,table.log td{display:block}
@@ -389,3 +394,6 @@ main .sec:first-of-type{margin-top:var(--s8)}
 @media (max-width:1023px){.page.wide .dbar{top:var(--head-h)}}
 .dbar .btn.tr{margin-left:auto}
 .dpane .empty{padding-top:var(--s8)}
+
+h1[tabindex="-1"]{outline:0}
+.ph .right .btn{white-space:nowrap}

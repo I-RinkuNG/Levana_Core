@@ -21,7 +21,7 @@ KeshViews.summary = (() => {
     let body;
     if (st.state === "missing") {
       body = [h("div", { className: "umiss" }, ring(0, "missing", "ยังไม่มีค่า usage"), h("div", { className: "ufacts", style: "flex:1 1 220px" }, h("p", h("b", "ยังไม่มีค่า 5 ชั่วโมง")), h("p", { className: "sub" }, "ไม่พบ usage.json หรือไม่มี rate_limits (ต้องเป็นแผน Pro/Max และส่งข้อความใน Claude Code อย่างน้อย 1 ครั้ง)"))),
-        h("div", { className: "dmain" }, h("b", "—"), h("span", { className: "sub" }, "ยังไม่มีค่า")), dots(0, "missing", "ไม่มีข้อมูล")];
+        dots(0, "missing", "ไม่มีข้อมูล")];
     } else {
       const stale = st.state === "stale", pct = Math.round(st.pct);
       const when = st.capturedAt != null ? L.hhmm(st.capturedAt) : "—";
@@ -30,7 +30,7 @@ KeshViews.summary = (() => {
           h("div", h("dt", st.resetPassed ? "รอบนี้รีเซ็ตแล้วตอน" : "รีเซ็ต"), h("dd", st.resetsAt != null ? L.hhmm(st.resetsAt) : "—", st.resetPassed ? h("small", " ค่าใหม่ยังไม่เข้า") : null)))
         : h("dl", { className: "ufacts" }, h("div", h("dt", "รีเซ็ต"), h("dd", st.resetsAt != null ? [L.hhmm(st.resetsAt) + " ", h("small", "อีก " + L.fmtDur(st.resetsAt - now))] : "—")),
           h("div", h("dt", "ณ"), h("dd", [when + " ", h("small", "(" + L.ageText(now - st.capturedAt) + ")")])));
-      body = [h("div", { className: "dmain" }, h("b", pct + "%"), stale ? chip("warn", "ข้อมูลเก่า", "clock") : h("span", { className: "sub" }, "ใช้แล้ว")),
+      body = [h("div", { className: "dmain" + (stale ? " stale" : "") }, h("b", pct + "%"), stale ? chip("warn", "ข้อมูลเก่า", "clock") : h("span", { className: "sub" }, "ใช้แล้ว")),
         h("div", { className: "ubody" }, ring(st.pct, stale ? "stale" : "live", (stale ? "ข้อมูลเก่า " : "ใช้ไปแล้ว ") + pct + "% ของ 5 ชั่วโมง"), dots(st.pct, st.state, pct + "% ของ 5 ชั่วโมง"), facts)];
     }
     return [h("h2", { id: "h-usage" }, "USAGE"), body, foot];
