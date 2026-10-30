@@ -22,7 +22,8 @@ const TREE = { sha: "t", truncated: false, tree: [{ path: "lessons", type: "tree
 
 // state: { gql: ok|401|502|empty, usage: live|stale|missing|404 }, sb: collected Supabase POST bodies
 const routes = async (ctx, state, sb) => {
-  await ctx.route("https://api.github.com/**", (r) => {
+  await ctx.route("https://api.github.com/**", async (r) => {
+    if (state.delay) await new Promise((x) => setTimeout(x, state.delay));
     const req = r.request(), u = req.url();
     if (req.method() === "OPTIONS") return r.fulfill({ status: 204, headers: F.CORS });
     const hd = Object.assign({ "x-ratelimit-remaining": "4990", "content-type": "application/json" }, F.CORS);
