@@ -107,6 +107,18 @@ const usage = (force) => {
   if (force) delete cache.u;
   return get("u", () => once("/contents/" + cfg().usagePath + "?ref=" + encodeURIComponent(cfg().usageBranch), true).then((t) => { const v = JSON.parse(t); return v && typeof v === "object" ? v : null; }).catch((e) => { if (e && e.code === "auth") throw e; return null; }));
 };
+const tree = () => get("t", () => api("/git/trees/" + encodeURIComponent(st.branch) + "?recursive=1").then((d) => ({ truncated: !!d.truncated, entries: (d.tree || []).filter((x) => x.type === "blob" || x.type === "tree").map((x) => ({ path: x.path, type: x.type, sha: x.sha })) })));
+const mdBatch = (paths) => get("mb" + paths.join("|"), async () => {
+  const out = {};
+  for (let i = 0; i < paths.length; i += 50) {
+    const chunk = paths.slice(i, i + 50);
+    const body = chunk.map((p, k) => "f" + k + ": object(expression: " + JSON.stringify(st.branch + ":" + p) + ") { ... on Blob { text } }").join("\n");
+    const d = await retrying(() => onceGql({ owner: OWNER, name: REPO }, "query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) {\n" + body + "\n} }"));
+    const repo = (d && d.repository) || {};
+    chunk.forEach((p, k) => { const o = repo["f" + k]; out[p] = o && typeof o.text === "string" ? o.text : ""; });
+  }
+  return out;
+});
 const issues = () => snap().then((m) => m.issues);
 const commits = () => snap().then((m) => m.commits);
 const mdFiles = async (d) => {
@@ -135,6 +147,6 @@ const recheck = async () => {
 };
 const clear = () => { cache = {}; };
 const clearLog = () => { try { localStorage.removeItem(LOGKEY); } catch (e) {} };
-return { OWNER, REPO, st, apiStatus, onStatus: (f) => subs.push(f), recheck, clear, clearLog, token, readLog, logErr, api, get, dir, text, snap, usage, issues, commits, mdFiles, ws, partial: () => partial, notes: () => notes };
+return { OWNER, REPO, st, apiStatus, onStatus: (f) => subs.push(f), recheck, clear, clearLog, token, readLog, logErr, api, get, dir, text, snap, usage, tree, mdBatch, issues, commits, mdFiles, ws, partial: () => partial, notes: () => notes };
 })();
 if (typeof module !== "undefined") module.exports = KeshApi;

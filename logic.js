@@ -129,6 +129,55 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     const t = String(body || "").replace(/```[\s\S]*?```/g, " ").replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/<[^>]+>/g, " ").replace(/[#>*_`|-]+/g, " ").replace(/\s+/g, " ").trim();
     return t.length > n ? t.slice(0, n) + "…" : t;
   };
+  const stripCode = (t) => String(t || "").replace(/```[\s\S]*?```/g, " ").replace(/~~~[\s\S]*?~~~/g, " ").replace(/`[^`\n]*`/g, " ");
+  const dirOf = (p) => (p.indexOf("/") < 0 ? "" : p.slice(0, p.lastIndexOf("/")));
+  const normPath = (p) => {
+    const out = [];
+    for (const seg of p.split("/")) { if (seg === "" || seg === ".") continue; if (seg === "..") { if (!out.length) return null; out.pop(); } else out.push(seg); }
+    return out.join("/");
+  };
+  const buildGraph = (files, agents, issues, mode) => {
+    const list = (files || []).filter((f) => /\.md$/i.test(f.path));
+    const paths = new Set(list.map((f) => f.path)), byBase = {};
+    for (const f of list) (byBase[f.path.split("/").pop()] || (byBase[f.path.split("/").pop()] = [])).push(f.path);
+    const nodes = list.map((f) => ({ id: "f:" + f.path, kind: "file", label: f.path.split("/").pop(), path: f.path }));
+    const links = [], seen = new Set();
+    const add = (source, target, kind) => { if (source === target) return; const k = source + "|" + target + "|" + kind; if (seen.has(k)) return; seen.add(k); links.push({ source, target, kind }); };
+    const B = mode === "b";
+    const agentNames = B ? (agents || []).map((a) => String(a).toLowerCase()) : [];
+    const issueNums = new Set(B ? (issues || []).map((i) => String(i.number)) : []);
+    for (const f of list) {
+      const id = "f:" + f.path, text = stripCode(f.text), linked = new Set();
+      const re = /\[[^\]]*\]\(([^)\s]+)\)/g;
+      let m;
+      while ((m = re.exec(text))) {
+        let href = m[1].split("#")[0];
+        if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) continue;
+        try { href = decodeURIComponent(href); } catch (e) {}
+        const t = normPath(href.startsWith("/") ? href.slice(1) : (dirOf(f.path) ? dirOf(f.path) + "/" : "") + href);
+        if (t && paths.has(t)) { add(id, "f:" + t, "link"); linked.add(t); }
+      }
+      const bare = text.replace(/\[[^\]]*\]\([^)]*\)/g, " ");
+      const re2 = /(?:[\w.-]+\/)*[\w.-]+\.md\b/g;
+      while ((m = re2.exec(bare))) {
+        const name = m[0], rel = normPath((dirOf(f.path) ? dirOf(f.path) + "/" : "") + name);
+        const t = paths.has(name) ? name : rel && paths.has(rel) ? rel : !name.includes("/") && byBase[name] && byBase[name].length === 1 ? byBase[name][0] : null;
+        if (t && !linked.has(t)) add(id, "f:" + t, "mention");
+      }
+      if (B) {
+        const dir = f.path.split("/")[0], base = f.path.split("/").pop().replace(/\.md$/i, "").toLowerCase();
+        if ((dir === "agents" || dir === "lessons") && agentNames.includes(base)) add(id, "a:" + base, "relation");
+        for (const a of agentNames) if (new RegExp("\\b" + a + "\\b", "i").test(text)) add(id, "a:" + a, "relation");
+        const re3 = /(?:#|issues\/)(\d+)\b/g;
+        while ((m = re3.exec(text))) if (issueNums.has(m[1])) add(id, "i:" + m[1], "relation");
+      }
+    }
+    if (B) {
+      for (const a of agentNames) nodes.push({ id: "a:" + a, kind: "agent", label: a.charAt(0).toUpperCase() + a.slice(1), agent: a });
+      for (const i of issues || []) nodes.push({ id: "i:" + i.number, kind: "issue", label: "#" + i.number, number: i.number });
+    }
+    return { nodes, links };
+  };
   const BOUNCE_WARN = 0.2, BOUNCE_TICK = 40, DAY = 86400000;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const pad2 = (n) => String(n).padStart(2, "0");
@@ -366,6 +415,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (i < t.length) out.push({ t: t.slice(i), hit: false });
     return out;
   };
-  return { excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, USAGE_STALE_MS, usageState, kpis7d, agentTable, issueRows, fmtDur, parseRoute, navModel, bounceLevel, bounceBarPct, activeRun, stageModel, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, isToday, tokensByAgent, rejectRates };
+  return { buildGraph, excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, USAGE_STALE_MS, usageState, kpis7d, agentTable, issueRows, fmtDur, parseRoute, navModel, bounceLevel, bounceBarPct, activeRun, stageModel, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;

@@ -16,7 +16,7 @@ const MD = {
   "lessons/kotev.md": "# kotev lessons\n\n- ใช้ `grep` ก่อน ดู [rosh](rosh.md) และ agents/bochek.md\n- เทสต์ issue #41 ก่อนส่ง\n\n```\nnode --test\n```\n",
   "lessons/rosh.md": "# rosh lessons\n\n- ดู [kotev](kotev.md)\n",
   "agents/kotev.md": "---\nname: kotev\n---\nbody\n",
-  "README.md": "# readme\n\nดู lessons/kotev.md\n"
+  "README.md": "# readme\n\nดู [kotev](lessons/kotev.md) และ agents/kotev.md\n"
 };
 const TREE = { sha: "t", truncated: false, tree: [{ path: "lessons", type: "tree" }, { path: "lessons/kotev.md", type: "blob", sha: "a1" }, { path: "lessons/rosh.md", type: "blob", sha: "a2" }, { path: "agents", type: "tree" }, { path: "agents/kotev.md", type: "blob", sha: "a3" }, { path: "README.md", type: "blob", sha: "a4" }, { path: "logo.png", type: "blob", sha: "a5" }] };
 

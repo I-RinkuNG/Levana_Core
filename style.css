@@ -384,3 +384,8 @@ main .sec:first-of-type{margin-top:var(--s8)}
 .usage .ufacts>div{display:block}
 .nm small.hm{display:none}
 @media (max-width:599px){.nm small.hm{display:block}}
+.page.wide{padding:0;max-width:none}
+.page.wide .files{min-height:100vh}
+@media (max-width:1023px){.page.wide .dbar{top:var(--head-h)}}
+.dbar .btn.tr{margin-left:auto}
+.dpane .empty{padding-top:var(--s8)}
