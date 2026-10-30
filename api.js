@@ -4,17 +4,14 @@ const API = "https://api.github.com/repos/" + OWNER + "/" + REPO;
 const st = { branch: "main" };
 const apiStatus = { ok: null, code: null, checkedAt: null };
 const subs = [];
-const setStatus = (ok, code) => { apiStatus.ok = ok; apiStatus.code = code || null; apiStatus.checkedAt = Date.now(); subs.forEach((f) => f(apiStatus)); };
+const setStatus = (ok, code) => { const changed = apiStatus.ok !== ok || apiStatus.code !== (code || null); apiStatus.ok = ok; apiStatus.code = code || null; apiStatus.checkedAt = Date.now(); subs.forEach((f) => f(apiStatus)); if (changed && typeof KeshLog !== "undefined") KeshLog.log(ok === false ? "warn" : "info", "api_status", "token API " + (ok === false ? "ใช้ไม่ได้" : "ใช้ได้"), { ok, code: code || null }); };
 const token = () => localStorage.getItem("levana_token");
 let cache = {};
 const LOGKEY = "levana_errlog";
 const readLog = () => { try { return JSON.parse(localStorage.getItem(LOGKEY)) || []; } catch (e) { return []; } };
 const logErr = (e) => {
   try {
-    localStorage.setItem(LOGKEY, JSON.stringify(KeshLogic.pushLog(readLog(), {
-      time: new Date().toISOString(), path: e.path, status: e.status || null, code: e.code,
-      remaining: e.remaining == null ? null : e.remaining, retryAfter: e.retryAfter == null ? null : e.retryAfter, message: e.message || ""
-    })));
+    if (typeof KeshLog !== "undefined") KeshLog.log("error", "fetch_error", e.message || e.code || "", { code: e.code, status: e.status || null, path: e.path, remaining: e.remaining == null ? null : e.remaining, retryAfter: e.retryAfter == null ? null : e.retryAfter });
   } catch (x) {}
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

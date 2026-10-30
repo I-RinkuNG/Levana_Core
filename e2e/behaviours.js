@@ -134,6 +134,27 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
   check("graph: clicking a node opens its file", (await t.page.evaluate(() => location.hash)).startsWith("#/files/lessons/rosh.md"));
   await t.ctx.close();
 
+  t = await open(1440, "light", "#/log");
+  check("log: works with empty config, local-only note", (await t.page.textContent("#logStatus")).includes("เก็บในเครื่องนี้เท่านั้น"));
+  await t.page.reload(); await t.page.waitForSelector("#main[aria-busy=false]");
+  check("log: has app_start + route_view rows", (await t.page.$$eval("table.log tr.r", (r) => r.length)) >= 2);
+  await t.page.click(".xbtn");
+  check("log: expand row shows JSON entry", (await t.page.textContent("tr.jr:not([hidden]) pre")).includes('"event"'));
+  const dl = t.page.waitForEvent("download");
+  await t.page.click("text=ส่งออก JSONL");
+  const file = await dl;
+  check("log: export jsonl downloads", file.suggestedFilename() === "levana-log.jsonl");
+  check("log: no token in stored entries", !(await t.page.evaluate(() => localStorage.getItem("levana_log_local").includes("ghp_test"))));
+  await t.ctx.close();
+  t = await open(1440, "light", "#/log", { cfg: { supabaseUrl: "https://abc.supabase.co", supabaseKey: "sb_publishable_x", usageBranch: "levana-usage", usagePath: "usage.json" } });
+  await t.page.evaluate(() => KeshLog.log("info", "probe", "hello"));
+  await t.page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await t.page.waitForFunction(() => KeshLog.status().lastWriteAt, null, { timeout: 8000 }).catch(() => {});
+  check("log: configured -> queue flushed to Supabase (mock) on online", t.sb.some((e) => e.event === "probe") && (await t.page.evaluate(() => KeshLog.queueLen())) === 0);
+  check("log: Supabase entries have no token", !JSON.stringify(t.sb).includes("ghp_test"));
+  check("log: sign-in form shown when not signed in", await t.page.isVisible("#logSignin"));
+  await t.ctx.close();
+
   await browser.close(); server.close();
   const bad = results.filter((r) => !r[1]);
   console.log(bad.length ? bad.length + " FAILED" : "ALL " + results.length + " OK");

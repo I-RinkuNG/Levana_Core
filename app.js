@@ -6,7 +6,7 @@
   const TITLES = { summary: "สรุป", runs: "Runs", run: "Run", issues: "Issues", issue: "Issue", agents: "Agents", files: "Files", log: "Log" };
   const TOKEN_URL = "https://github.com/settings/personal-access-tokens";
   let rid = 0, shown = null, lastOk = null, busy = false, sheets = [], lastFocus = null;
-  const ev = (level, event, message, detail) => { if (window.KeshLog) KeshLog.log(level, event, message, detail); };
+  const ev = (level, event, message, detail) => { if (typeof KeshLog !== "undefined") KeshLog.log(level, event, message, detail); };
 
   const MSG = (e) => ({
     rate: "ชน rate limit ของ GitHub รอสักครู่แล้วลองใหม่" + (e.retryAfter != null ? " (" + e.retryAfter + "s)" : ""),
@@ -141,9 +141,8 @@
     } catch (e) {
       if (id !== rid) return;
       busy = false;
-      if (e.code === "auth") { ev("error", "fetch_error", MSG(e), { code: e.code, status: e.status || null, path: e.path || null }); return tokenForm(MSG(e)); }
+      if (e.code === "auth") return tokenForm(MSG(e));
       document.body.dataset.state = "error";
-      ev("error", "fetch_error", MSG(e), { code: e.code, status: e.status || null, path: e.path || null, remaining: e.remaining == null ? null : e.remaining, retryAfter: e.retryAfter == null ? null : e.retryAfter });
       const detail = [e.status, e.path, e.message].filter(Boolean).join(" · ");
       const b = banner("ดึงข้อมูลจาก GitHub ไม่ได้", MSG(e) + (detail ? " (" + detail + ")" : "") + (lastOk ? " ข้อมูลด้านล่างเป็นของเวลา " + L.hhmm(lastOk) : ""), refresh);
       if (fresh || !main.querySelector(".ph")) { shown = null; draw(page, [phRow({ h1: view.skel[0] }), b], view.wide); }
@@ -152,5 +151,6 @@
   }
   window.KeshApp = { route, refresh, logout, tokenForm, msg: MSG, h1Row: phRow, getTokenLink, openSheet, closeAll, addSheet, setBusy, ev, lastOk: () => lastOk, TOKEN_URL };
   window.addEventListener("hashchange", () => route());
+  ev("info", "app_start", "เริ่มแอป", { viewport: innerWidth + "x" + innerHeight, mode: root.dataset.mode });
   route();
 })();
