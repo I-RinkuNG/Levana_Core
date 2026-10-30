@@ -57,3 +57,23 @@ Ship gate (self-score): NOT passed until Log wrap, stale mobile and graph label/
 
 ## Fix order for Kotev
 1. Log message column wrap (R22). 2. Stale state: grey dots + dim number on mobile. 3. Graph: disambiguate duplicate labels, fit height, label size 13px+, avoid overlap. 4. Retake drawer/tree-sheet as viewport shots after transition. 5. h1 focus ring only on :focus-visible. 6. Missing-state dash glyph. 7. Update DESIGN.md for mobile top-3 issues.
+
+## Re-check round 1 (Tzayar)
+Method: eyeballed the 11 retaken shots in build-shots/ plus grep of DESIGN.md. Not measured; not a heuristic evaluation.
+
+| Fix | Result | Shot / evidence |
+|---|---|---|
+| F1 Log message wrap | Message column PASS (full-word, one line). Still FAIL sev 2: Route column (mono) now breaks mid-path in 2-4 lines ("#/files/l / essons/ko / tev.md", "#/run/202 / 6-10-30-l ..."); device wraps to 2 lines | log-1440-light |
+| F2 Stale mobile | PASS: grey dots, muted 21%, chip kept | summary-stale-390-light |
+| F3 Graph | Mode A mostly PASS: path-unique labels (lessons/kotev.md, agents/kotev.md), edges visible. Minor: neighbour list repeats "rosh.md . ลิงก์" twice; label text still ~11px; graph uses ~half of a 520px canvas. Mode B still FAIL sev 3: centre files overlap (Bochek / lessons/kotev.md / README.md labels collide, nodes touch), labels ~11px | files-graph-a-1440-light, files-graph-b-1440-light |
+| F4 Drawer / tree sheet | PASS: settled, viewport-only, light + dark contrast fine, close 44px. Focus trap not provable from a still | drawer-390-light, drawer-390-dark, tree-sheet-390-light |
+| F5 h1 focus ring | PASS: no ring on h1 | log-1440-light, summary-missing-1440-light |
+| F6 Missing bar | PASS at 390 (no bar). 1440 ring shows a deliberate centred dash, reads fine | summary-missing-390-light, summary-missing-1440-light |
+| F7 Export wrap | PASS: button is one line (the helper text beside it wraps, acceptable) | log-390-light |
+| F8 Runs stat pairs | PASS: Started / Handoffs / Tokens on one row | runs-390-light |
+| F13 DESIGN.md | PASS: line 20 says desktop top 5, mobile top 3 | DESIGN.md |
+
+Blockers: none.
+Major (1): graph mode B centre overlap (sev 3, R22-type unreadable labels). It is the secondary view and the data is still reachable via the neighbour list, so it does not break a core task. Recommend a PR only with this logged as an open issue, or one more small fix: pin file nodes on a ring or add label collision skip, labels 13px.
+Backlog (minor): Log route mid-path breaks (sev 2; fix by giving route min ~24ch and moving device to the expanded row, or `overflow-wrap` break only after "/"), graph A label size and duplicate neighbour row, canvas height.
+Self-score deltas: R22 now fail only for Log route (sev 2) and graph B (sev 3). R15 pass, keep 3 issues on mobile (documented). Ship gate (self-score): passes with graph B listed as known major.
