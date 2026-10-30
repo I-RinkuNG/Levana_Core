@@ -68,6 +68,9 @@ test("fmtCountdown / projection / ageText / fmtTok", () => {
   assert.equal(L.fmtTok(482000), "482k");
   assert.equal(L.fmtTok(1460000), "1.46M");
   assert.equal(L.fmtTok(900), "900");
+  assert.equal(L.fmtTok(999600), "1M");
+  assert.equal(L.fmtTok(999400), "999k");
+  assert.equal(L.fmtTok(999), "999");
   assert.equal(L.fmtTok(null), "0");
 });
 

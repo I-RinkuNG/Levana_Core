@@ -45,7 +45,7 @@ const KeshLogic = (() => {
     return p;
   };
   const DIRS = ["runs", "agents", "lessons"];
-  const GQL_QUERY = `fragment D on GitObject { ... on Tree { entries { name type object { ... on Blob { text isTruncated byteSize } } } } }
+  const GQL_QUERY = `fragment D on GitObject { ... on Tree { entries { name type object { ... on Blob { text isTruncated byteSize oid } } } } }
 query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: String!, $lessons: String!) {
   rateLimit { cost remaining }
   repository(owner: $owner, name: $name) {
@@ -54,10 +54,32 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     agents: object(expression: $agents) { ...D }
     lessons: object(expression: $lessons) { ...D }
     issues(first: 100, states: [OPEN, CLOSED], orderBy: { field: CREATED_AT, direction: DESC }) {
+      pageInfo { hasNextPage endCursor }
       nodes { number title state body createdAt closedAt url author { login } comments { totalCount } labels(first: 20) { nodes { name } } }
     }
   }
 }`;
+  const GQL_ISSUES_QUERY = `query($owner: String!, $name: String!, $after: String) {
+  rateLimit { cost remaining }
+  repository(owner: $owner, name: $name) {
+    issues(first: 100, after: $after, states: [OPEN, CLOSED], orderBy: { field: CREATED_AT, direction: DESC }) {
+      pageInfo { hasNextPage endCursor }
+      nodes { number title state body createdAt closedAt url author { login } comments { totalCount } labels(first: 20) { nodes { name } } }
+    }
+  }
+}`;
+  const MAX_ISSUE_PAGES = 10;
+  const issuePageInfo = (data) => {
+    const i = data && data.repository && data.repository.issues;
+    const p = i && i.pageInfo;
+    return p && p.hasNextPage && p.endCursor ? p.endCursor : null;
+  };
+  const mergeIssuePages = (data, pages) => {
+    const base = (data.repository && data.repository.issues && data.repository.issues.nodes) || [];
+    const more = [].concat(...pages.map((d) => (d && d.repository && d.repository.issues && d.repository.issues.nodes) || []));
+    const repo = Object.assign({}, data.repository, { issues: Object.assign({}, data.repository.issues, { nodes: base.concat(more) }) });
+    return Object.assign({}, data, { repository: repo });
+  };
   const gqlVars = (owner, name, branch) => ({
     owner, name, ref: "refs/heads/" + branch,
     runs: branch + ":runs", agents: branch + ":agents", lessons: branch + ":lessons"
@@ -87,7 +109,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
         if (e.type !== "blob" || !/\.md$/.test(e.name)) continue;
         const b = e.object;
         if (!b || b.isTruncated || typeof b.text !== "string") { partial.push(dir + "/" + e.name); continue; }
-        files.push({ dir, name: e.name.replace(/\.md$/, ""), md: b.text });
+        files.push({ dir, name: e.name.replace(/\.md$/, ""), md: b.text, oid: b.oid || null });
       }
     }
     const issues = ((repo.issues && repo.issues.nodes) || []).filter(Boolean).map((i) => ({
@@ -119,7 +141,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const fmtTok = (n) => {
     n = Number(n) || 0;
-    if (n >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M";
+    if (n >= 1e6 || Math.round(n / 1e3) >= 1000) return (n / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M";
     if (n >= 1e3) return Math.round(n / 1e3) + "k";
     return String(Math.round(n));
   };
@@ -321,6 +343,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (i < t.length) out.push({ t: t.slice(i), hit: false });
     return out;
   };
-  return { bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
+  return { bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, parseRoute, navModel, window5h, reservedTokens, meterSegments, fmtCountdown, projection, bounceLevel, bounceBarPct, activeRun, stageModel, actionQueue, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, TOKENS_PER_PCT, pct5h, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;
