@@ -82,6 +82,21 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
   check("390: show all 10 agents", (await t.page.$$eval("#agTable tbody tr", (r) => r.filter((x) => x.offsetParent !== null).length)) === 10);
   await t.ctx.close();
 
+  t = await open(1440, "light", "#/runs");
+  const cnt = await t.page.$$eval(".txt button", (b) => b.map((x) => x.textContent.replace(/\s+/g, " ").trim()));
+  check("runs: filter counts ทั้งหมด 3 / เสร็จ 2 / กำลังทำ 1 / ค้างต่อ 0 (" + cnt.join("|") + ")", cnt.join("|") === "ทั้งหมด 3|เสร็จ 2|กำลังทำ 1|มีงานค้างต่อ 0");
+  check("runs: table rows = 3, ตีกลับ chip shown", (await t.page.$$eval("tbody tr", (r) => r.length)) === 3 && (await t.page.textContent("tbody")).includes("ตีกลับ 1"));
+  await t.page.click("text=กำลังทำ");
+  check("runs: filter กำลังทำ -> 1 row", (await t.page.$$eval("tbody tr", (r) => r.length)) === 1);
+  check("runs: help is a details, one place", (await t.page.$$("details.help")).length === 1);
+  await t.ctx.close();
+  t = await open(1440, "light", "#/agents");
+  check("agents: 10 rows, no strip/legend, lessons link to files", (await t.page.$$eval("tbody tr", (r) => r.length)) === 10 && (await t.page.$("a[href='#/files/lessons/kotev.md']")) && !(await t.page.$(".strip")));
+  await t.ctx.close();
+  t = await open(1440, "light", "#/issues");
+  check("issues: rows use the shared issue row", (await t.page.$$eval("a.issue", (r) => r.length)) === 6);
+  await t.ctx.close();
+
   await browser.close(); server.close();
   const bad = results.filter((r) => !r[1]);
   console.log(bad.length ? bad.length + " FAILED" : "ALL " + results.length + " OK");

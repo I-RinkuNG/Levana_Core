@@ -72,25 +72,8 @@ const KeshUI = (() => {
   const skeleton = (n) => h("div", { className: "sk", "aria-hidden": "true" }, Array.from({ length: n || 2 }, () => h("i")));
   const skeletonBlk = ([word, title, n]) => blk({ tab: tab(word), title, children: skeleton(n) });
   const banner = (title, text, onRetry) => h("div", { className: "banner keep", role: "alert" }, icon("errors"), h("p", h("b", title), " " + text), onRetry ? btn("ลองอีกครั้ง", { onclick: onRetry }) : null);
-  const meter = ({ segs, label, legend }) => h("div", {},
-    h("div", { className: "bar", role: "img", "aria-label": label }, h("span", { className: "seg used", style: "--w:" + segs.used + "%" }), segs.reserved ? h("span", { className: "seg resv", style: "--w:" + segs.reserved + "%" }) : null),
-    h("ul", { className: "legend meta" }, legend.map(([cls, kids]) => h("li", h("i", { className: "sw " + cls }), kids))));
   const stages = (model, meta) => h("ol", { className: "stages" }, model.map((s) => h("li", { className: (s.state === "bounced" ? "done bounced" : s.state) },
     h("span", { className: "dia num" }, String(s.n).padStart(2, "0")), h("b", cap(s.agent)), h("span", { className: "meta" + (s.bounces ? " bad-t" : "") }, meta(s)))));
-  const opCard = (c, full) => {
-    const bad = c.level === "bad", pct = Math.round(c.bounceRate * 100), L = KeshLogic;
-    return h("li", { className: "op" + (bad ? " warn" : ""), "data-ag": c.name },
-      h("span", { className: "op-ini", "aria-hidden": "true" }, c.name[0].toUpperCase(), h("span", { className: "mono" }, String(c.rank).padStart(2, "0"))),
-      h("b", { className: "op-name", translate: "no" }, c.name.toUpperCase()),
-      h("div", { className: "op-body" }, h("span", { className: "meta" }, c.role), h("b", { className: "num op-val" }, L.fmtTok(c.tokens)),
-        h("span", { className: "op-bar", style: "--w:" + c.relPct + "%", role: full ? "img" : null, "aria-label": full ? "token 7 วัน " + L.fmtTok(c.tokens) : null }),
-        full ? [
-          h("dl", h("dt", { className: "meta" }, "handoff"), h("dd", { className: "num" }, String(c.handoffs)), h("dt", { className: "meta" }, "ตีกลับ"),
-            h("dd", { className: "num" + (bad ? " bad-t" : "") }, bad ? icon("errors", "sm") : null, pct + "%")),
-          h("span", { className: "bnc" + (bad ? " over" : ""), role: "img", "aria-label": "ตีกลับ " + pct + "% เกณฑ์ 20%" + (bad ? " เกินเกณฑ์" : "") }, h("i", { style: "--w:" + L.bounceBarPct(c.bounceRate) + "%" })),
-          h("a", { className: "more", href: "#lessons" }, "lessons " + c.lessons)
-        ] : h("span", { className: "meta" + (bad ? " bad-t" : "") }, bad ? icon("errors", "sm") : null, "ตีกลับ " + pct + "%")));
-  };
   const runRow = (r, seq) => {
     const c = KeshLogic.runChip(r);
     return h("li", h("a", { className: "row", href: "#run/" + encodeURIComponent(r.run_id) }, h("span", { className: "num rid", translate: "no" }, String(seq).padStart(3, "0")),
@@ -103,5 +86,5 @@ const KeshUI = (() => {
     } else el.append(h("pre", src));
     return el;
   };
-  return { ring, dots, dl, table, issueRow, labelChip, runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, meter, stages, opCard, md };
+  return { ring, dots, dl, table, issueRow, labelChip, runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, stages, md };
 })();

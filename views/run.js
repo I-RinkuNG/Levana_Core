@@ -6,11 +6,11 @@ KeshViews.run = (() => {
   const reasonList = (rs) => h("ul", { className: "reasons" }, rs.map((r) => h("li", h("span", r.reason), h("b", { className: "num" }, String(r.count)), bar((r.count / rs[0].count) * 100))));
   return {
     skel: ["Run", [["STAGE", "ขั้นตอน", 1], ["HANDOFF", "ไทม์ไลน์ handoff", 4]]],
-    crumb: () => ["Runs", "#runs"],
+    crumb: () => ["Runs", "#/runs"],
     load: async (id) => { const w = await A.ws(); return { run: w.runs.find((r) => r.run_id === id), runs: w.runs, id }; },
     render: ({ run, runs, id }) => {
-      const crumb = ["Runs", "#runs"];
-      if (!run) return { h1: "ไม่พบ run", crumb, nodes: [empty({ icon: "empty", title: "ไม่พบ run " + id, next: "run นี้อาจอยู่นอก snapshot ล่าสุด", action: btn("ดู Runs ทั้งหมด", { href: "#runs", primary: true }) })] };
+      const crumb = ["Runs", "#/runs"];
+      if (!run) return { h1: "ไม่พบ run", crumb, nodes: [empty({ icon: "empty", title: "ไม่พบ run " + id, next: "run นี้อาจอยู่นอก snapshot ล่าสุด", action: btn("ดู Runs ทั้งหมด", { href: "#/runs", primary: true }) })] };
       const seq = runs.slice().sort((a, b) => String(a.run_id).localeCompare(String(b.run_id))).findIndex((r) => r.run_id === id) + 1;
       const stg = L.stageModel(run), rows = L.handoffRows(run), ag = L.agentTokens(run), rs = L.bounceReasons(run);
       const tokens = run.tokens_total || 0, nowI = stg.findIndex((s) => s.state === "now");
