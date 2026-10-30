@@ -1,10 +1,11 @@
-// Dev-only: NODE_PATH=$(npm root -g) node e2e/smoke.js [pageName]   shots -> design/v3/build-shots (OUT overrides)
+// Dev-only: NODE_PATH=$(npm root -g) node e2e/smoke.js [pageName] [--update]   shots -> design/v3/build-shots/_run (untracked); --update writes the tracked design/v3/build-shots (OUT overrides)
 const { chromium } = require("playwright");
 const fs = require("node:fs"), path = require("node:path");
 const H = require("./harness"), F = H.F, ROOT = H.ROOT;
-const OUT = path.resolve(process.env.OUT || path.join(ROOT, "design/v3/build-shots"));
+const args = process.argv.slice(2), UPDATE = args.includes("--update");
+const OUT = path.resolve(process.env.OUT || path.join(ROOT, "design/v3/build-shots", UPDATE ? "" : "_run"));
 for (const bad of ["design/v2", "design/shots"]) if (OUT === path.join(ROOT, bad) || OUT.startsWith(path.join(ROOT, bad) + path.sep)) { console.error("refusing to write shots into " + bad); process.exit(2); }
-const only = process.argv[2];
+const only = args.find((a) => !a.startsWith("--"));
 const PAGES = ["summary", "runs", "run", "issues", "issue", "agents", "files", "log"];
 const noTr = () => { try { delete self.Translator; } catch (e) {} };
 (async () => {

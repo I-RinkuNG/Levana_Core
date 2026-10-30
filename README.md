@@ -60,6 +60,6 @@ test ที่อ่านไฟล์จริงจะใช้ `../claude-dot
 ## E2E (dev only, ไม่ขึ้น Pages)
 ต้องมี Playwright แบบ global (`NODE_PATH=$(npm root -g)`):
 ```
-node e2e/smoke.js        # ทุกหน้า x 390/1440 x light/dark + states + graph, mock GitHub/Supabase, screenshot -> design/v3/build-shots/ (ไม่เขียนลง design/v2 หรือ design/shots)
+node e2e/smoke.js        # ทุกหน้า x 390/1440 x light/dark + states + graph, mock GitHub/Supabase, screenshot -> design/v3/build-shots/_run/ (gitignored; --update เขียนทับรูปที่ commit ใน build-shots/) (ไม่เขียนลง design/v2 หรือ design/shots)
 node e2e/behaviours.js   # drawer, redirects, usage states, runs filter, files tree/graph/translate, log queue
 ```
