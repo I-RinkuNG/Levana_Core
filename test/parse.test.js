@@ -349,3 +349,10 @@ test("fixture: _template name is not a run", () => {
   assert.equal(P.isRun("_template", mk("## Handoffs\n" + TBL("ok"))), false);
   assert.equal(P.isRun("2026-01-01-x", P.parseRunLog("# QC\n\nTally", "x.md")), false);
 });
+
+test("handoff tables under any ## section are parsed once", () => {
+  const md = "# Run: t (2026-11-02)\n\n## Handoffs\n| # | จาก → ถึง | เหตุผล | ผล | tokens |\n|---|---|---|---|---|\n| 1 | Kesh → Kotev | a | ok | 1,000 |\n\n## ผลสุดท้าย\n- ok\n\n## รอบเพิ่ม: x\n| # | จาก → ถึง | เหตุผล | ผล | tokens |\n|---|---|---|---|---|\n| 2 | Kesh → Kotev | b | ok | 500 |\n";
+  const r = P.parseRunLog(md, "2026-11-02-t.md");
+  assert.equal(r.handoffs.length, 2);
+  assert.equal(r.tokens_total, 1500);
+});

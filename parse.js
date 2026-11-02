@@ -243,6 +243,7 @@ const KeshParse = (() => {
     let handoffLines = [];
     let inHandoffs = false;
     let tableState = 0;
+    let handoffSeen = false;
 
     const flush = () => {
       if (current != null) sections[current] = sectionLines.join("\n").trim();
@@ -264,14 +265,19 @@ const KeshParse = (() => {
         continue;
       }
       sectionLines.push(line);
-      if (inHandoffs && tableState < 2) {
-        const t = line.trim();
-        if (/^#/.test(t)) tableState = 2;
-        else if (t.startsWith("|")) {
+      const t = line.trim();
+      if (tableState === 1) {
+        if (t.startsWith("|")) handoffLines.push(line);
+        else if (t) tableState = 0;
+      } else if (t.startsWith("|") && tableState === 0) {
+        const hc = splitRow(t);
+        const first = inHandoffs && !handoffSeen;
+        if (first || (/^#$/.test(hc[0]) && /จาก/.test(hc[1] || ""))) {
+          handoffSeen = true;
           tableState = 1;
-          handoffLines.push(line);
-        } else if (t && tableState === 1) tableState = 2;
-      }
+          handoffLines.push(handoffLines.length ? "" : line);
+        } else tableState = 2;
+      } else if (tableState === 2 && t && !t.startsWith("|")) tableState = 0;
     }
     flush();
 
