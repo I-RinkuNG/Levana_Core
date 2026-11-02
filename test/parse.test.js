@@ -349,3 +349,48 @@ test("fixture: _template name is not a run", () => {
   assert.equal(P.isRun("_template", mk("## Handoffs\n" + TBL("ok"))), false);
   assert.equal(P.isRun("2026-01-01-x", P.parseRunLog("# QC\n\nTally", "x.md")), false);
 });
+
+test("fixture local-setup: cumulative cells count once per agent", () => {
+  const name = "run-local-setup.md";
+  const r = P.parseRunLog(fixture(name), name);
+  const t = P.computeTokens(r.handoffs);
+  assert.equal(t.perAgent.oseh, 41901);
+  assert.notEqual(t.perAgent.oseh, 160382);
+  assert.equal(t.perAgent.amet, 36095);
+  assert.equal(t.perAgent.bochek, 15795);
+  assert.equal(r.tokens_total, 93791);
+  assert.equal(t.total, 93791);
+});
+
+test("fixture local-setup: parser reads only the first handoff table, not 'หลังจบ'", () => {
+  const name = "run-local-setup.md";
+  const r = P.parseRunLog(fixture(name), name);
+  assert.equal(r.handoffs.length, 14);
+  assert.equal(r.handoffs.some((h) => h.to === "zekher"), false);
+  assert.equal(r.tokens_total, 93791);
+});
+
+test("fixture subagent-frontmatter: bounce cumulative cells", () => {
+  const name = "run-subagent-frontmatter.md";
+  const r = P.parseRunLog(fixture(name), name);
+  const t = P.computeTokens(r.handoffs);
+  assert.equal(t.perAgent.rosh, 127753);
+  assert.equal(t.perAgent.cheker, 14061);
+  assert.equal(t.perAgent.amet, 78411);
+  assert.equal(r.tokens_total, 220225);
+  assert.equal(r.bounce_count, 2);
+});
+
+test("fixture c11: unparseable cells give null, partial, and a warning for 'A + B'", () => {
+  const name = "run-c11-agent-tokens.md";
+  const r = P.parseRunLog(fixture(name), name);
+  const byN = (n) => r.handoffs.find((h) => h.n === n);
+  assert.equal(byN("2b").tokens, null);
+  assert.equal(byN("4").tokens, null);
+  assert.equal(byN("2b").tokens_warning, "");
+  assert.equal(byN("4").tokens_warning, "two-agent");
+  const t = P.computeTokens(r.handoffs);
+  assert.equal(t.partial, true);
+  assert.deepEqual(t.warnings, ["4"]);
+  assert.equal(r.tokens_total, 129101);
+});

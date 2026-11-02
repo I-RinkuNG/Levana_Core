@@ -86,7 +86,7 @@ const KeshParse = (() => {
       const v = parseInt(a[1].replace(/,/g, ""), 10);
       if (!isNaN(v)) return { value: v, cumulative: /สะสม/.test(a[2]), note: a[2].trim() };
     }
-    return { value: null, cumulative: false, note: s };
+    return { value: null, cumulative: false, note: s, warning: /^~?[\d,]+\s*\+\s*~?[\d,]+/.test(s) ? "two-agent" : "" };
   }
 
   function parseFromTo(cell) {
@@ -155,7 +155,8 @@ const KeshParse = (() => {
         annotation: ft.annotation,
         tokens: tk.value,
         tokens_cumulative: tk.cumulative,
-        tokens_note: tk.note
+        tokens_note: tk.note,
+        tokens_warning: tk.warning || ""
       });
     }
     return rows;
@@ -168,7 +169,9 @@ const KeshParse = (() => {
     let total = 0;
     let any = false;
     let missing = 0;
+    const warnings = [];
     for (const h of handoffs || []) {
+      if (h.tokens_warning) warnings.push(h.n);
       if (h.tokens == null) {
         deltas.push(null);
         if (!h.self) missing++;
@@ -182,7 +185,7 @@ const KeshParse = (() => {
       total += d;
       any = true;
     }
-    return { total: any ? total : null, perAgent, deltas, partial: missing > 0 };
+    return { total: any ? total : null, perAgent, deltas, partial: missing > 0, warnings };
   }
 
   function parseFrontmatter(md) {
