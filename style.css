@@ -317,7 +317,7 @@ td .tags{display:flex;gap:6px;flex-wrap:wrap}
 tr.jr td{background:var(--sunken)!important;padding:var(--s3) var(--s4)}
 tr.jr pre{margin:0;font:400 13px/1.6 var(--font-mono);overflow-x:auto;white-space:pre-wrap}
 tr.jr[hidden]{display:none}
-.lmsg{min-width:32ch;max-width:60ch}table.log td.mono,table.log .lv{white-space:nowrap}table.log td.e{min-width:14ch;overflow-wrap:anywhere}table.log td.rt{width:24ch;max-width:24ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.jdev{margin:0 0 var(--s2);overflow-wrap:anywhere}
+.lmsg{min-width:32ch;max-width:60ch}table.log td{vertical-align:middle}table.log td.mono,table.log .lv{white-space:nowrap}table.log td.e{min-width:14ch;overflow-wrap:anywhere}table.log td.rt{width:24ch;max-width:24ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.jdev{margin:0 0 var(--s2);overflow-wrap:anywhere}
 @media (min-width:600px) and (max-width:1599px){table.log th:nth-child(5),table.log td.tz{display:none}}
 @media (max-width:599px){
   table.log thead{display:none}
