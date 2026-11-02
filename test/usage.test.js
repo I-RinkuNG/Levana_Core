@@ -92,3 +92,13 @@ test("excerpt strips markdown and clips", () => {
   assert.equal(L.excerpt("## Head\n\n- [link](http://x) `code` text", 100), "Head link code text");
   assert.equal(L.excerpt("a".repeat(10), 5), "aaaaa…");
 });
+
+test("7-day window is today plus the 6 days before it", () => {
+  const runs = [run("in", day(6), [hd("kotev", 1000)]), run("out", day(7), [hd("kotev", 500)])];
+  assert.equal(L.agentTable(runs, 7, NOW).find((x) => x.agent === "kotev").tokens, 1000);
+  assert.equal(L.agentCards({ runs, lessons: {} }, 7, NOW).find((x) => x.name === "kotev").tokens, 1000);
+  assert.equal(L.kpis7d(runs, [], NOW).handoffs, 1);
+  const prev = [run("p1", day(7), [hd("kotev", 400)]), run("p2", day(13), [hd("kotev", 200)]), run("p3", day(14), [hd("kotev", 900)])];
+  assert.equal(L.kpis7d(prev, [], NOW).prevTph, 300);
+  assert.equal(L.kpis7d([], [{ name: "kotev", md: "- a " + day(6) + "\n- b " + day(7) }], NOW).lessons.count, 1);
+});

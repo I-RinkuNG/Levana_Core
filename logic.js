@@ -317,7 +317,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     return { handoffs, tokens, bounces, per };
   };
   const lessonCount7d = (texts, nowMs) => {
-    const from = ymd(nowMs - 7 * DAY), agents = new Set();
+    const from = ymd(nowMs - 6 * DAY), agents = new Set();
     let count = 0;
     for (const t of texts || []) {
       if (String(t.name).startsWith("_")) continue;
@@ -330,7 +330,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const kpis7d = (runs, lessonsTexts, now) => {
     const n = now == null ? Date.now() : now;
-    const cur = tally(inWindow(runs, ymd(n - 7 * DAY), "9999")), prev = tally(inWindow(runs, ymd(n - 14 * DAY), ymd(n - 7 * DAY)));
+    const cur = tally(inWindow(runs, ymd(n - 6 * DAY), "9999")), prev = tally(inWindow(runs, ymd(n - 13 * DAY), ymd(n - 6 * DAY)));
     const tph = cur.handoffs ? cur.tokens / cur.handoffs : null, prevTph = prev.handoffs ? prev.tokens / prev.handoffs : null;
     const worst = Object.values(cur.per).filter((a) => a.handoffs > 0 && !SKIP.includes(a.agent)).sort((a, b) => b.rejects / b.handoffs - a.rejects / a.handoffs || b.rejects - a.rejects)[0] || null;
     const open = (runs || []).filter((r) => r.status === "open");
@@ -344,14 +344,14 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const agentTable = (runs, days, now) => {
     const n = now == null ? Date.now() : now;
-    const t = tally(inWindow(runs, ymd(n - (days || 7) * DAY), "9999"));
+    const t = tally(inWindow(runs, ymd(n - ((days || 7) - 1) * DAY), "9999"));
     const names = Object.values(AGENT_GROUPS).flat().map((x) => x[0]);
     const rows = names.map((a) => { const x = t.per[a] || {}; const tokens = x.tokens || 0, handoffs = x.handoffs || 0, rejects = x.rejects || 0; return { agent: a, tokens, handoffs, rejects, tph: handoffs ? tokens / handoffs : 0, share: t.tokens ? (tokens / t.tokens) * 100 : 0, rate: handoffs ? rejects / handoffs : 0, hot: handoffs > 0 && rejects / handoffs > BOUNCE_WARN + 1e-9 }; });
     return rows.sort((a, b) => b.tokens - a.tokens || a.agent.localeCompare(b.agent));
   };
   const issueRows = (issues, n) => (issues || []).filter((i) => i.state === "open").sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, n);
   const agentCards = (w, windowDays, nowMs) => {
-    const days = windowDays || 7, from = ymd((nowMs == null ? Date.now() : nowMs) - days * DAY);
+    const days = windowDays || 7, from = ymd((nowMs == null ? Date.now() : nowMs) - (days - 1) * DAY);
     const runs = ((w && w.runs) || []).filter((r) => runDay(r) >= from);
     const per = {}, hc = {}, bc = {};
     for (const r of runs) {
