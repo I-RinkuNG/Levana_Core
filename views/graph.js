@@ -34,10 +34,10 @@ const KeshGraph = (() => {
     const by = (k) => data.nodes.filter((n) => n.kind === k);
     if (data.nodes.length > RING_MAX) return false;
     let prev = null;
-    (narrow ? [["file", 96, 64], ["agent", 76, 80], ["issue", 66, 80]] : [["file", 130, 90], ["agent", 100, 110], ["issue", 90, 110]]).forEach(([k, gap, step]) => {
+    (narrow ? [["file", 130, 84], ["agent", 76, 80], ["issue", 66, 80]] : [["file", 130, 90], ["agent", 100, 110], ["issue", 90, 110]]).forEach(([k, gap, step]) => {
       const list = by(k);
       if (!list.length) return;
-      const rad = Math.max(list.length * gap / (2 * Math.PI), prev != null ? prev + step : list.length > 1 ? (narrow ? 64 : 90) : 0);
+      const rad = Math.max(list.length * gap / (2 * Math.PI), prev != null ? prev + step : list.length > 1 ? (narrow ? 84 : 90) : 0);
       list.forEach((n, i) => {
         const a = -Math.PI / 2 + (i + (k === "file" ? 0 : 0.5)) * 2 * Math.PI / list.length;
         n.x = n.fx = Math.cos(a) * rad;
@@ -98,7 +98,7 @@ const KeshGraph = (() => {
         ctx.font = fs + "px " + FONT();
         const rank = (n) => n.id === sel ? 0 : n.id === hover ? 1 : n.kind === "file" ? 2 : n.kind === "agent" ? 3 : 4;
         [...data.nodes].filter((n) => n.x != null).sort((a, b) => rank(a) - rank(b)).forEach((n) => {
-          const wd = ctx.measureText(n.label).width + 4 / k, x0 = n.x - wd / 2, y0 = n.y + (n.id === sel ? 17 : 11), y1 = y0 + fs + 2 / k;
+          const pad = n.kind === "file" ? 8 / k : 0, wd = ctx.measureText(n.label).width + 4 / k + pad, x0 = n.x - wd / 2, y0 = n.y + (n.id === sel ? 17 : 11), y1 = y0 + fs + 2 / k + pad;
           const hit = boxes.some((b) => x0 < b[2] && x0 + wd > b[0] && y0 < b[3] && y1 > b[1]);
           if (!hit || rank(n) < 2) { shownLabels.add(n.id); boxes.push([x0, y0, x0 + wd, y1]); }
         });
