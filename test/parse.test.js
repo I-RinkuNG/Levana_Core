@@ -365,16 +365,16 @@ test("fixture local-setup: cumulative cells count once per agent", () => {
   assert.notEqual(t.perAgent.oseh, 160382);
   assert.equal(t.perAgent.amet, 36095);
   assert.equal(t.perAgent.bochek, 15795);
-  assert.equal(r.tokens_total, 93791);
-  assert.equal(t.total, 93791);
+  assert.equal(r.tokens_total, 117068);
+  assert.equal(t.total, 117068);
 });
 
-test("fixture local-setup: parser reads only the first handoff table, not 'หลังจบ'", () => {
+test("fixture local-setup: handoff tables under any ## section (incl. หลังจบ) are counted once", () => {
   const name = "run-local-setup.md";
   const r = P.parseRunLog(fixture(name), name);
-  assert.equal(r.handoffs.length, 14);
-  assert.equal(r.handoffs.some((h) => h.to === "zekher"), false);
-  assert.equal(r.tokens_total, 93791);
+  assert.equal(r.handoffs.length, 15);
+  assert.equal(r.handoffs.some((h) => h.to === "zekher"), true);
+  assert.equal(r.tokens_total, 117068);
 });
 
 test("fixture subagent-frontmatter: bounce cumulative cells", () => {
