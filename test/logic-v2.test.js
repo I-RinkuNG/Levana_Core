@@ -148,6 +148,8 @@ test("agentCards: 10 cards, groups, 7-day window, bounce level", () => {
   assert.equal(b.level, "bad");
   assert.equal(b.rank, 6);
   assert.equal(c.find((x) => x.name === "amet").tokens, 0);
+  assert.equal(c[0].tokens, 200000);
+  assert.equal(b.tokens, 150000);
   assert.equal(c.find((x) => x.name === "tak").level, "ok");
 });
 

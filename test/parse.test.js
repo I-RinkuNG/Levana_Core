@@ -124,6 +124,9 @@ test("parseTokens variants", () => {
   assert.deepEqual(P.parseTokens("113,466 (สะสม)"), { value: 113466, cumulative: true, note: "" });
   assert.equal(P.parseTokens("–").value, null);
   assert.equal(P.parseTokens("").value, null);
+  assert.deepEqual(P.parseTokens("276,622 (1.84× cap → หยุดถาม Rin)"), { value: 276622, cumulative: false, note: "1.84× cap → หยุดถาม Rin" });
+  assert.deepEqual(P.parseTokens("16,535 (เกิน cap 10k)"), { value: 16535, cumulative: false, note: "เกิน cap 10k" });
+  assert.equal(P.parseTokens("n/a (ไม่มีข้อมูล)").value, null);
   const f = P.parseTokens('Rin ตอบ "ok" ให้ตรวจต่อ');
   assert.equal(f.value, null);
   assert.ok(f.note.includes("ok"));
