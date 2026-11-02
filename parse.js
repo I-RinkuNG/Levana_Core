@@ -84,7 +84,7 @@ const KeshParse = (() => {
     const a = /^~?([\d,]+)\s*\((.*)\)$/.exec(s);
     if (a) {
       const v = parseInt(a[1].replace(/,/g, ""), 10);
-      if (!isNaN(v)) return { value: v, cumulative: false, note: a[2].trim() };
+      if (!isNaN(v)) return { value: v, cumulative: /สะสม/.test(a[2]), note: a[2].trim() };
     }
     return { value: null, cumulative: false, note: s };
   }
