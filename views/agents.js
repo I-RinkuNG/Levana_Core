@@ -17,7 +17,7 @@ KeshViews.agents = (() => {
         const r = last[a], d = r && /^(\d{4})-(\d{2})-(\d{2})/.exec(r.date || r.run_id);
         return [h("div", { className: "nm" }, h("span", { className: "sw lg", style: "--c:var(--agent-" + a + ")", "aria-hidden": "true" }, cap(a)[0]), h("span", { translate: "no" }, cap(a))),
           ROLE[a], r ? (d ? +d[3] + " " + MON[+d[2] - 1] + " · " : "") + (r.title || r.run_id) : "—",
-          tok[a] ? L.fmtTok(tok[a]) : "–",
+          tok[a] ? L.fmtTok(tok[a]) : "—",
           h("a", { href: "#/files/lessons/" + a + ".md" }, (w.lessons[a] || 0) + " ข้อ")];
       });
       const t = table(cols, rows, { cls: "stack" });

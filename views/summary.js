@@ -3,7 +3,6 @@ KeshViews.summary = (() => {
   const mqD = matchMedia("(min-width:1024px)");
   const TOKEN_URL = "https://github.com/settings/personal-access-tokens";
   let timer = null, lastState = null;
-  const fmt = (n) => Math.round(n).toLocaleString("en-US");
 
   const tokenChip = () => {
     const s = A.apiStatus;
@@ -52,7 +51,7 @@ KeshViews.summary = (() => {
       cls: i > 4 ? "x" : null,
       cells: [
         h("div", { className: "nm" }, h("span", { className: "sw", style: "--c:var(--agent-" + x.agent + ")", "aria-hidden": "true" }, cap(x.agent)[0]), h("span", { translate: "no" }, cap(x.agent), h("small", { className: "hm" }, x.handoffs ? L.fmtTok(x.tph) + " ต่อ handoff" : ""))),
-        fmt(x.tokens), String(x.handoffs), x.handoffs ? L.fmtTok(x.tph) : "—", x.share.toFixed(1) + "%",
+        x.tokens ? L.fmtTok(x.tokens) : "—", String(x.handoffs), x.handoffs ? L.fmtTok(x.tph) : "—", x.share.toFixed(1) + "%",
         x.hot ? { cls: "hot", node: h("span", icon("warn"), x.rejects + "/" + x.handoffs + " · " + Math.round(x.rate * 100) + "%") } : x.rejects + "/" + x.handoffs
       ]
     }));
