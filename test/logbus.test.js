@@ -85,6 +85,20 @@ test("refuses a service_role key (JWT or sb_secret_)", async () => {
   assert.equal(K.configured(), true);
 });
 
+test("400 on a batch retries rows one by one; only the bad row is rejected", async () => {
+  clear();
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_publishable_abc" };
+  const calls = [];
+  globalThis.fetch = async (u, o) => { const rows = JSON.parse(o.body); calls.push(rows.length); return { status: rows.some((r) => r.event === "bad") ? 400 : 201 }; };
+  K.log("info", "a", "m"); K.log("info", "bad", "m"); K.log("info", "c", "m");
+  await K.flush();
+  assert.deepEqual(calls, [3, 1, 1, 1]);
+  assert.equal(K.queueLen(), 0);
+  const rej = K.readLocal().filter((e) => e.event === "log_rejected");
+  assert.equal(rej.length, 1);
+  assert.equal(rej[0].detail.count, 1);
+});
+
 test("configured: flush posts batches with headers; 4xx drops + logs locally; 5xx keeps", async () => {
   clear();
   globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_publishable_abc" };
@@ -117,4 +131,9 @@ test("configured: flush posts batches with headers; 4xx drops + logs locally; 5x
 test("jsonl export: one object per line", () => {
   assert.equal(K.toJsonl([{ a: 1 }, { b: 2 }]), '{"a":1}\n{"b":2}\n');
   assert.equal(K.toJsonl([]), "");
+});
+
+test("detail is limited by UTF-8 bytes, not chars", () => {
+  const e = K.makeEntry("info", "e", "m", { t: "ก".repeat(2500) });
+  assert.deepEqual(e.detail, { truncated: true });
 });

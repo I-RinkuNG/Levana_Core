@@ -25,7 +25,7 @@ const KeshLog = (() => {
   };
   const makeEntry = (level, event, message, detail) => {
     let d = detail == null ? null : scrubDeep(detail);
-    if (d && JSON.stringify(d).length > 8000) d = { truncated: true };
+    if (d && new TextEncoder().encode(JSON.stringify(d)).length > 7000) d = { truncated: true };
     return {
       ts: isoOffset(new Date()), level: LEVELS.includes(level) ? level : "info", event: String(event).slice(0, 64),
       route: String(G.location && G.location.hash || "").replace(/access_token=[^&]*/g, "access_token=[redacted]").slice(0, 200), device: device(),
@@ -50,14 +50,24 @@ const KeshLog = (() => {
       let q = rd(QK);
       while (q.length) {
         const batch = q.slice(0, BATCH);
-        let status = 0;
-        try { status = (await fetch(cfg().supabaseUrl.replace(/\/$/, "") + "/rest/v1/levana_log", { method: "POST", headers: headers(), body: JSON.stringify(batch), keepalive: !!keepalive })).status; } catch (e) { status = 0; }
+        const post = async (rows) => { try { return (await fetch(cfg().supabaseUrl.replace(/\/$/, "") + "/rest/v1/levana_log", { method: "POST", headers: headers(), body: JSON.stringify(rows), keepalive: !!keepalive })).status; } catch (e) { return 0; } };
+        let status = await post(batch), rejected = 0, okCount = 0;
+        if (status === 400 && batch.length > 1) {
+          status = 201;
+          for (const row of batch) {
+            const s1 = await post([row]), v1 = verdict(s1);
+            if (v1 === "keep") { backoff = Math.min(300000, backoff ? backoff * 2 : 30000); nextTry = Date.now() + backoff; q = q.slice(okCount + rejected); wr(QK, q); if (okCount) lastWriteAt = Date.now(); return; }
+            if (v1 === "ok") okCount++; else { rejected++; status = s1; }
+          }
+          if (okCount) lastWriteAt = Date.now();
+        } else rejected = verdict(status) === "drop" ? batch.length : 0;
         const v = verdict(status);
         if (v === "keep") { backoff = Math.min(300000, backoff ? backoff * 2 : 30000); nextTry = Date.now() + backoff; return; }
         q = q.slice(batch.length);
         wr(QK, q);
         backoff = 0; nextTry = 0;
-        if (v === "ok") lastWriteAt = Date.now(); else local(makeEntry("warn", "log_rejected", "Supabase ปฏิเสธ log " + batch.length + " รายการ (HTTP " + status + ")", { status, count: batch.length }));
+        if (v === "ok" && !rejected) lastWriteAt = Date.now();
+        if (rejected) local(makeEntry("warn", "log_rejected", "Supabase ปฏิเสธ log " + rejected + " รายการ (HTTP " + status + ")", { status, count: rejected }));
       }
     } finally { flushing = false; }
   }
