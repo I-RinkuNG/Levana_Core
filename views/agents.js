@@ -20,7 +20,7 @@ KeshViews.agents = (() => {
           tok[a] ? L.fmtTok(tok[a]) : "—",
           h("a", { href: "#/files/lessons/" + a + ".md" }, (w.lessons[a] || 0) + " ข้อ")];
       });
-      const t = table(cols, rows, { cls: "stack" });
+      const t = table(cols, rows, { cls: "stack agents-t" });
       t.querySelectorAll("tbody tr").forEach((tr) => { ["", "หน้าที่", "ล่าสุด", "Tokens 7 วัน", "Lessons"].forEach((l, i) => l && tr.children[i].setAttribute("data-l", l)); });
       return { h1: "Agents", noFresh: true, nodes: [h("div", { className: "tw" }, t)] };
     }
