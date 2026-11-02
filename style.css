@@ -9,7 +9,7 @@
 :root{
   --font-body:"Noto Sans Thai","IBM Plex Sans Thai","Sarabun",system-ui,sans-serif;
   --font-disp:"Anuphan","Noto Sans Thai",system-ui,sans-serif;
-  --font-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",monospace;
+  --font-mono:"JetBrains Mono","Noto Sans Thai",ui-monospace,"SFMono-Regular",monospace;
   --t-meta:13px;--t-small:15px;--t-body:17px;--t-h2:20px;--t-h1:28px;--t-val:32px;--t-hero:56px;
   --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;--s12:48px;
   --pad:var(--s4);--gap:var(--s6);
@@ -246,6 +246,8 @@ td .tags{display:flex;gap:6px;flex-wrap:wrap}
   table.stack td[data-l]{display:inline-block;margin-right:var(--s3)}
   table.stack td[data-l]::before{content:attr(data-l) " ";color:var(--ink-2);font-size:var(--t-meta)}
   table.stack tbody tr:hover td{background:none}
+  table.agents-t tr{display:flex;flex-wrap:wrap}
+  table.agents-t td:nth-child(-n+3){flex:0 0 100%}
 }
 
 /* files */
