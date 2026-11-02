@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const store = {};
 globalThis.localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } };
 const K = require("../logbus.js");
-const clear = () => { for (const k of Object.keys(store)) delete store[k]; };
+const clear = () => { K._reset(); for (const k of Object.keys(store)) delete store[k]; };
 
 test("entry shape: required fields, ISO with offset, no token fields", () => {
   const e = K.makeEntry("error", "fetch_error", "bad ghp_ABCDEF123456 token", { status: 401, token: "ghp_x", nested: { Authorization: "Bearer x", ok: 1 }, path: "graphql" });
@@ -136,4 +136,28 @@ test("jsonl export: one object per line", () => {
 test("detail is limited by UTF-8 bytes, not chars", () => {
   const e = K.makeEntry("info", "e", "m", { t: "ก".repeat(2500) });
   assert.deepEqual(e.detail, { truncated: true });
+});
+
+test("5xx mid per-row retry: earlier 400 is recorded, queue keeps the rest", async () => {
+  clear();
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_publishable_abc" };
+  const st = { a: 400, b: 201, c: 503 };
+  globalThis.fetch = async (u, o) => { const rows = JSON.parse(o.body); return { status: rows.length > 1 ? 400 : st[rows[0].event] || 201 }; };
+  for (const n of ["a", "b", "c", "d"]) K.log("info", n, "m");
+  await K.flush();
+  assert.deepEqual(JSON.parse(store.levana_logq).map((e) => e.event), ["c", "d"]);
+  const rej = K.readLocal().filter((e) => e.event === "log_rejected");
+  assert.equal(rej.length, 1);
+  assert.equal(rej[0].detail.count, 1);
+  assert.equal(rej[0].detail.status, 400);
+});
+
+test("log() during an in-flight flush survives", async () => {
+  clear();
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_publishable_abc" };
+  let n = 0;
+  globalThis.fetch = async () => { n++; if (n === 1) { K.log("info", "late", "m"); return { status: 201 }; } return { status: 503 }; };
+  K.log("info", "early", "m");
+  await K.flush();
+  assert.deepEqual(JSON.parse(store.levana_logq).map((e) => e.event), ["late"]);
 });
