@@ -32,11 +32,11 @@ KeshViews.log = (() => {
         const shown = list.slice(0, limit);
         const trs = [];
         shown.forEach((r) => {
-          const l = LV[r.level] || LV.info, jr = h("tr", { className: "jr", hidden: true }, h("td", { colspan: "8" }, h("pre", JSON.stringify(r, null, 1))));
+          const l = LV[r.level] || LV.info, jr = h("tr", { className: "jr", hidden: true }, h("td", { colspan: "7" }, h("p", { className: "sub jdev" }, "อุปกรณ์: " + devLabel(r.device)), r.route ? h("p", { className: "sub jdev mono" }, "Route: " + r.route) : null, h("pre", JSON.stringify(r, null, 1))));
           const xb = h("button", { className: "xbtn", type: "button", "aria-expanded": "false", "aria-label": "ดูรายละเอียด JSON", onclick: () => { const o = xb.getAttribute("aria-expanded") === "true"; xb.setAttribute("aria-expanded", String(!o)); jr.hidden = o; } }, icon("chev"));
-          trs.push(h("tr", { className: "r" }, h("td", { className: "mono" }, when(r)), h("td", h("span", { className: "lv " + l[1] }, icon(l[0]), r.level)), h("td", { className: "e mono", style: "font-size:var(--t-small)" }, r.event), h("td", { className: "rt mono" }, r.route || ""), h("td", { className: "dv" }, devLabel(r.device)), h("td", { className: "tz mono" }, r.tz || ""), h("td", { className: "lmsg" }, r.message || ""), h("td", { className: "x" }, xb)), jr);
+          trs.push(h("tr", { className: "r" }, h("td", { className: "mono" }, when(r)), h("td", h("span", { className: "lv " + l[1] }, icon(l[0]), r.level)), h("td", { className: "e mono", style: "font-size:var(--t-small)" }, r.event), h("td", { className: "rt mono", title: r.route || null }, r.route || ""), h("td", { className: "tz mono" }, r.tz || ""), h("td", { className: "lmsg" }, r.message || ""), h("td", { className: "x" }, xb)), jr);
         });
-        box.replaceChildren(h("div", { className: "tw" }, h("table", { className: "log thsticky" }, h("thead", h("tr", ["เวลา", "ระดับ", "Event", "Route", "อุปกรณ์", "Timezone", "ข้อความ"].map((t) => h("th", t)), h("th", h("span", { className: "sr" }, "ขยาย")))), h("tbody", trs))),
+        box.replaceChildren(h("div", { className: "tw" }, h("table", { className: "log thsticky" }, h("thead", h("tr", ["เวลา", "ระดับ", "Event", "Route", "Timezone", "ข้อความ"].map((t) => h("th", t)), h("th", h("span", { className: "sr" }, "ขยาย")))), h("tbody", trs))),
           h("div", { className: "logfoot" }, h("span", { className: "sub" }, "แสดง " + shown.length + " จาก " + list.length), list.length > shown.length ? btn("แสดงเพิ่ม", { onclick: () => { limit += 100; draw(); } }) : null));
       };
       input.oninput = () => { limit = 100; draw(); };
