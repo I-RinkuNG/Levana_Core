@@ -30,14 +30,14 @@ const KeshGraph = (() => {
     return [...best.values()];
   };
   const RING_MAX = 80;
-  const layout = (data) => {
+  const layout = (data, narrow) => {
     const by = (k) => data.nodes.filter((n) => n.kind === k);
     if (data.nodes.length > RING_MAX) return false;
-    let prev = 0;
-    [["file", 130, 90], ["agent", 100, 110], ["issue", 90, 110]].forEach(([k, gap, step]) => {
+    let prev = null;
+    (narrow ? [["file", 96, 64], ["agent", 76, 80], ["issue", 66, 80]] : [["file", 130, 90], ["agent", 100, 110], ["issue", 90, 110]]).forEach(([k, gap, step]) => {
       const list = by(k);
       if (!list.length) return;
-      const rad = Math.max(list.length * gap / (2 * Math.PI), prev ? prev + step : list.length > 1 ? 90 : 0);
+      const rad = Math.max(list.length * gap / (2 * Math.PI), prev != null ? prev + step : list.length > 1 ? (narrow ? 64 : 90) : 0);
       list.forEach((n, i) => {
         const a = -Math.PI / 2 + (i + (k === "file" ? 0 : 0.5)) * 2 * Math.PI / list.length;
         n.x = n.fx = Math.cos(a) * rad;
@@ -62,12 +62,13 @@ const KeshGraph = (() => {
     let FG;
     try { FG = await load(); } catch (e) { host.replaceChildren(h("p", { className: "meta" }, "โหลดกราฟไม่สำเร็จ")); return; }
     let m = mode, data = build(m), g = null, sel = selectedId;
-    let pinned = layout(data);
-    const can = h("div", { className: "gcan", style: "height:clamp(360px,calc(100vh - 170px),860px)" });
+    const isNarrow = () => matchMedia("(max-width:599px)").matches;
+    let pinned = layout(data, isNarrow());
+    const can = h("div", { className: "gcan", style: isNarrow() ? "height:clamp(300px,52vh,400px)" : "height:clamp(360px,calc(100vh - 170px),860px)" });
     const zoom = h("div", { className: "zoom" },
       h("button", { type: "button", "aria-label": "ซูมเข้า", onclick: () => g && g.zoom(g.zoom() * 1.4, 250) }, "+"),
       h("button", { type: "button", "aria-label": "ซูมออก", onclick: () => g && g.zoom(g.zoom() / 1.4, 250) }, "−"),
-      h("button", { type: "button", "aria-label": "พอดีจอ", style: "font-size:15px", onclick: () => { if (!g) return; g.zoomToFit(300, 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 360); } }, "fit"));
+      h("button", { type: "button", "aria-label": "พอดีจอ", style: "font-size:15px", onclick: () => { if (!g) return; g.zoomToFit(300, isNarrow() ? 24 : 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 360); } }, "fit"));
     const panel = h("div", { className: "gpanel" });
     host.replaceChildren(h("div", { className: "gwrap", id: "graphView" }, h("div", { style: "display:grid;gap:8px" }, can, capped ? h("p", { className: "sub" }, "แสดง 400 ไฟล์แรกเท่านั้น") : null), panel));
     can.append(zoom);
@@ -86,8 +87,10 @@ const KeshGraph = (() => {
         else if (n.kind === "issue") { ctx.fillStyle = surface; ctx.strokeStyle = ink; ctx.beginPath(); ctx.moveTo(n.x, n.y - r - 3); ctx.lineTo(n.x + r + 3, n.y); ctx.lineTo(n.x, n.y + r + 3); ctx.lineTo(n.x - r - 3, n.y); ctx.closePath(); ctx.fill(); ctx.stroke(); }
         else { ctx.fillStyle = surface; ctx.strokeStyle = data_; ctx.beginPath(); ctx.rect(n.x - r, n.y - r, 2 * r, 2 * r); ctx.fill(); ctx.stroke(); }
         if (!shownLabels.has(n.id)) return;
-        ctx.fillStyle = ink; ctx.font = fs + "px " + FONT(); ctx.textAlign = "center"; ctx.textBaseline = "top";
-        ctx.fillText(n.label, n.x, n.y + r + (n.id === sel ? 10 : 4));
+        const ly = n.y + r + (n.id === sel ? 10 : 4);
+        ctx.font = fs + "px " + FONT(); ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.lineJoin = "round"; ctx.lineWidth = 4 / k; ctx.strokeStyle = surface; ctx.strokeText(n.label, n.x, ly);
+        ctx.fillStyle = ink; ctx.fillText(n.label, n.x, ly);
       };
       const pickLabels = (ctx, k) => {
         shownLabels.clear();
@@ -104,8 +107,8 @@ const KeshGraph = (() => {
         .onRenderFramePre(pickLabels).onNodeHover((n) => { hover = n ? n.id : null; can.style.cursor = n ? "pointer" : ""; }).nodeCanvasObject(nodeObj).nodePointerAreaPaint((n, color, ctx) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, 2 * Math.PI); ctx.fill(); })
         .linkColor(() => line).linkWidth((l) => l.kind === "relation" ? 1 : 1.5).linkLineDash((l) => l.kind === "mention" ? [4, 3] : l.kind === "relation" ? [1, 3] : null)
         .warmupTicks(pinned ? 0 : reduce ? 100 : 0).cooldownTicks(pinned ? 0 : reduce ? 0 : 120).onNodeClick((n) => { location.hash = hashFor(n); })
-        .onEngineStop(() => { if (!can.dataset.fit) { can.dataset.fit = "1"; g.zoomToFit(200, 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 260); } });
-      if (pinned) { can.dataset.fit = "1"; setTimeout(() => { g.zoomToFit(0, 60); if (g.zoom() > 2.5) g.zoom(2.5, 0); }, 0); }
+        .onEngineStop(() => { if (!can.dataset.fit) { can.dataset.fit = "1"; g.zoomToFit(200, isNarrow() ? 24 : 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 260); } });
+      if (pinned) { can.dataset.fit = "1"; setTimeout(() => { g.zoomToFit(0, isNarrow() ? 24 : 60); if (g.zoom() > 2.5) g.zoom(2.5, 0); }, 0); }
       else if (reduce) setTimeout(() => g.zoomToFit(0, 30), 0);
       KeshApp.ev("info", "graph_open", "เปิดกราฟ", { mode: m, nodes: data.nodes.length, links: data.links.length });
     };
@@ -113,7 +116,7 @@ const KeshGraph = (() => {
       const nb = neighbours(data, sel);
       panel.replaceChildren(
         h("div", h("h3", "โหมด"),
-          ...[["a", "ลิงก์ระหว่างไฟล์", "ลิงก์ใน .md และการอ้างชื่อไฟล์"], ["b", "+ agent และ issue", "เพิ่มโหนด agent และ issue"]].map(([v, t, s], i) => h("label", { className: "radio", style: i ? "margin-top:8px" : null }, h("input", { type: "radio", name: "gm", value: v, checked: m === v, onchange: () => { m = v; data = build(m); pinned = layout(data); can.dataset.fit = ""; draw(); side(); if (onMode) onMode(v); } }), h("span", t, h("small", s))))),
+          ...[["a", "ลิงก์ระหว่างไฟล์", "ลิงก์ใน .md และการอ้างชื่อไฟล์"], ["b", "+ agent และ issue", "เพิ่มโหนด agent และ issue"]].map(([v, t, s], i) => h("label", { className: "radio", style: i ? "margin-top:8px" : null }, h("input", { type: "radio", name: "gm", value: v, checked: m === v, onchange: () => { m = v; data = build(m); pinned = layout(data, isNarrow()); can.dataset.fit = ""; draw(); side(); if (onMode) onMode(v); } }), h("span", t, h("small", s))))),
         h("div", h("h3", "สัญลักษณ์"), h("ul", { className: "legend", id: "glegend" }, legend(m))),
         h("div", h("h3", sel ? "เชื่อมกับ " + ((data.nodes.find((n) => n.id === sel) || {}).label || "") : "เชื่อมกับ"), h("div", { className: "gl", id: "glist" }, nb.length ? nb.map((x) => h("button", { type: "button", onclick: () => { location.hash = hashFor(x.node); } }, x.node.label + " · " + KIND_TXT[x.kind])) : h("p", { className: "sub" }, sel ? "ไม่มีโหนดที่เชื่อมกับไฟล์นี้" : "คลิกโหนดเพื่อเปิดไฟล์"))));
     };
