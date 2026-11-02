@@ -20,3 +20,14 @@ PASS with 3 minor fails (sev 1-2). The column answers Rin's complaint. No bar ne
 
 ## Notes
 - Mobile rows wrap unevenly (Bona: "ล่าสุด — Tokens 7 วัน –" then Lessons alone on the next line). Cosmetic, sev 1, style.css:245; could force Tokens and Lessons onto one line with `flex`.
+
+## Round 2 (fix list items 2 and 4)
+
+Method: eyeballed agents-1440-light, agents-390-dark, summary-1440-light from shots-c11-r2. Not measured, not a heuristic evaluation. Not opened: agents-1440-dark, agents-390-light, summary dark (same CSS).
+
+- Fail 1 (format): PASS. Agents and Summary both show `263k / 134k / 90k / 12k` for Kotev/Amet/Bochek/Tzayar, and empty is `—` in both (Summary no longer shows `0` in the token column; Handoffs column keeps `0` as a count, which is correct). Same agent, same window, one format.
+- Fail 3 (alignment): PASS. At 1440 the swatch, name and every data cell share one centre line per row; the 8-12px top-aligned gap is gone. Figures stay right-aligned with the header.
+- 390 dark: PASS. Labels, values and `—` read cleanly; no overflow.
+- Still open (unchanged, sev 1): mobile rows wrap unevenly (Bona/Oseh/Tak/Rosh/Cheker/Zekher put Lessons alone on line 3; Amet puts ล่าสุด on its own line); header font fallback on "7 วัน" (system quirk).
+
+Verdict: PASS. Items 2 and 4 resolved, no new issues.
