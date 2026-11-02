@@ -69,8 +69,6 @@ const KeshUI = (() => {
   const bar = (pct, cls) => h("span", { className: "op-bar" + (cls ? " " + cls : ""), style: "--w:" + Math.max(0, Math.min(100, pct)) + "%" });
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const empty = ({ icon: ic, title, next, action }) => h("div", { className: "empty" }, icon(ic || "empty"), h("p", h("b", title), next ? " " + next : ""), action || null);
-  const skeleton = (n) => h("div", { className: "sk", "aria-hidden": "true" }, Array.from({ length: n || 2 }, () => h("i")));
-  const skeletonBlk = ([word, title, n]) => blk({ tab: tab(word), title, children: skeleton(n) });
   const banner = (title, text, onRetry) => h("div", { className: "banner keep", role: "alert" }, icon("errors"), h("p", h("b", title), " " + text), onRetry ? btn("ลองอีกครั้ง", { onclick: onRetry }) : null);
   const stages = (model, meta) => h("ol", { className: "stages" }, model.map((s) => h("li", { className: (s.state === "bounced" ? "done bounced" : s.state) },
     h("span", { className: "dia num" }, String(s.n).padStart(2, "0")), h("b", cap(s.agent)), h("span", { className: "meta" + (s.bounces ? " bad-t" : "") }, meta(s)))));
@@ -86,5 +84,5 @@ const KeshUI = (() => {
     } else el.append(h("pre", src));
     return el;
   };
-  return { ring, dots, dl, table, issueRow, labelChip, runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, skeleton, skeletonBlk, banner, stages, md };
+  return { ring, dots, dl, table, issueRow, labelChip, runRow, h, icon, num, tab, more, blk, strip, chip, btn, iconbtn, bar, cap, empty, banner, stages, md };
 })();
