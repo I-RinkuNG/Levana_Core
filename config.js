@@ -1,1 +1,1 @@
-window.LEVANA_CFG = Object.assign({ supabaseUrl: "", supabaseKey: "", usageBranch: "levana-usage", usagePath: "usage.json" }, window.LEVANA_CFG || {});
+window.LEVANA_CFG = Object.assign({ supabaseUrl: "https://hhrpedidxbnolpzthdvb.supabase.co", supabaseKey: "sb_publishable_kdyZIPmkowHRH5RNkIz9WQ_n0QYBH7R", usageBranch: "levana-usage", usagePath: "usage.json" }, window.LEVANA_CFG || {});
