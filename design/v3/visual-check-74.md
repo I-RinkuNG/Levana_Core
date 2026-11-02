@@ -37,3 +37,21 @@ No blockers. Items 1-3 pass on desktop light. Mobile graph mode B is the one rea
 | 5 | 1 | DESIGN.md:33 still lists device/tz columns | design/v3/DESIGN.md:33 |
 
 Self-score delta: R22 no longer fails for Log route or graph B at 1440; remaining R22-type risk is graph B at 390 (sev 2). Ship gate (self-score): passes; fail #1 recommended before ship, not blocking.
+
+---
+
+# Round 2: re-check of f524419, 436deb1 (Tzayar)
+
+Method: eyeballed shots-r2 (graph B 390 light/dark, graph B 1440 light, log 1440, log expanded) plus one extra graph B 1440 dark shot (scratchpad only). Read style.css:320-321 and DESIGN.md:33. Not a heuristic evaluation. Not opened: graph A 390 (not part of the fixes).
+
+| # | Item | Result | Sev | Evidence |
+|---|------|--------|-----|----------|
+| 1 | Graph B 390 light + dark | PASS (residual sev 1) | 1 | Canvas about 395px tall (was 674); issue diamonds span x=36..346 so the cluster fills the width. All 9 agent labels now drawn, none dropped, no label-on-label overlap. Residual: the centre file labels (README.md, rosh.md, agents/kotev.md, lessons/kotev.md) sit about 15-20px apart and are tight but legible. Light and dark identical in layout. |
+| 2 | 390 panel above 844 fold | PASS | 0 | Panel heading "โหมด" at y about 620, panel top about 608-611; the mode radios (y 640-780) are fully above 844. |
+| 3 | Label halo, 1440 light + dark | PASS | 0 | graph.js:92 strokeText with surface colour, 4/k. The vertical README.md to lessons edge no longer runs through "README.md", "rosh.md" or "lessons/kotev.md"; dark equal. |
+| 4 | Log cells vertically centred | PASS | 0 | style.css:320 `table.log td{vertical-align:middle}`. Time y=228, level y=227, event y=229, chevron y=229 (was about 12px off). |
+| 5 | DESIGN.md:33 vs build | PASS | 0 | Lists time, level, event, route, message, chevron; tz column only at >=1600px (matches style.css:321, hidden 600-1599); device line in the expanded row (matches the log-expanded shot). |
+
+Note only (unchanged, sev 1): at 1440 graph B the cluster is still about 300px wide in a 560px canvas with 10px nodes; acceptable.
+
+Verdict: no fails. Fail #1 from round 1 (sev 2) is closed; items 2-5 closed. Ship gate (self-check): passes.
