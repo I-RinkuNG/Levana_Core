@@ -161,3 +161,17 @@ test("log() during an in-flight flush survives", async () => {
   await K.flush();
   assert.deepEqual(JSON.parse(store.levana_logq).map((e) => e.event), ["late"]);
 });
+
+test("queue overflow during a flush drops only rows that were sent", async () => {
+  clear();
+  globalThis.LEVANA_CFG = { supabaseUrl: "https://x.supabase.co", supabaseKey: "sb_publishable_abc" };
+  const row = (i) => ({ ts: "2026-01-01T00:00:00." + String(i).padStart(3, "0") + "+07:00", session_id: "s", event: "r" + i });
+  store.levana_logq = JSON.stringify(Array.from({ length: K.Q_CAP }, (_, i) => row(i)));
+  let n = 0;
+  globalThis.fetch = async () => { n++; if (n === 1) { K.log("info", "late", "m"); return { status: 201 }; } return { status: 503 }; };
+  await K.flush();
+  const q = JSON.parse(store.levana_logq);
+  assert.equal(q.length, K.Q_CAP - K.BATCH + 1);
+  assert.equal(q[0].event, "r" + K.BATCH);
+  assert.equal(q[q.length - 1].event, "late");
+});
