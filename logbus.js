@@ -43,7 +43,8 @@ const KeshLog = (() => {
   let lastWriteAt = null, backoff = 0, nextTry = 0, flushing = false, timer = null;
   const local = (entry) => wr(LK, rd(LK).concat([entry]).slice(-LOCAL_CAP));
   const headers = () => { const k = cfg().supabaseKey, h = { apikey: k, "Content-Type": "application/json", Prefer: "return=minimal" }; if (/^eyJ/.test(k)) h.Authorization = "Bearer " + k; return h; };
-  const dropHead = (n) => wr(QK, rd(QK).slice(n));
+  const sameRow = (a, b) => a.ts === b.ts && a.session_id === b.session_id;
+  const dropSent = (rows) => { const left = rows.slice(); wr(QK, rd(QK).filter((e) => { const i = left.findIndex((r) => sameRow(r, e)); if (i < 0) return true; left.splice(i, 1); return false; })); };
   const noteRejected = (count, status) => { if (count) local(makeEntry("warn", "log_rejected", "Supabase ปฏิเสธ log " + count + " รายการ (HTTP " + status + ")", { status, count })); };
   async function flush(keepalive) {
     if (!configured() || flushing || Date.now() < nextTry) return;
@@ -58,14 +59,14 @@ const KeshLog = (() => {
           status = 201;
           for (const row of batch) {
             const s1 = await post([row]), v1 = verdict(s1);
-            if (v1 === "keep") { backoff = Math.min(300000, backoff ? backoff * 2 : 30000); nextTry = Date.now() + backoff; dropHead(okCount + rejected); noteRejected(rejected, status); if (okCount) lastWriteAt = Date.now(); return; }
+            if (v1 === "keep") { backoff = Math.min(300000, backoff ? backoff * 2 : 30000); nextTry = Date.now() + backoff; dropSent(batch.slice(0, okCount + rejected)); noteRejected(rejected, status); if (okCount) lastWriteAt = Date.now(); return; }
             if (v1 === "ok") okCount++; else { rejected++; status = s1; }
           }
           if (okCount) lastWriteAt = Date.now();
         } else rejected = verdict(status) === "drop" ? batch.length : 0;
         const v = verdict(status);
         if (v === "keep") { backoff = Math.min(300000, backoff ? backoff * 2 : 30000); nextTry = Date.now() + backoff; return; }
-        dropHead(batch.length);
+        dropSent(batch);
         q = rd(QK);
         backoff = 0; nextTry = 0;
         if (v === "ok" && !rejected) lastWriteAt = Date.now();
