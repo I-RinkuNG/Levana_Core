@@ -86,11 +86,16 @@ const KeshGraph = (() => {
         if (n.kind === "agent") { ctx.fillStyle = agentColor(n.agent); ctx.beginPath(); ctx.arc(n.x, n.y, r + 2, 0, 2 * Math.PI); ctx.fill(); ctx.fillStyle = onAgent; ctx.font = "600 " + fs + "px " + FONT(); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(n.label[0], n.x, n.y); }
         else if (n.kind === "issue") { ctx.fillStyle = surface; ctx.strokeStyle = ink; ctx.beginPath(); ctx.moveTo(n.x, n.y - r - 3); ctx.lineTo(n.x + r + 3, n.y); ctx.lineTo(n.x, n.y + r + 3); ctx.lineTo(n.x - r - 3, n.y); ctx.closePath(); ctx.fill(); ctx.stroke(); }
         else { ctx.fillStyle = surface; ctx.strokeStyle = data_; ctx.beginPath(); ctx.rect(n.x - r, n.y - r, 2 * r, 2 * r); ctx.fill(); ctx.stroke(); }
-        if (!shownLabels.has(n.id)) return;
-        const ly = n.y + r + (n.id === sel ? 10 : 4);
-        ctx.font = fs + "px " + FONT(); ctx.textAlign = "center"; ctx.textBaseline = "top";
-        ctx.lineJoin = "round"; ctx.lineWidth = 4 / k; ctx.strokeStyle = surface; ctx.strokeText(n.label, n.x, ly);
-        ctx.fillStyle = ink; ctx.fillText(n.label, n.x, ly);
+      };
+      const drawLabels = (ctx, k) => {
+        const fs = 13 / k, r = 7;
+        ctx.font = fs + "px " + FONT(); ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.lineJoin = "round";
+        data.nodes.forEach((n) => {
+          if (n.x == null || !shownLabels.has(n.id)) return;
+          const ly = n.y + r + (n.id === sel ? 10 : 4);
+          ctx.lineWidth = 5 / k; ctx.strokeStyle = surface; ctx.strokeText(n.label, n.x, ly);
+          ctx.fillStyle = ink; ctx.fillText(n.label, n.x, ly);
+        });
       };
       const pickLabels = (ctx, k) => {
         shownLabels.clear();
@@ -104,7 +109,7 @@ const KeshGraph = (() => {
         });
       };
       g = FG()(can).width(w).height(hgt).graphData(data).nodeId("id").backgroundColor("rgba(0,0,0,0)")
-        .onRenderFramePre(pickLabels).onNodeHover((n) => { hover = n ? n.id : null; can.style.cursor = n ? "pointer" : ""; }).nodeCanvasObject(nodeObj).nodePointerAreaPaint((n, color, ctx) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, 2 * Math.PI); ctx.fill(); })
+        .onRenderFramePre(pickLabels).onRenderFramePost(drawLabels).onNodeHover((n) => { hover = n ? n.id : null; can.style.cursor = n ? "pointer" : ""; }).nodeCanvasObject(nodeObj).nodePointerAreaPaint((n, color, ctx) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, 2 * Math.PI); ctx.fill(); })
         .linkColor(() => line).linkWidth((l) => l.kind === "relation" ? 1 : 1.5).linkLineDash((l) => l.kind === "mention" ? [4, 3] : l.kind === "relation" ? [1, 3] : null)
         .warmupTicks(pinned ? 0 : reduce ? 100 : 0).cooldownTicks(pinned ? 0 : reduce ? 0 : 120).onNodeClick((n) => { location.hash = hashFor(n); })
         .onEngineStop(() => { if (!can.dataset.fit) { can.dataset.fit = "1"; g.zoomToFit(200, isNarrow() ? 24 : 60); setTimeout(() => { if (g.zoom() > 2.5) g.zoom(2.5, 150); }, 260); } });
