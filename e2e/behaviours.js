@@ -155,6 +155,48 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
   check("log: sign-in form shown when not signed in", await t.page.isVisible("#logSignin"));
   await t.ctx.close();
 
+  for (const width of [390, 1440]) for (const mode of ["light", "dark"]) {
+    const tag = "weekly " + width + " " + mode + ": ";
+    t = await open(width, mode, "#/", { usage: "live" });
+    const txt = await t.page.textContent(".usage");
+    check(tag + "live shows 7 วัน 12% + reset countdown", txt.includes("7 วัน") && txt.includes("12%") && /อีก 3 วัน 2\d ชม\.|อีก 4 วัน|อีก 3 วัน/.test(txt), txt);
+    check(tag + "no horizontal scroll", await t.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await t.ctx.close();
+    t = await open(width, mode, "#/", { usage: "stalewk" });
+    check(tag + "stale keeps weekly row", (await t.page.textContent(".usage")).includes("ข้อมูลเก่า") && (await t.page.textContent(".usage")).includes("7 วัน"));
+    await t.ctx.close();
+    t = await open(width, mode, "#/", { usage: "weeknull" });
+    check(tag + "weekly null: no row, 5h still shown", !(await t.page.textContent(".usage")).includes("7 วัน") && (await t.page.textContent(".usage")).includes("21%"));
+    await t.ctx.close();
+    t = await open(width, mode, "#/", { usage: "missing" });
+    check(tag + "missing: no weekly row", !(await t.page.textContent(".usage")).includes("7 วัน"));
+    await t.ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 844 }, locale: "th-TH" });
+    await ctx.addInitScript(() => localStorage.setItem("levana_token", "ghp_test"));
+    const state = { gql: "ok", usage: "live" };
+    await H.routes(ctx, state, []);
+    const page = await ctx.newPage();
+    let hits = 0;
+    page.on("request", (r) => { if (r.url().includes("/contents/usage.json")) hits++; });
+    await page.clock.install();
+    await page.goto(base + "#/");
+    await page.waitForSelector("#main[aria-busy=false]", { timeout: 15000 });
+    const h0 = hits;
+    state.usage = "weeknull";
+    await page.clock.runFor(61000);
+    await page.waitForFunction(() => !document.querySelector(".usage").textContent.includes("7 วัน"), null, { timeout: 5000 }).catch(() => {});
+    check("poll: 60 s later usage re-fetched and only usage part re-rendered", hits === h0 + 1 && !(await page.textContent(".usage")).includes("7 วัน"), hits + " vs " + h0);
+    await page.evaluate(() => { Object.defineProperty(document, "hidden", { value: true, configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    await page.clock.runFor(180000);
+    check("poll: paused while hidden", hits === h0 + 1, hits + " vs " + h0);
+    await page.evaluate(() => { Object.defineProperty(document, "hidden", { value: false, configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    await page.waitForTimeout(300);
+    check("poll: one fetch on visible", hits === h0 + 2, hits + " vs " + h0);
+    await ctx.close();
+  }
+
   await browser.close(); server.close();
   const bad = results.filter((r) => !r[1]);
   console.log(bad.length ? bad.length + " FAILED" : "ALL " + results.length + " OK");
