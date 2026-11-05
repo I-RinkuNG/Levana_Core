@@ -2,7 +2,7 @@ KeshViews.summary = (() => {
   const { h, icon, chip, ring, dots, dl, issueRow, table, cap, empty } = KeshUI, A = KeshApi, L = KeshLogic;
   const mqD = matchMedia("(min-width:1024px)");
   const TOKEN_URL = "https://github.com/settings/personal-access-tokens";
-  let timer = null, lastState = null;
+  let poller = null, lastState = null;
 
   const tokenChip = () => {
     const s = A.apiStatus;
@@ -29,6 +29,11 @@ KeshViews.summary = (() => {
           h("div", h("dt", st.resetPassed ? "รอบนี้รีเซ็ตแล้วตอน" : "รีเซ็ต"), h("dd", st.resetsAt != null ? L.hhmm(st.resetsAt) : "—", st.resetPassed ? h("small", " ค่าใหม่ยังไม่เข้า") : null)))
         : h("dl", { className: "ufacts" }, h("div", h("dt", "รีเซ็ต"), h("dd", st.resetsAt != null ? [L.hhmm(st.resetsAt) + " ", h("small", "อีก " + L.fmtDur(st.resetsAt - now))] : "—")),
           h("div", h("dt", "ณ"), h("dd", [when + " ", h("small", "(" + L.ageText(now - st.capturedAt) + ")")])));
+      const wk = st.weekly;
+      const wrow = !wk ? null : h("div", h("dt", "7 วัน"), wk.resetPassed
+        ? h("dd", "รีเซ็ตแล้ว ", h("small", "ค่าใหม่ยังไม่เข้า"))
+        : h("dd", [Math.round(wk.pct) + "% ", wk.resetsAt != null ? h("small", "รีเซ็ต " + L.ymd(wk.resetsAt).slice(5) + " " + L.hhmm(wk.resetsAt) + " · อีก " + L.fmtDur(wk.resetsAt - now)) : null]));
+      if (wrow) facts.appendChild(wrow);
       body = [h("div", { className: "dmain" + (stale ? " stale" : "") }, h("b", pct + "%"), stale ? chip("warn", "ข้อมูลเก่า", "clock") : h("span", { className: "sub" }, "ใช้แล้ว")),
         h("div", { className: "ubody" }, ring(st.pct, stale ? "stale" : "live", (stale ? "ข้อมูลเก่า " : "ใช้ไปแล้ว ") + pct + "% ของ 5 ชั่วโมง"), dots(st.pct, st.state, pct + "% ของ 5 ชั่วโมง"), facts)];
     }
@@ -62,7 +67,7 @@ KeshViews.summary = (() => {
     skel: ["สรุป"],
     load: async () => { const w = await A.ws(); const u = await A.usage().catch(() => null); return { w, u, now: Date.now() }; },
     render: ({ w, u, now }) => {
-      clearInterval(timer);
+      if (poller) poller.stop();
       const k = L.kpis7d(w.runs, w.lessonTexts, now), rows = L.agentTable(w.runs, 7, now);
       const open = w.issues.filter((i) => i.state === "open");
       const usage = h("section", { className: "usage", "aria-labelledby": "h-usage" }, usageNodes(u, now));
@@ -81,11 +86,8 @@ KeshViews.summary = (() => {
           h("section", { className: "sec", "aria-labelledby": "h-gi" }, h("h2", { id: "h-gi" }, "GIT ISSUE"), gi, h("a", { className: "more", href: "#/issues" }, "ดู issue ทั้งหมด (" + open.length + ")")),
           h("section", { className: "sec", "aria-labelledby": "h-ag" }, h("h2", { id: "h-ag" }, "TOKEN ต่อ AGENT ", h("span", { className: "mono" }, "7 วัน")), h("div", { className: "tw" }, agentTable(rows)), more)],
         after: () => {
-          timer = setInterval(async () => {
-            if (document.visibilityState !== "visible" || !usage.isConnected) return;
-            const nu = await A.usage(true).catch(() => null);
-            usage.replaceChildren(...usageNodes(nu, Date.now()).flat());
-          }, 5 * 60 * 1000);
+          poller = L.usagePoller({ fetch: () => A.usage(true).catch(() => null), render: (nu) => usage.replaceChildren(...usageNodes(nu, Date.now()).flat()), alive: () => usage.isConnected, ms: L.USAGE_POLL_MS, doc: document, setInt: (f, ms) => setInterval(f, ms), clearInt: (i) => clearInterval(i) });
+          poller.start();
         }
       };
     }

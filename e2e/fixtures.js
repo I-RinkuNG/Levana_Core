@@ -59,6 +59,9 @@ const usage = (kind) => {
   const now = Date.now();
   if (kind === "live") return { schema: 1, five_hour: { used_percentage: 21, resets_at: Math.floor((now + 88 * 60000) / 1000) }, seven_day: { used_percentage: 12, resets_at: Math.floor((now + 4 * 86400000) / 1000) }, captured_at: new Date(now - 2 * 60000).toISOString() };
   if (kind === "stale") return { schema: 1, five_hour: { used_percentage: 21, resets_at: Math.floor((now - 3600000) / 1000) }, seven_day: null, captured_at: new Date(now - 4 * 3600000).toISOString() };
+  if (kind === "weeknull") return Object.assign(usage("live"), { seven_day: null });
+  if (kind === "stalewk") return Object.assign(usage("stale"), { seven_day: { used_percentage: 12, resets_at: Math.floor((now + 4 * 86400000) / 1000) } });
+  if (kind === "livesrc") return Object.assign(usage("live"), { source: "extension" });
   return null;
 };
 module.exports.usage = usage;

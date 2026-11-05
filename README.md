@@ -3,7 +3,7 @@
 Dashboard ของ workspace Kesh (repo `i-rinkung/claude-dotfiles`) บน GitHub Pages อ่านข้อมูลสดทุกครั้งที่โหลด ไม่เก็บข้อมูลไว้ที่ไหน
 
 - v3: 6 หน้า (hash): `#/` สรุป, `#/runs`, `#/run/<id>`, `#/issues`, `#/issue/<n>`, `#/agents`, `#/files[/<path>][?view=graph&gm=a|b]`, `#/log` ลิงก์เก่า (`#today`, `#usage`, `#lessons[/x]`, `#errors`, `#more`) redirect ให้เอง
-- USAGE 5 ชม. มาจาก `rate_limits.five_hour` ของ statusline ผ่านไฟล์ `usage.json` บน branch `levana-usage` (ไม่มีการแปลง token เป็น %) เก่าเกิน 15 นาที (`USAGE_STALE_MS` ใน `logic.js`) หรือเลยเวลารีเซ็ต = "ข้อมูลเก่า" ถ้าไม่มีไฟล์ = "ยังไม่มีค่า"
+- USAGE 5 ชม. มาจาก `rate_limits.five_hour` และแถว 7 วัน (`seven_day`, % + เวลารีเซ็ต + นับถอยหลัง; ไม่มีค่า = ไม่แสดงแถว) ของ statusline หรือ Claude Token Tracker bridge ผ่านไฟล์ `usage.json` บน branch `levana-usage` (ไม่มีการแปลง token เป็น %) เก่าเกิน 15 นาที (`USAGE_STALE_MS` ใน `logic.js`) หรือเลยเวลารีเซ็ต = "ข้อมูลเก่า" ถ้าไม่มีไฟล์ = "ยังไม่มีค่า"
 - สถานะ run: `เสร็จ` / `กำลังทำ` + ป้าย `มีงานค้างต่อ` แยก (ไฟล์ `_*.md` และเอกสารที่ไม่มี handoff ไม่นับเป็น run)
 - ตีกลับ > 20% = สีแดง + ไอคอน + ข้อความ
 - Files: ต้นไม้ไฟล์ (git trees API) + เอกสาร + กราฟความเชื่อมโยง (force-graph 1.52.0 ตรึงใน `vendor/` มี `SHA256SUMS`) + ปุ่มแปล EN/TH บนเครื่อง (Translator API เฉพาะ Chrome/Edge เดสก์ท็อป ซ่อนที่อื่น) Lessons รวมอยู่ใน `lessons/`
@@ -13,7 +13,9 @@ Dashboard ของ workspace Kesh (repo `i-rinkung/claude-dotfiles`) บน Git
 - repo นี้ public แต่ไม่มีข้อมูลหรือ token ในโค้ด คนที่ไม่มี token เห็นแค่ฟอร์มใส่ token พร้อมลิงก์ `get token`
 - ไม่มี build step: `index.html`, `app.js` (router/shell/drawer), `api.js`, `ui.js`, `translate.js`, `logbus.js`, `config.js`, `views/*.js`, `style.css`, `logic.js` (pure), `parse.js`, ฟอนต์ใน `fonts/` และ `vendor/` (marked, DOMPurify, force-graph โหลดแบบ lazy)
 
-## usage.json (statusline)
+## usage.json (statusline / bridge)
+ข้อมูลมาจาก 2 ทาง เขียนไฟล์เดียวกัน ฟิลด์ `source` = `statusline` หรือ `extension` (Claude Token Tracker bridge) อันที่เขียนล่าสุดชนะ หน้า Summary แสดง 5 ชม. และ 7 วัน (`seven_day` เป็น null ได้) และดึง `usage.json` ใหม่ทุก 60 วินาที (`USAGE_POLL_MS` ใน `logic.js`) ผ่าน contents API ของ branch `levana-usage` (ไม่ผ่าน CDN ที่ cache) เฉพาะส่วน USAGE ไม่โหลดหน้าใหม่ พักเมื่อแท็บถูกซ่อน และดึงอีกครั้งเมื่อกลับมาเห็น กฎ "ข้อมูลเก่า" 15 นาทียังเหมือนเดิม
+
 ใน claude-dotfiles: `scripts/statusline.py` (ตั้งเป็น `statusLine` ใน `~/.claude/settings.json` ของเครื่อง PC: `"statusLine": {"type":"command","command":"python C:/Users/<you>/.claude/scripts/statusline.py"}`) เขียน `~/.claude/state/usage.json` และเรียก `scripts/push_usage.py` (ต้องมี `gh auth login` สิทธิ์ repo) ส่งขึ้น branch `levana-usage` ประมาณทุก 5 นาที ไม่แตะ `main`
 
 ## ตั้งค่า Supabase (ทำครั้งเดียว, Rin)

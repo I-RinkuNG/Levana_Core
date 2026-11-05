@@ -102,3 +102,74 @@ test("7-day window is today plus the 6 days before it", () => {
   assert.equal(L.kpis7d(prev, [], NOW).prevTph, 300);
   assert.equal(L.kpis7d([], [{ name: "kotev", md: "- a " + day(6) + "\n- b " + day(7) }], NOW).lessons.count, 1);
 });
+
+test("usageState: weekly present, null, reset passed, source", () => {
+  const w = L.usageState(u({ seven_day: { used_percentage: 18.4, resets_at: (NOW + 2 * 86400000) / 1000 }, source: "extension" }), NOW);
+  assert.deepEqual(w.weekly, { pct: 18.4, resetsAt: NOW + 2 * 86400000, resetPassed: false });
+  assert.equal(w.source, "extension");
+  const n = L.usageState(u(), NOW);
+  assert.equal(n.weekly, null);
+  assert.equal(n.source, null);
+  assert.equal(L.usageState(u({ seven_day: {} }), NOW).weekly, null);
+  const p = L.usageState(u({ seven_day: { used_percentage: 150, resets_at: (NOW - 1000) / 1000 } }), NOW);
+  assert.deepEqual(p.weekly, { pct: 100, resetsAt: NOW - 1000, resetPassed: true });
+  assert.equal(p.state, "live");
+  assert.equal(L.usageState(u({ seven_day: { used_percentage: 5, resets_at: null } }), NOW).weekly.resetsAt, null);
+});
+
+test("fmtDur: days", () => {
+  assert.equal(L.fmtDur(53 * 3600000), "2 วัน 5 ชม.");
+  assert.equal(L.fmtDur(48 * 3600000), "2 วัน");
+  assert.equal(L.fmtDur(23 * 3600000 + 59 * 60000), "23 ชม. 59 น.");
+});
+
+const rig = (hidden) => {
+  const doc = { hidden, ls: [], addEventListener(e, f) { this.ls.push(f); }, removeEventListener(e, f) { this.ls = this.ls.filter((x) => x !== f); } };
+  const ints = [], calls = [], rendered = [];
+  let alive = true;
+  const p = L.usagePoller({
+    fetch: async () => { calls.push(1); return calls.length; }, render: (v) => rendered.push(v), alive: () => alive, ms: L.USAGE_POLL_MS, doc,
+    setInt: (f, ms) => { ints.push({ f, ms }); return ints.length; }, clearInt: (i) => { ints[i - 1].off = true; }
+  });
+  const flush = () => new Promise((r) => setImmediate(r));
+  return { doc, ints, calls, rendered, p, flush, kill: () => { alive = false; } };
+};
+
+test("usagePoller: 60 s interval, ticks fetch and render", async () => {
+  assert.equal(L.USAGE_POLL_MS, 60000);
+  const r = rig(false);
+  r.p.start();
+  assert.equal(r.ints.length, 1);
+  assert.equal(r.ints[0].ms, 60000);
+  await r.ints[0].f(); await r.ints[0].f();
+  assert.deepEqual(r.rendered, [1, 2]);
+});
+
+test("usagePoller: pauses when hidden, one fetch on visible, no start when hidden", async () => {
+  const r = rig(false);
+  r.p.start();
+  r.doc.hidden = true; r.doc.ls[0]();
+  assert.equal(r.ints[0].off, true);
+  assert.equal(r.calls.length, 0);
+  r.doc.hidden = false; r.doc.ls[0]();
+  await r.flush();
+  assert.equal(r.calls.length, 1);
+  assert.equal(r.ints.length, 2);
+  const h = rig(true);
+  h.p.start();
+  assert.equal(h.ints.length, 0);
+  h.doc.hidden = false; h.doc.ls[0]();
+  await h.flush();
+  assert.equal(h.calls.length, 1);
+  assert.equal(h.ints.length, 1);
+});
+
+test("usagePoller: stops itself when view is gone, swallows fetch errors", async () => {
+  const r = rig(false);
+  r.p.start();
+  r.kill();
+  await r.ints[0].f();
+  assert.equal(r.calls.length, 0);
+  assert.equal(r.ints[0].off, true);
+  assert.equal(r.doc.ls.length, 0);
+});

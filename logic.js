@@ -185,6 +185,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   const hhmm = (ms) => { const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); };
   const fmtDur = (ms) => {
     const m = Math.max(0, Math.round(ms / 60000)), hh = Math.floor(m / 60), mm = m % 60;
+    if (hh >= 24) { const d = Math.floor(hh / 24), h2 = hh % 24; return d + " วัน" + (h2 ? " " + h2 + " ชม." : ""); }
     return hh ? (hh + " ชม. " + (mm ? mm + " น." : "")).trim() : mm + " น.";
   };
   const ageText = (ms) => {
@@ -287,13 +288,33 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     BUILD: [["kotev", "เขียนโค้ด"], ["tzayar", "ออกแบบ"], ["bona", "วางโครงสร้าง"], ["oseh", "รันคำสั่ง"], ["tak", "ปรับโค้ด"]],
     CHECK: [["bochek", "ทดสอบ"], ["amet", "ตรวจข้อเท็จจริง"], ["rosh", "วางแผนวิจัย"], ["cheker", "ดึงข้อมูล"], ["zekher", "ดูแล lessons"]]
   };
-  const USAGE_STALE_MS = 15 * 60 * 1000;
+  const USAGE_STALE_MS = 15 * 60 * 1000, USAGE_POLL_MS = 60 * 1000;
+  const weeklyState = (w, now) => {
+    if (!w || typeof w.used_percentage !== "number") return null;
+    const resetsAt = typeof w.resets_at === "number" ? w.resets_at * 1000 : null;
+    return { pct: clamp(w.used_percentage, 0, 100), resetsAt, resetPassed: resetsAt != null && now > resetsAt };
+  };
+  const usagePoller = ({ fetch, render, alive, ms, doc, setInt, clearInt }) => {
+    let id = null, busy = false;
+    const arm = () => { if (id == null) id = setInt(tick, ms); };
+    const halt = () => { if (id != null) { clearInt(id); id = null; } };
+    const stop = () => { halt(); doc.removeEventListener("visibilitychange", onVis); };
+    const tick = async () => {
+      if (!alive()) return stop();
+      if (busy) return;
+      busy = true;
+      try { const v = await fetch(); if (alive()) render(v); } catch (e) {} finally { busy = false; }
+    };
+    const onVis = () => { if (doc.hidden) halt(); else { tick(); arm(); } };
+    const start = () => { doc.addEventListener("visibilitychange", onVis); if (!doc.hidden) arm(); };
+    return { start, stop };
+  };
   const usageState = (u, now) => {
     const f = u && u.five_hour;
     if (!f || typeof f.used_percentage !== "number") return { state: "missing" };
     const cap = Date.parse(u.captured_at), capturedAt = isNaN(cap) ? null : cap;
     const resetsAt = typeof f.resets_at === "number" ? f.resets_at * 1000 : null;
-    const base = { pct: clamp(f.used_percentage, 0, 100), resetsAt, capturedAt };
+    const base = { pct: clamp(f.used_percentage, 0, 100), resetsAt, capturedAt, weekly: weeklyState(u.seven_day, now), source: typeof u.source === "string" ? u.source : null };
     const resetPassed = resetsAt != null && now > resetsAt;
     if (resetPassed || capturedAt == null || now - capturedAt > USAGE_STALE_MS) return Object.assign({ state: "stale", resetPassed }, base);
     return Object.assign({ state: "live" }, base);
@@ -415,6 +436,6 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     if (i < t.length) out.push({ t: t.slice(i), hit: false });
     return out;
   };
-  return { buildGraph, excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, USAGE_STALE_MS, usageState, kpis7d, agentTable, issueRows, fmtDur, parseRoute, navModel, bounceLevel, bounceBarPct, activeRun, stageModel, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, isToday, tokensByAgent, rejectRates };
+  return { buildGraph, excerpt, bounceSummary, BOUNCE_WARN, BOUNCE_TICK, AGENT_GROUPS, USAGE_STALE_MS, USAGE_POLL_MS, usagePoller, usageState, kpis7d, agentTable, issueRows, fmtDur, parseRoute, navModel, bounceLevel, bounceBarPct, activeRun, stageModel, handoffRows, bounceReasons, agentTokens, agentCards, runRows, runChip, usageSeries, groupFiles, lessonGroups, highlight, ageText, hhmm, fmtTok, ymd, classify, classifyGql, gqlNotes, mapGraphql, gqlVars, GQL_QUERY, GQL_ISSUES_QUERY, MAX_ISSUE_PAGES, issuePageInfo, mergeIssuePages, retryDelay, pushLog, memo, isToday, tokensByAgent, rejectRates };
 })();
 if (typeof module !== "undefined") module.exports = KeshLogic;
