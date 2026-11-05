@@ -173,3 +173,11 @@ test("usagePoller: stops itself when view is gone, swallows fetch errors", async
   assert.equal(r.ints[0].off, true);
   assert.equal(r.doc.ls.length, 0);
 });
+
+test("usageState: NaN/Infinity treated as missing", () => {
+  const nw = (x) => L.usageState(u({ seven_day: { used_percentage: x, resets_at: null } }), NOW).weekly;
+  assert.equal(nw(NaN), null);
+  assert.equal(nw(Infinity), null);
+  assert.equal(L.usageState(u({ five_hour: { used_percentage: NaN, resets_at: null } }), NOW).state, "missing");
+  assert.equal(L.usageState(u({ seven_day: { used_percentage: 5, resets_at: NaN } }), NOW).weekly.resetsAt, null);
+});

@@ -6,13 +6,14 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
 (async () => {
   const { server, base } = await H.startServer();
   const browser = await chromium.launch();
-  const open = async (width, mode, hash, { gql, usage, tokenless, cfg, init } = {}) => {
+  const open = async (width, mode, hash, { gql, usage, tokenless, cfg, init, emptyCfg } = {}) => {
     const ctx = await browser.newContext({ viewport: { width, height: 844 }, colorScheme: mode || "light", locale: "th-TH" });
     const state = { gql: gql || "ok", usage: usage || "live" }, sb = [];
     if (!tokenless) await ctx.addInitScript(() => { if (!localStorage.getItem("levana_token")) localStorage.setItem("levana_token", "ghp_test"); });
     if (cfg) await ctx.addInitScript((c) => { window.LEVANA_CFG = c; }, cfg);
     if (init) await ctx.addInitScript(init);
     await H.routes(ctx, state, sb);
+    if (emptyCfg) await ctx.route("**/config.js", (r) => r.fulfill({ contentType: "application/javascript", body: "window.LEVANA_CFG = window.LEVANA_CFG || {};" }));
     const page = await ctx.newPage();
     await page.goto(base + hash);
     await page.waitForSelector("#main[aria-busy=false]", { timeout: 15000 });
@@ -134,7 +135,7 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
   check("graph: clicking a node opens its file", (await t.page.evaluate(() => location.hash)).startsWith("#/files/lessons/rosh.md"));
   await t.ctx.close();
 
-  t = await open(1440, "light", "#/log");
+  t = await open(1440, "light", "#/log", { emptyCfg: true });
   check("log: works with empty config, local-only note", (await t.page.textContent("#logStatus")).includes("เก็บในเครื่องนี้เท่านั้น"));
   await t.page.reload(); await t.page.waitForSelector("#main[aria-busy=false]");
   check("log: has app_start + route_view rows", (await t.page.$$eval("table.log tr.r", (r) => r.length)) >= 2);
@@ -194,6 +195,11 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
     await page.evaluate(() => { Object.defineProperty(document, "hidden", { value: false, configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await page.waitForTimeout(300);
     check("poll: one fetch on visible", hits === h0 + 2, hits + " vs " + h0);
+    await page.evaluate(() => { location.hash = "#/runs"; });
+    await page.waitForSelector("#main[aria-busy=false]");
+    const h1 = hits;
+    await page.clock.runFor(61000);
+    check("poll: stops on route change (no fetch after leaving)", hits === h1, hits + " vs " + h1);
     await ctx.close();
   }
 

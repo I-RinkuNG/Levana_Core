@@ -65,6 +65,7 @@ KeshViews.summary = (() => {
 
   return {
     skel: ["สรุป"],
+    leave: () => { if (poller) poller.stop(); },
     load: async () => { const w = await A.ws(); const u = await A.usage().catch(() => null); return { w, u, now: Date.now() }; },
     render: ({ w, u, now }) => {
       if (poller) poller.stop();

@@ -290,8 +290,8 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const USAGE_STALE_MS = 15 * 60 * 1000, USAGE_POLL_MS = 60 * 1000;
   const weeklyState = (w, now) => {
-    if (!w || typeof w.used_percentage !== "number") return null;
-    const resetsAt = typeof w.resets_at === "number" ? w.resets_at * 1000 : null;
+    if (!w || !Number.isFinite(w.used_percentage)) return null;
+    const resetsAt = Number.isFinite(w.resets_at) ? w.resets_at * 1000 : null;
     return { pct: clamp(w.used_percentage, 0, 100), resetsAt, resetPassed: resetsAt != null && now > resetsAt };
   };
   const usagePoller = ({ fetch, render, alive, ms, doc, setInt, clearInt }) => {
@@ -311,7 +311,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
   };
   const usageState = (u, now) => {
     const f = u && u.five_hour;
-    if (!f || typeof f.used_percentage !== "number") return { state: "missing" };
+    if (!f || !Number.isFinite(f.used_percentage)) return { state: "missing" };
     const cap = Date.parse(u.captured_at), capturedAt = isNaN(cap) ? null : cap;
     const resetsAt = typeof f.resets_at === "number" ? f.resets_at * 1000 : null;
     const base = { pct: clamp(f.used_percentage, 0, 100), resetsAt, capturedAt, weekly: weeklyState(u.seven_day, now), source: typeof u.source === "string" ? u.source : null };

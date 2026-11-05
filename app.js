@@ -111,11 +111,14 @@
   };
   const logout = () => { localStorage.removeItem("levana_token"); ev("info", "token_cleared", "ล้าง token"); A.clear(); lastOk = null; tokenForm(); };
 
+  let curPage = null;
   async function route(force) {
     let r = L.parseRoute(location.hash);
     if (r.redirect) { history.replaceState(null, "", r.redirect); r = L.parseRoute(location.hash); }
     const page = r.page, view = KeshViews[page];
     const id = ++rid, key = page + "/" + (r.arg || "") + (force ? "!" : "");
+    if (curPage && curPage !== page && KeshViews[curPage] && KeshViews[curPage].leave) KeshViews[curPage].leave();
+    curPage = page;
     closeAll();
     renderSide(page);
     setTitle(page, TITLES[page] || "Levana");
