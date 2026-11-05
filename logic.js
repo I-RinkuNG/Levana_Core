@@ -313,7 +313,7 @@ query($owner: String!, $name: String!, $ref: String!, $runs: String!, $agents: S
     const f = u && u.five_hour;
     if (!f || !Number.isFinite(f.used_percentage)) return { state: "missing" };
     const cap = Date.parse(u.captured_at), capturedAt = isNaN(cap) ? null : cap;
-    const resetsAt = typeof f.resets_at === "number" ? f.resets_at * 1000 : null;
+    const resetsAt = Number.isFinite(f.resets_at) ? f.resets_at * 1000 : null;
     const base = { pct: clamp(f.used_percentage, 0, 100), resetsAt, capturedAt, weekly: weeklyState(u.seven_day, now), source: typeof u.source === "string" ? u.source : null };
     const resetPassed = resetsAt != null && now > resetsAt;
     if (resetPassed || capturedAt == null || now - capturedAt > USAGE_STALE_MS) return Object.assign({ state: "stale", resetPassed }, base);

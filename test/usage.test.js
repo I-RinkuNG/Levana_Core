@@ -181,3 +181,9 @@ test("usageState: NaN/Infinity treated as missing", () => {
   assert.equal(L.usageState(u({ five_hour: { used_percentage: NaN, resets_at: null } }), NOW).state, "missing");
   assert.equal(L.usageState(u({ seven_day: { used_percentage: 5, resets_at: NaN } }), NOW).weekly.resetsAt, null);
 });
+
+test("usageState: five_hour resets_at NaN/Infinity becomes null", () => {
+  for (const bad of [NaN, Infinity, -Infinity]) {
+    assert.equal(L.usageState(u({ five_hour: { used_percentage: 5, resets_at: bad } }), NOW).resetsAt, null);
+  }
+});

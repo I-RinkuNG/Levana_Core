@@ -182,6 +182,12 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
     let hits = 0;
     page.on("request", (r) => { if (r.url().includes("/contents/usage.json")) hits++; });
     await page.clock.install();
+    await page.addInitScript(() => {
+      const live = new Map(), si = window.setInterval.bind(window), ci = window.clearInterval.bind(window);
+      window.__liveIv = () => [...live.values()];
+      window.setInterval = (fn, ms, ...a) => { const id = si(fn, ms, ...a); live.set(id, ms); return id; };
+      window.clearInterval = (id) => { live.delete(id); return ci(id); };
+    });
     await page.goto(base + "#/");
     await page.waitForSelector("#main[aria-busy=false]", { timeout: 15000 });
     const h0 = hits;
@@ -195,8 +201,12 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
     await page.evaluate(() => { Object.defineProperty(document, "hidden", { value: false, configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await page.waitForTimeout(300);
     check("poll: one fetch on visible", hits === h0 + 2, hits + " vs " + h0);
+    const ivBefore = await page.evaluate(() => window.__liveIv());
+    check("poll: exactly one live 60000ms interval on #/", ivBefore.filter((m) => m === 60000).length === 1, JSON.stringify(ivBefore));
     await page.evaluate(() => { location.hash = "#/runs"; });
     await page.waitForSelector("#main[aria-busy=false]");
+    const ivAfter = await page.evaluate(() => window.__liveIv().filter((m) => m === 60000));
+    check("poll: no live 60000ms interval right after leaving", ivAfter.length === 0, JSON.stringify(ivAfter));
     const h1 = hits;
     await page.clock.runFor(61000);
     check("poll: stops on route change (no fetch after leaving)", hits === h1, hits + " vs " + h1);
