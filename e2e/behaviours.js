@@ -34,7 +34,8 @@ const check = (name, ok, info) => { results.push([name, !!ok]); console.log((ok 
   await t.page.click("#menuBtn");
   await t.page.click("#nav a[href='#/runs']");
   await t.page.waitForSelector("#main[aria-busy=false]");
-  check("nav click routes and closes drawer", !(await t.page.isVisible("#side")) && (await t.page.textContent("#mtitle")) === "Runs");
+  const navDone = await t.page.waitForFunction(() => { const s = document.getElementById("side"), m = document.getElementById("mtitle"); return s && m && getComputedStyle(s).visibility === "hidden" && m.textContent === "Runs"; }, null, { timeout: 5000 }).then(() => true, () => false);
+  check("nav click routes and closes drawer", navDone && !(await t.page.isVisible("#side")) && (await t.page.textContent("#mtitle")) === "Runs", "drawer still visible or title not Runs");
   await t.ctx.close();
 
   t = await open(1440, "light", "#/");
